@@ -221,7 +221,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	local xPlayer = ESX.GetPlayerFromId(src)
 	if data.item.type == 'item_standard' then
 		local xItem = xPlayer.getInventoryItem(data.item.name)
-		if Config.ESX2 then
+		if xPlayer.canCarryItem ~= nil then
 			if xPlayer.canCarryItem(data.item.name, count) then
 				local inventory = {}
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
@@ -467,7 +467,7 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
     local xPlayer = ESX.GetPlayerFromId(src)
     if invType == "item_standard" then
 		local targetItem = xPlayer.getInventoryItem(item)
-		if Config.ESX2 then
+		if xPlayer.canCarryItem ~= nil then
 			if xPlayer.canCarryItem(item, count) then
 				local list = itemShopList.items
 				for k,v in pairs(list) do
