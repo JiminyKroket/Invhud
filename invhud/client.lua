@@ -28,6 +28,9 @@ Citizen.CreateThread(function()
 			if not IsPedSittingInAnyVehicle(ped) then
 				local inZone, zoneIn = InShopZone(pos)
 				if inZone then
+					if Config.Markers.UseText then
+						DrawShopText(pos.x, pos.y, pos.z, zoneIn)
+					end
 					if zoneIn ~= 'weaponshop' or Licenses['firearm'] ~= nil then
 						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 							setShopInventory(data)
@@ -40,6 +43,9 @@ Citizen.CreateThread(function()
 				else
 					local atStash, stashAt = InStashZone(pos)
 					if atStash then
+						if Config.Markers.UseText then
+							DrawShopText(pos.x, pos.y, pos.z, stashAt)
+						end
 						if tonumber(stashAt) ~= nil then
 							ESX.TriggerServerCallback('invhud:getInv', function(data)
 								setInventory(data, 'stash')
@@ -93,6 +99,28 @@ Citizen.CreateThread(function()
 		end
 	end
 end)
+
+DrawShopText = function(x, y, z, text)
+	local onScreen,_x,_y=World3dToScreen2d(x, y, z)
+	local px,py,pz=table.unpack(GetGameplayCamCoords())
+	local scale = 0.5
+	local text = text
+	
+	if onScreen then
+		SetTextScale(scale, scale)
+		SetTextFont(0)
+		SetTextProportional(1)
+		SetTextColour(255, 255, 255, 255)
+		SetTextDropshadow(1, 1, 0, 0, 255)
+		SetTextEdge(0, 0, 0, 0, 150)
+		SetTextDropShadow()
+		SetTextOutline()
+		SetTextEntry("STRING")
+		SetTextCentre(2)
+		AddTextComponentString(text)
+		DrawText(_x,_y)
+	end
+end
 
 Notify = function(text, timer)
 	if timer == nil then
@@ -424,6 +452,11 @@ InShopZone = function(pos)
 	for k,v in pairs(Config.Shops) do
 		for i = 1,#v.Locations do
 			local dis = #(pos - v.Locations[i])
+			if Config.Markers.Use then
+				if dis <= Config.Markers.Draw then
+					DrawMarker(Config.Markers.Type, pos, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+				end
+			end
 			if dis < 1.5 then
 				inShop = true
 				shopIn = k
@@ -437,6 +470,11 @@ InStashZone = function(pos)
 	local atStash, stashAt = false, nil
 	for k,v in pairs(Config.Stash) do
 		local dis = #(pos - v.coords)
+		if Config.Markers.Use then
+			if dis <= Config.Markers.Draw then
+				DrawMarker(Config.Markers.Type, pos, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+			end
+		end
 		if dis < 1.5 and (PlayerData.job.name == v.job or v.job == 'identifier') then
 			atStash = true
 			stashAt = k

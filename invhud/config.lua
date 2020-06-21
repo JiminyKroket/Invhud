@@ -5,7 +5,7 @@ Config.IncludeWeapons = true -- Include weapons in inventory?
 Config.IncludeAccounts = true -- Include accounts (bank, black money, ...)?
 Config.ExcludeAccountsList = {'bank', 'credit'} -- List of accounts names to exclude from inventory
 Config.OpenControl = 82 -- Key for opening inventory. Edit html/js/config.js to change key for closing it.
-Config.CurrencyIcon = '$' -- Is your languages currency icon
+Config.CurrencyIcon = '$'
 
 -- List of item names that will close ui when used
 Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "gps", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth"}
@@ -17,6 +17,14 @@ Config.Blips = {
 	youtool = 402,
 	prison = 52,
 	weaponshop = 110
+}
+
+Config.Markers = {
+	Use = false,
+	Type = 1,
+	Draw = 15,
+	UseText = false,
+	RGB = vector3(255, 255, 255)
 }
 
 Config.Names = {
