@@ -14,29 +14,12 @@ Notify = function(src, text, timer)
 end
 
 ESX.RegisterServerCallback("invhud:getPlayerInventory", function(source, cb, target)
-	local targetXPlayer = ESX.GetPlayerFromId(target)
+	local tPlayer = ESX.GetPlayerFromId(target)
 
-	if targetXPlayer ~= nil then
-		cb({inventory = targetXPlayer.inventory, money = targetXPlayer.getMoney(), accounts = targetXPlayer.accounts, weapons = targetXPlayer.loadout})
+	if tPlayer ~= nil then
+		cb({inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout})
 	else
 		cb(nil)
-	end
-end)
-
-AddEventHandler('esx:giveIventoryItem', function(target, itemType, label, count)
-	print(target, itemType, label, count)
-	if itemType == 'item_money' then
-		local src = source
-		local xPlayer = ESX.GetPlayerFromId(src)
-		local xTarget = ESX.GetPlayerFromId(target)
-		if xPlayer.getMoney() >= count then
-		  xPlayer.removeMoney(count)
-		  xTarget.addMoney(count)
-		  Notify(xPlayer.source, 'You have given '..Config.CurrencyIcon..count..' to '..xTarget.identifier)
-		  Notify(xTarget.source, 'You have received '..Config.CurrencyIcon..count..' from '..xPlayer.identifier)
-		else
-		  Notify(xPlayer.source, 'You do not have '..Config.CurrenyIcon..count..' to give to '..xTarget.identifier)
-		end
 	end
 end)
 
@@ -44,34 +27,51 @@ RegisterServerEvent("invhud:tradePlayerItem")
 AddEventHandler("invhud:tradePlayerItem", function(from, target, type, itemName, itemCount)
 	local src = from
 
-	local sourceXPlayer = ESX.GetPlayerFromId(src)
-	local targetXPlayer = ESX.GetPlayerFromId(target)
+	local xPlayer = ESX.GetPlayerFromId(src)
+	local tPlayer = ESX.GetPlayerFromId(target)
 
 	if type == "item_standard" then
-		local sourceItem = sourceXPlayer.getInventoryItem(itemName)
-		local targetItem = targetXPlayer.getInventoryItem(itemName)
-
-		if itemCount > 0 and sourceItem.count >= itemCount then
-			if targetItem.limit ~= -1 and (targetItem.count + itemCount) > targetItem.limit then
+		local xItem = xPlayer.getInventoryItem(itemName)
+		local tItem = tPlayer.getInventoryItem(itemName)
+		
+		if xPlayer.canCarryItem ~= nil then
+			if itemCount > 0 and xItem.count >= itemCount then
+				if tPlayer.canCarryItem(itemName, itemCount) then
+					xPlayer.removeInventoryItem(itemName, itemCount)
+					tPlayer.addInventoryItem(itemName, itemCount)
+				else
+					Notify(xPlayer.source, 'This player can not carry that much')
+					Notify(tPlayer.source, 'You can not carry that much')
+				end
 			else
-				sourceXPlayer.removeInventoryItem(itemName, itemCount)
-				targetXPlayer.addInventoryItem(itemName, itemCount)
+				Notify(xPlayer.source, 'You do not have enough of that item to give')
+			end
+		else
+			if itemCount > 0 and xItem.count >= itemCount then
+				if tItem.limit == -1 or (tItem.count + itemCount) <= tItem.limit then
+					xPlayer.removeInventoryItem(itemName, itemCount)
+					tPlayer.addInventoryItem(itemName, itemCount)
+				else
+					Notify(xPlayer.source, 'This player can not carry that much')
+					Notify(tPlayer.source, 'You can not carry that much')
+				end
+			else
+				Notify(xPlayer.source, 'You do not have enough of that item to give')
 			end
 		end
-	elseif type == "item_money" then
-		if itemCount > 0 and sourceXPlayer.getMoney() >= itemCount then
-			sourceXPlayer.removeMoney(itemCount)
-			targetXPlayer.addMoney(itemCount)
-		end
 	elseif type == "item_account" then
-		if itemCount > 0 and sourceXPlayer.getAccount(itemName).money >= itemCount then
-			sourceXPlayer.removeAccountMoney(itemName, itemCount)
-			targetXPlayer.addAccountMoney(itemName, itemCount)
+		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
+			xPlayer.removeAccountMoney(itemName, itemCount)
+			tPlayer.addAccountMoney(itemName, itemCount)
+		else
+			Notify(xPlayer.source, 'You do not have enough in that account to give')
 		end
 	elseif type == "item_weapon" then
-		if not targetXPlayer.hasWeapon(itemName) then
-			sourceXPlayer.removeWeapon(itemName)
-			targetXPlayer.addWeapon(itemName, itemCount)
+		if not tPlayer.hasWeapon(itemName) then
+			xPlayer.removeWeapon(itemName)
+			tPlayer.addWeapon(itemName, itemCount)
+		else
+			Notify(xPlayer.source, 'This person already has this weapon, just give them ammo')
 		end
 	end
 end)
@@ -466,7 +466,7 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     if invType == "item_standard" then
-		local targetItem = xPlayer.getInventoryItem(item)
+		local tItem = xPlayer.getInventoryItem(item)
 		if xPlayer.canCarryItem ~= nil then
 			if xPlayer.canCarryItem(item, count) then
 				local list = itemShopList.items
@@ -486,7 +486,7 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
 				Notify(source, 'You do not have enough space in your inventory!')
 			end
 		else
-			if targetItem.count + count <= targetItem.limit then
+			if tItem.count + count <= tItem.limit then
 				local list = itemShopList.items
 				for k,v in pairs(list) do
 					if v.name == item then

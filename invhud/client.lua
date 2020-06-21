@@ -590,7 +590,6 @@ loadPlayerInventory = function(inv)
 	if not inv then
 		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
 			items = {}
-			id = 0
 			inventory = data.inventory
 			accounts = data.accounts
 			money = data.money
@@ -600,7 +599,6 @@ loadPlayerInventory = function(inv)
 				moneyData = {
 					label = _U('cash'),
 					name = 'money',
-					id = id,
 					type = 'item_account',
 					count = money,
 					usable = false,
@@ -610,7 +608,6 @@ loadPlayerInventory = function(inv)
 				}
 
 				table.insert(items, moneyData)
-				id = id + 1
 			end
 
 			if Config.IncludeAccounts and accounts ~= nil then
@@ -622,7 +619,6 @@ loadPlayerInventory = function(inv)
 								accountData = {
 									label = accounts[key].label,
 									count = accounts[key].money,
-									id = id,
 									type = 'item_account',
 									name = accounts[key].name,
 									usable = false,
@@ -631,7 +627,6 @@ loadPlayerInventory = function(inv)
 									canRemove = canDrop
 								}
 								table.insert(items, accountData)
-								id = id + 1
 							end
 						end
 					end
@@ -646,7 +641,6 @@ loadPlayerInventory = function(inv)
 						inventory[key].type = 'item_standard'
 						inventory[key].id = id
 						table.insert(items, inventory[key])
-						id = id + 1
 					end
 				end
 			end
@@ -663,7 +657,6 @@ loadPlayerInventory = function(inv)
 								label = weapons[key].label,
 								count = ammo,
 								limit = -1,
-								id = id,
 								type = 'item_weapon',
 								name = weapons[key].name,
 								usable = false,
@@ -671,7 +664,6 @@ loadPlayerInventory = function(inv)
 								canRemove = true
 							}
 						)
-						id = id + 1
 					end
 				end
 			end
@@ -759,155 +751,155 @@ end)
 
 -------------PLAYER----------------
 
--- RegisterNetEvent('invhud:openPlayerInventory')
--- AddEventHandler('invhud:openPlayerInventory', function(target, playerName)
-	-- targetPlayer = target
-	-- targetPlayerName = playerName
-	-- setPlayerInventoryData()
-	-- openInventory('player')
--- end)
+RegisterNetEvent('invhud:openPlayerInventory')
+AddEventHandler('invhud:openPlayerInventory', function(target, playerName)
+	targetPlayer = target
+	targetPlayerName = playerName
+	setPlayerInventoryData()
+	openInventory('player')
+end)
 
--- refreshPlayerInventory = function()
-    -- setPlayerInventoryData()
--- end
+refreshPlayerInventory = function()
+    setPlayerInventoryData()
+end
 
--- setPlayerInventoryData = function()
-    -- ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-		-- SendNUIMessage(
-			-- {
-				-- action = 'setInfoText',
-				-- text = '<strong>' .. _U('player_inventory') .. '</strong><br>' .. targetPlayerName .. ' (' .. targetPlayer .. ')'
-			-- }
-		-- )
+setPlayerInventoryData = function()
+    ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
+		SendNUIMessage(
+			{
+				action = 'setInfoText',
+				text = '<strong>' .. _U('player_inventory') .. '</strong><br>' .. targetPlayerName .. ' (' .. targetPlayer .. ')'
+			}
+		)
 
-		-- items = {}
-		-- inventory = data.inventory
-		-- accounts = data.accounts
-		-- money = data.money
-		-- weapons = data.weapons
+		items = {}
+		inventory = data.inventory
+		accounts = data.accounts
+		money = data.money
+		weapons = data.weapons
 
-		-- if Config.IncludeCash and money ~= nil and money > 0 then
-			-- for key, value in pairs(accounts) do
-				-- moneyData = {
-					-- label = _U('cash'),
-					-- name = 'cash',
-					-- type = 'item_money',
-					-- count = money,
-					-- usable = false,
-					-- rare = false,
-					-- limit = -1,
-					-- canRemove = true
-				-- }
+		if Config.IncludeCash and money ~= nil and money > 0 then
+			moneyData = {
+				label = _U('cash'),
+				name = 'money',
+				type = 'item_account',
+				count = money,
+				usable = false,
+				rare = false,
+				limit = -1,
+				canRemove = true
+			}
 
-				-- table.insert(items, moneyData)
-			-- end
-		-- end
+			table.insert(items, moneyData)
+		end
 
-		-- if Config.IncludeAccounts and accounts ~= nil then
-			-- for key, value in pairs(accounts) do
-				-- if not shouldSkipAccount(accounts[key].name) then
-					-- local canDrop = accounts[key].name ~= 'bank'
+		if Config.IncludeAccounts and accounts ~= nil then
+			for key, value in pairs(accounts) do
+				if not shouldSkipAccount(accounts[key].name) then
+					local canDrop = accounts[key].name == 'money' or accounts[key].name == 'black_money'
+					if accounts[key].name ~= 'money' then
+						if accounts[key].money > 0 then
+							accountData = {
+								label = accounts[key].label,
+								count = accounts[key].money,
+								type = 'item_account',
+								name = accounts[key].name,
+								usable = false,
+								rare = false,
+								limit = -1,
+								canRemove = canDrop
+							}
+							table.insert(items, accountData)
+						end
+					end
+				end
+			end
+		end
 
-					-- if accounts[key].money > 0 then
-						-- accountData = {
-							-- label = accounts[key].label,
-							-- count = accounts[key].money,
-							-- type = 'item_account',
-							-- name = accounts[key].name,
-							-- usable = false,
-							-- rare = false,
-							-- limit = -1,
-							-- canRemove = canDrop
-						-- }
-						-- table.insert(items, accountData)
-					-- end
-				-- end
-			-- end
-		-- end
+		if inventory ~= nil then
+			for key, value in pairs(inventory) do
+				if inventory[key].count <= 0 then
+					inventory[key] = nil
+				else
+					inventory[key].type = 'item_standard'
+					inventory[key].id = id
+					table.insert(items, inventory[key])
+				end
+			end
+		end
 
-		-- if inventory ~= nil then
-			-- for key, value in pairs(inventory) do
-				-- if inventory[key].count <= 0 then
-					-- inventory[key] = nil
-				-- else
-					-- inventory[key].type = 'item_standard'
-					-- table.insert(items, inventory[key])
-				-- end
-			-- end
-		-- end
+		if Config.IncludeWeapons and weapons ~= nil then
+			for key, value in pairs(weapons) do
+				local weaponHash = GetHashKey(weapons[key].name)
+				local playerPed = PlayerPedId()
+				if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
+					local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
+					table.insert(
+						items,
+						{
+							label = weapons[key].label,
+							count = ammo,
+							limit = -1,
+							type = 'item_weapon',
+							name = weapons[key].name,
+							usable = false,
+							rare = false,
+							canRemove = true
+						}
+					)
+				end
+			end
+		end
 
-		-- if Config.IncludeWeapons and weapons ~= nil then
-			-- for key, value in pairs(weapons) do
-				-- local weaponHash = GetHashKey(weapons[key].name)
-				-- local playerPed = PlayerPedId()
-				-- if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
-					-- local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
-					-- table.insert(
-						-- items,
-						-- {
-							-- label = weapons[key].label,
-							-- count = ammo,
-							-- limit = -1,
-							-- type = 'item_weapon',
-							-- name = weapons[key].name,
-							-- usable = false,
-							-- rare = false,
-							-- canRemove = true
-						-- }
-					-- )
-				-- end
-			-- end
-		-- end
+		SendNUIMessage(
+			{
+				action = 'setSecondInventoryItems',
+				itemList = items
+			}
+		)
+	end, targetPlayer)
+end
 
-		-- SendNUIMessage(
-			-- {
-				-- action = 'setSecondInventoryItems',
-				-- itemList = items
-			-- }
-		-- )
-	-- end, targetPlayer)
--- end
+RegisterNUICallback('PutIntoPlayer', function(data, cb)
+	if IsPedSittingInAnyVehicle(playerPed) then
+		return
+	end
 
--- RegisterNUICallback('PutIntoPlayer', function(data, cb)
-	-- if IsPedSittingInAnyVehicle(playerPed) then
-		-- return
-	-- end
+	if type(data.number) == 'number' and math.floor(data.number) == data.number then
+		local count = tonumber(data.number)
 
-	-- if type(data.number) == 'number' and math.floor(data.number) == data.number then
-		-- local count = tonumber(data.number)
+		if data.item.type == 'item_weapon' then
+			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
+		end
 
-		-- if data.item.type == 'item_weapon' then
-			-- count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
-		-- end
+		TriggerServerEvent('invhud:tradePlayerItem', GetPlayerServerId(PlayerId()), targetPlayer, data.item.type, data.item.name, count)
+	end
 
-		-- TriggerServerEvent('invhud:tradePlayerItem', GetPlayerServerId(PlayerId()), targetPlayer, data.item.type, data.item.name, count)
-	-- end
+	Wait(250)
+	refreshPlayerInventory()
+	loadPlayerInventory()
 
-	-- Wait(250)
-	-- refreshPlayerInventory()
-	-- loadPlayerInventory()
+	cb('ok')
+end)
 
-	-- cb('ok')
--- end)
+RegisterNUICallback('TakeFromPlayer', function(data, cb)
+	if IsPedSittingInAnyVehicle(playerPed) then
+		return
+	end
 
--- RegisterNUICallback('TakeFromPlayer', function(data, cb)
-	-- if IsPedSittingInAnyVehicle(playerPed) then
-		-- return
-	-- end
+	if type(data.number) == 'number' and math.floor(data.number) == data.number then
+		local count = tonumber(data.number)
 
-	-- if type(data.number) == 'number' and math.floor(data.number) == data.number then
-		-- local count = tonumber(data.number)
+		if data.item.type == 'item_weapon' then
+			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
+		end
 
-		-- if data.item.type == 'item_weapon' then
-			-- count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
-		-- end
+		TriggerServerEvent('invhud:tradePlayerItem', targetPlayer, GetPlayerServerId(PlayerId()), data.item.type, data.item.name, count)
+	end
 
-		-- TriggerServerEvent('invhud:tradePlayerItem', targetPlayer, GetPlayerServerId(PlayerId()), data.item.type, data.item.name, count)
-	-- end
+	Wait(250)
+	refreshPlayerInventory()
+	loadPlayerInventory()
 
-	-- Wait(250)
-	-- refreshPlayerInventory()
-	-- loadPlayerInventory()
-
-	-- cb('ok')
--- end)
+	cb('ok')
+end)
