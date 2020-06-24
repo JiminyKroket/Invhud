@@ -22,15 +22,36 @@ Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(5)
 		DisableControlAction(0, Config.OpenControl)
+		if Config.Markers.Use then
+			local ped = PlayerPedId()
+			local pos = GetEntityCoords(ped)
+			for k,v in pairs(Config.Shops) do
+				for i = 1,#v.Locations do
+					local dis = #(pos - v.Locations[i])
+					if dis <= Config.Markers.Draw then
+						DrawMarker(Config.Markers.Type, v.Locations[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+						if Config.Markers.UseText then
+							DrawShopText(v.Locations[i].x, v.Locations[i].y, v.Locations[i].z+1.0, k..' shop')
+						end
+					end
+				end
+			end
+			for k,v in pairs(Config.Stash) do
+				local dis = #(pos - v.coords)
+				if dis <= Config.Markers.Draw then
+					DrawMarker(Config.Markers.Type, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+					if Config.Markers.UseText then
+						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k)
+					end
+				end
+			end
+		end
 		if IsDisabledControlJustReleased(0, Config.OpenControl) then
-			local ped = GetPlayerPed(-1)
+			local ped = PlayerPedId()
 			local pos = GetEntityCoords(ped)
 			if not IsPedSittingInAnyVehicle(ped) then
 				local inZone, zoneIn = InShopZone(pos)
 				if inZone then
-					if Config.Markers.UseText then
-						DrawShopText(pos.x, pos.y, pos.z, zoneIn)
-					end
 					if zoneIn ~= 'weaponshop' or Licenses['firearm'] ~= nil then
 						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 							setShopInventory(data)
@@ -43,9 +64,6 @@ Citizen.CreateThread(function()
 				else
 					local atStash, stashAt = InStashZone(pos)
 					if atStash then
-						if Config.Markers.UseText then
-							DrawShopText(pos.x, pos.y, pos.z, stashAt)
-						end
 						if tonumber(stashAt) ~= nil then
 							ESX.TriggerServerCallback('invhud:getInv', function(data)
 								setInventory(data, 'stash')
@@ -452,11 +470,6 @@ InShopZone = function(pos)
 	for k,v in pairs(Config.Shops) do
 		for i = 1,#v.Locations do
 			local dis = #(pos - v.Locations[i])
-			if Config.Markers.Use then
-				if dis <= Config.Markers.Draw then
-					DrawMarker(Config.Markers.Type, pos, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
-				end
-			end
 			if dis < 1.5 then
 				inShop = true
 				shopIn = k
@@ -470,11 +483,6 @@ InStashZone = function(pos)
 	local atStash, stashAt = false, nil
 	for k,v in pairs(Config.Stash) do
 		local dis = #(pos - v.coords)
-		if Config.Markers.Use then
-			if dis <= Config.Markers.Draw then
-				DrawMarker(Config.Markers.Type, pos, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
-			end
-		end
 		if dis < 1.5 and (PlayerData.job.name == v.job or v.job == 'identifier') then
 			atStash = true
 			stashAt = k

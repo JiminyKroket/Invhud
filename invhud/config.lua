@@ -20,10 +20,10 @@ Config.Blips = {
 }
 
 Config.Markers = {
-	Use = false,
+	Use = true,
 	Type = 1,
 	Draw = 15,
-	UseText = false,
+	UseText = true,
 	RGB = vector3(255, 255, 255)
 }
 
