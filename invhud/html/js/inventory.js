@@ -1,6 +1,7 @@
 var type = "normal";
 var disabled = false;
 var disabledFunction = null;
+var curIcon = "$";
 
 window.addEventListener("message", function (event) {
     if (event.data.action == "display") {
@@ -124,9 +125,8 @@ function secondInventorySetup(items) {
 function shopInventorySetup(items) {
     $("#otherInventory").html("");
     $.each(items, function (index, item) {
-        //count = setCount(item)
-        cost = setCost(item);
-
+		cost = setCost(item)
+		
         $("#otherInventory").append('<div class="slot"><div id="itemOther-' + index + '" class="item" style = "background-image: url(\'img/items/' + item.name + '.png\')">' +
             '<div class="item-count">' + cost + '</div> <div class="item-name">' + item.label + '</div> </div ><div class="item-name-bg"></div></div>');
         $('#itemOther-' + index).data('item', item);
@@ -199,7 +199,7 @@ function setCost(item) {
         cost = "Free"
     }
     if (item.price > 0) {
-        cost = "$" + item.price
+        cost = curIcon + item.price
     }
     return cost;
 }
