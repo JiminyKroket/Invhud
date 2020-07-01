@@ -52,14 +52,22 @@ Citizen.CreateThread(function()
 			if not IsPedSittingInAnyVehicle(ped) then
 				local inZone, zoneIn = InShopZone(pos)
 				if inZone then
-					if zoneIn ~= 'weaponshop' or Licenses['firearm'] ~= nil then
+					if Config.NeedsWeaponLicense then
+						if zoneIn ~= 'weaponshop' or Licenses['firearm'] ~= nil then
+							ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+								setShopInventory(data)
+								openInventory('shop')
+							end, zoneIn)
+							Citizen.Wait(250)
+						else
+							Notify('You do not have a fire-arm license, we can not sell you guns')
+						end
+					else
 						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 							setShopInventory(data)
 							openInventory('shop')
 						end, zoneIn)
 						Citizen.Wait(250)
-					else
-						Notify('You do not have a fire-arm license, we can not sell you guns')
 					end
 				else
 					local atStash, stashAt = InStashZone(pos)
@@ -254,7 +262,7 @@ setShopInventory = function(data)
 
     SendNUIMessage(
         {
-            action = 'setSecondInventoryItems',
+            action = 'setShopInventoryItems',
             itemList = items
         }
     )
