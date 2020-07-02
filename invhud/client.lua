@@ -94,12 +94,17 @@ Citizen.CreateThread(function()
 							local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
 							local dis = #(pos - trunkPos)
 							if dis < 2.5 then
-								ESX.TriggerServerCallback('invhud:getInv', function(data)
-									setInventory(data, 'trunk')
-									SetVehicleDoorOpen(veh, 5)
-									openedTrunk = veh
-									openInventory('trunk')
-								end, 'trunk', plate)
+								local lok = GetVehicleDoorLockStatus(veh)
+								if lok == 1 then
+									ESX.TriggerServerCallback('invhud:getInv', function(data)
+										setInventory(data, 'trunk')
+										SetVehicleDoorOpen(veh, 5)
+										openedTrunk = veh
+										openInventory('trunk')
+									end, 'trunk', plate)
+								else
+									Notify('This trunk is locked')
+								end
 							else
 								openInventory('normal')
 							end
