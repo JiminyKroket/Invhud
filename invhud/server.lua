@@ -189,15 +189,16 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 		else
 			Notify(src, 'You do not have that weapon')
 		end
-	elseif data.item.type == 'item_money' then
-		local cash = xPlayer.getMoney()
-		if cash >= count then
+	elseif data.item.type == 'item_account' then
+		local accountName = data.item.name
+		local money = xPlayer.getAccount(accountName).money
+		if money >= count then
 			local inventory = {}
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
-					xPlayer.removeMoney(count)
-					inventory.cash = inventory.cash + count
+					xPlayer.removeAccountMoney(accountName, count)
+					inventory[accountName] = inventory[accountName] + count
 					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 						['@owner'] = owner,
 						['@type'] = invType,
@@ -252,7 +253,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'You do not have room for '..data.item.name)
+				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		else
 			if xItem.count + count <= xItem.limit then
@@ -285,7 +286,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'You do not have room for '..data.item.name)
+				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		end
 	elseif data.item.type == 'item_weapon' then
@@ -318,28 +319,33 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 		else
 			Notify(src, 'You already have this weapon')
 		end
-	elseif data.item.type == 'item_money' then
-		local inventory = {}
-		MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-			if result[1] then
-				inventory = json.decode(result[1].data)
-				if inventory.cash >= count then
-					xPlayer.addMoney(count)
-					inventory.cash = inventory.cash - count
-					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-						['@owner'] = owner,
-						['@type'] = invType,
-						['@data'] = json.encode(inventory)
-					}, function(rowsChanged)
-						if rowsChanged then
-							print('Inventory updated for: '..owner..' with type: '..invType)
-						end
-					end)
-				else
-					Notify(src, 'There is not enough of that in the inventory')
+	elseif data.item.type == 'item_account' then
+		local accountName = data.item.name
+		if money >= count then
+			local inventory = {}
+			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+				if result[1] then
+					inventory = json.decode(result[1].data)
+					if inventory[accountName] >= count then
+						xPlayer.addAccountMoney(accountName, count)
+						inventory[accountName] = inventory[accountName] - count
+						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+							['@owner'] = owner,
+							['@type'] = invType,
+							['@data'] = json.encode(inventory)
+						}, function(rowsChanged)
+							if rowsChanged then
+								print('Inventory updated for: '..owner..' with type: '..invType)
+							end
+						end)
+					else
+						Notify(src, 'There is not enough of that in the inventory')
+					end
 				end
-			end
-		end)
+			end)
+		else
+			Notify(src, 'You do not have enough cash to do that')
+		end
 	end
 end)
 
