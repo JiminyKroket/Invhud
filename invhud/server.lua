@@ -252,7 +252,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'You do not have that much of '..data.item.name)
+				Notify(src, 'You do not have room for '..data.item.name)
 			end
 		else
 			if xItem.count + count <= xItem.limit then
@@ -285,7 +285,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'You do not have that much of '..data.item.name)
+				Notify(src, 'You do not have room for '..data.item.name)
 			end
 		end
 	elseif data.item.type == 'item_weapon' then
