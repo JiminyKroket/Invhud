@@ -190,14 +190,20 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 			Notify(src, 'You do not have that weapon')
 		end
 	elseif data.item.type == 'item_account' then
-		local accountName = data.item.name
-		local money = xPlayer.getAccount(accountName).money
+		local accountName
+		if data.item.name == 'money' or data.item.name == 'cash' then
+			accountName = 'cash'
+			data.item.name = 'money'
+		elseif data.item.name == 'black_money' then
+			accountName = 'blackMoney'
+		end
+		local money = xPlayer.getAccount(data.item.name).money
 		if money >= count then
 			local inventory = {}
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
-					xPlayer.removeAccountMoney(accountName, count)
+					xPlayer.removeAccountMoney(data.item.name, count)
 					inventory[accountName] = inventory[accountName] + count
 					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 						['@owner'] = owner,
@@ -320,14 +326,20 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 			Notify(src, 'You already have this weapon')
 		end
 	elseif data.item.type == 'item_account' then
-		local accountName = data.item.name
+		local accountName
+		if data.item.name == 'money' or data.item.name == 'cash' then
+			accountName = 'cash'
+			data.item.name = 'money'
+		elseif data.item.name == 'black_money' then
+			accountName = 'blackMoney'
+		end
 		if money >= count then
 			local inventory = {}
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
 					if inventory[accountName] >= count then
-						xPlayer.addAccountMoney(accountName, count)
+						xPlayer.addAccountMoney(data.item.name, count)
 						inventory[accountName] = inventory[accountName] - count
 						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 							['@owner'] = owner,
@@ -344,7 +356,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				end
 			end)
 		else
-			Notify(src, 'You do not have enough cash to do that')
+			Notify(src, 'You do not have enough '..accountName..' to do that')
 		end
 	end
 end)
