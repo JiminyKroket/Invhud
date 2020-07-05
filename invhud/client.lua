@@ -203,7 +203,7 @@ setInventory = function(data, invType)
     if data.items ~= nil then
         for key, value in pairs(data.items) do
 			data.items[key][1].name = key
-			data.items[key][1].label = key
+			data.items[key][1].label = value[1].label
 			data.items[key][1].type = 'item_standard'
 			data.items[key][1].usable = false
 			data.items[key][1].rare = false
