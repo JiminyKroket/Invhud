@@ -1,6 +1,6 @@
 local isInInventory = false
 local targetPlayer, targetPlayerName, shopData, openedTrunk
-local trunkData, gBoxData, stashData, propertyData, swappedItems, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}
+local trunkData, gBoxData, stashData, propertyData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}
 ESX = nil
 
 Citizen.CreateThread(function()
@@ -272,24 +272,6 @@ setShopInventory = function(data)
         }
     )
 end
-
-RegisterNUICallback('SwapItemPosition', function(data, cb)
-	if not swappedItems[1] then
-		swappedItems[1] = data.item
-	else
-		playerInv[data.item.id + 1] = swappedItems[1]
-		Citizen.Wait(100)
-		playerInv[swappedItems[1].id + 1] = data.item
-		SendNUIMessage(
-			{
-				action = 'setItems',
-				itemList = playerInv
-			}
-		)
-		swappedItems = {}
-	end
-	cb('ok')
-end)
 
 RegisterNUICallback('PutIntoGBox', function(data, cb)
 	if not IsPedSittingInAnyVehicle(PlayerPedId()) then
