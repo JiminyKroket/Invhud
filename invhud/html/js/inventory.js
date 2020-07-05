@@ -344,11 +344,6 @@ $(document).ready(function () {
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
-			} else if (type === "normal" && itemInventory === "main") {
-                disableInventory(500);
-                $.post("http://invhud/SwapItemPosition", JSON.stringify({
-                    item: itemData
-                }));
             }
         }
     });
