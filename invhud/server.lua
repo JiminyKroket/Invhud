@@ -114,6 +114,10 @@ RegisterServerEvent('invhud:putItem')
 AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
+	if data.item.type == 'item_money' then
+		data.item.type = 'item_account'
+		data.item.name = 'money'
+	end
 	if data.item.type == 'item_standard' then
 		local xItem = xPlayer.getInventoryItem(data.item.name)
 		if xItem.count >= count then
@@ -190,20 +194,24 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 			Notify(src, 'You do not have that weapon')
 		end
 	elseif data.item.type == 'item_account' then
-		local accountName
-		if data.item.name == 'money' or data.item.name == 'cash' then
+		local accountName, money
+		if data.item.name == 'money' then
 			accountName = 'cash'
-			data.item.name = 'money'
+			money = xPlayer.getMoney()
 		elseif data.item.name == 'black_money' then
 			accountName = 'blackMoney'
+			money = xPlayer.getAccount(data.item.name).money
 		end
-		local money = xPlayer.getAccount(data.item.name).money
 		if money >= count then
 			local inventory = {}
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
-					xPlayer.removeAccountMoney(data.item.name, count)
+					if data.item.name == 'money' then
+						xPlayer.removeMoney(count)
+					else
+						xPlayer.removeAccountMoney(data.item.name, count)
+					end
 					inventory[accountName] = inventory[accountName] + count
 					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 						['@owner'] = owner,
@@ -226,6 +234,10 @@ RegisterServerEvent('invhud:getItem')
 AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
+	if data.item.type == 'item_money' then
+		data.item.type = 'item_account'
+		data.item.name = 'money'
+	end
 	if data.item.type == 'item_standard' then
 		local xItem = xPlayer.getInventoryItem(data.item.name)
 		if xPlayer.canCarryItem ~= nil then
@@ -327,37 +339,36 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 		end
 	elseif data.item.type == 'item_account' then
 		local accountName
-		if data.item.name == 'money' or data.item.name == 'cash' then
+		if data.item.name == 'money' then
 			accountName = 'cash'
-			data.item.name = 'money'
 		elseif data.item.name == 'black_money' then
 			accountName = 'blackMoney'
 		end
-		if money >= count then
-			local inventory = {}
-			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-				if result[1] then
-					inventory = json.decode(result[1].data)
-					if inventory[accountName] >= count then
-						xPlayer.addAccountMoney(data.item.name, count)
-						inventory[accountName] = inventory[accountName] - count
-						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-							['@owner'] = owner,
-							['@type'] = invType,
-							['@data'] = json.encode(inventory)
-						}, function(rowsChanged)
-							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
-							end
-						end)
+		local inventory = {}
+		MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+			if result[1] then
+				inventory = json.decode(result[1].data)
+				if inventory[accountName] >= count then
+					if data.item.name == 'money' then
+						xPlayer.addMoney(count)
 					else
-						Notify(src, 'There is not enough of that in the inventory')
+						xPlayer.addAccountMoney(data.item.name, count)
 					end
+					inventory[accountName] = inventory[accountName] - count
+					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+						['@owner'] = owner,
+						['@type'] = invType,
+						['@data'] = json.encode(inventory)
+					}, function(rowsChanged)
+						if rowsChanged then
+							print('Inventory updated for: '..owner..' with type: '..invType)
+						end
+					end)
+				else
+					Notify(src, 'There is not enough of that in the inventory')
 				end
-			end)
-		else
-			Notify(src, 'You do not have enough '..accountName..' to do that')
-		end
+			end
+		end)
 	end
 end)
 
