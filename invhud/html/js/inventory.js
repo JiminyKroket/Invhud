@@ -16,6 +16,8 @@ window.addEventListener("message", function (event) {
             $(".info-div").show();
         } else if (type === "property") {
             $(".info-div").show();
+		} else if (type === "safe") {
+            $(".info-div").show();
 		} else if (type === "stash") {
             $(".info-div").show();
         } else if (type === "player") {
@@ -326,6 +328,12 @@ $(document).ready(function () {
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
+			} else if (type === "safe" && itemInventory === "second") {
+                disableInventory(500);
+                $.post("http://invhud/TakeFromSafe", JSON.stringify({
+                    item: itemData,
+                    number: parseInt($("#count").val())
+                }));
 			} else if (type === "stash" && itemInventory === "second") {
                 disableInventory(500);
                 $.post("http://invhud/TakeFromStash", JSON.stringify({
@@ -368,6 +376,12 @@ $(document).ready(function () {
             } else if (type === "property" && itemInventory === "main") {
                 disableInventory(500);
                 $.post("http://invhud/PutIntoProperty", JSON.stringify({
+                    item: itemData,
+                    number: parseInt($("#count").val())
+                }));
+			} else if (type === "safe" && itemInventory === "main") {
+                disableInventory(500);
+                $.post("http://invhud/PutIntoSafe", JSON.stringify({
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
