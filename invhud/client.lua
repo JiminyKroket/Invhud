@@ -1,6 +1,6 @@
 local isInInventory = false
 local targetPlayer, targetPlayerName, shopData, openedTrunk
-local trunkData, gBoxData, stashData, propertyData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}
+local trunkData, gBoxData, stashData, propertyData, safeData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}
 ESX = nil
 
 Citizen.CreateThread(function()
@@ -402,6 +402,49 @@ RegisterNUICallback('TakeFromProperty', function(data, cb)
 	cb('ok')
 end)
 
+RegisterNUICallback('PutIntoSafe', function(data, cb)
+	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		return
+	end
+	if type(data.number) == 'number' and math.floor(data.number) == data.number then
+		local count = tonumber(data.number)
+
+		if data.item.type == 'item_weapon' then
+			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
+		end
+		if count == 0 then
+			count = 1
+		end
+		TriggerServerEvent('invhud:putItem', 'safe', safeData.id, data, count)
+	end
+	Wait(250)
+	loadPlayerInventory()
+	ESX.TriggerServerCallback('invhud:getInv', function(data)
+		setInventory(data, 'safe')
+		openInventory('safe')
+	end, 'safe', safeData.id)
+
+	cb('ok')
+end)
+
+RegisterNUICallback('TakeFromSafe', function(data, cb)
+	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		return
+	end
+
+	if type(data.number) == 'number' and math.floor(data.number) == data.number then
+		TriggerServerEvent('invhud:getItem', 'safe', safeData.id, data, tonumber(data.number))
+	end
+	Wait(250)
+	loadPlayerInventory()
+	ESX.TriggerServerCallback('invhud:getInv', function(data)
+		setInventory(data, 'safe')
+		openInventory('safe')
+	end, 'safe', safeData.id)
+
+	cb('ok')
+end)
+
 RegisterNUICallback('TakeFromShop', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
 		return
@@ -757,6 +800,16 @@ AddEventHandler('invhud:openPropertyInv', function(name)
 		setInventory(data, 'property')
 		openInventory('property')
 	end, 'property', propertyData.id)
+end)
+
+RegisterNetEvent('invhud:openSafeInv')
+AddEventHandler('invhud:openSafeInv', function(name)
+	local ped = PlayerPedId()
+	safeData.id = name
+	ESX.TriggerServerCallback('invhud:getInv', function(data)
+		setInventory(data, 'safe')
+		openInventory('safe')
+	end, 'safe', safeData.id)
 end)
 
 RegisterNetEvent('invhud:usedAmmo')
