@@ -556,7 +556,7 @@ closeInventory = function()
 end
 
 RegisterNUICallback('NUIFocusOff', function()
-	closeInventory()
+	TriggerEvent('invhud:closeInventory')
 end)
 
 RegisterNUICallback('GetNearPlayers', function(data, cb)
