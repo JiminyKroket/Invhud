@@ -16,9 +16,9 @@ window.addEventListener("message", function (event) {
             $(".info-div").show();
         } else if (type === "property") {
             $(".info-div").show();
-		} else if (type === "safe") {
+	} else if (type === "safe") {
             $(".info-div").show();
-		} else if (type === "stash") {
+	} else if (type === "stash") {
             $(".info-div").show();
         } else if (type === "player") {
             $(".info-div").show();
