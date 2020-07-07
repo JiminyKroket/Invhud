@@ -843,6 +843,10 @@ AddEventHandler('onResourceStop', function(resource)
 	end
 end)
 
+AddEventHandler('invhud:closeInventory', function()
+	closeInventory()
+end)
+
 -------------PLAYER----------------
 
 RegisterNetEvent('invhud:openPlayerInventory')
