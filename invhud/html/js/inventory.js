@@ -12,7 +12,7 @@ window.addEventListener("message", function (event) {
             $(".info-div").hide();
         } else if (type === "trunk") {
             $(".info-div").show();
-		} else if (type === "gbox") {
+	} else if (type === "gbox") {
             $(".info-div").show();
         } else if (type === "property") {
             $(".info-div").show();
