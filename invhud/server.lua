@@ -274,7 +274,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		else
-			if xItem.count + count <= xItem.limit then
+			if xItem.count + count <= xItem.limit or xItem.limit == -1 then
 				local inventory = {}
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 					if result[1] then
