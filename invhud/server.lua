@@ -274,7 +274,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		else
-			if xItem.count + count <= xItem.limit or xItem.limit == -1 then
+			if xItem.count + count <= xItem.limit then
 				local inventory = {}
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 					if result[1] then
@@ -390,89 +390,23 @@ ESX.RegisterServerCallback("invhud:getShopItems", function(source, cb, shoptype)
 		itemInformation[itemResult[i].name].can_remove = itemResult[i].can_remove
 		itemInformation[itemResult[i].name].price = itemResult[i].price
 
-		if shoptype == "regular" then
-			for _, v in pairs(Config.Shops.regular.Items) do
-				if v.name == itemResult[i].name then
-					table.insert(itemShopList.items, {
-						type = "item_standard",
-						name = itemInformation[itemResult[i].name].name,
-						label = itemInformation[itemResult[i].name].label,
-						limit = itemInformation[itemResult[i].name].limit,
-						rare = itemInformation[itemResult[i].name].rare,
-						can_remove = itemInformation[itemResult[i].name].can_remove,
-						price = itemInformation[itemResult[i].name].price,
-						count = 1
-					})
-				end
-			end
-		end
-		if shoptype == "robsliquor" then
-			for _, v in pairs(Config.Shops.robsliquor.Items) do
-				if v.name == itemResult[i].name then
-					table.insert(itemShopList.items, {
-						type = "item_standard",
-						name = itemInformation[itemResult[i].name].name,
-						label = itemInformation[itemResult[i].name].label,
-						limit = itemInformation[itemResult[i].name].limit,
-						rare = itemInformation[itemResult[i].name].rare,
-						can_remove = itemInformation[itemResult[i].name].can_remove,
-						price = itemInformation[itemResult[i].name].price,
-						count = 1
-					})
-				end
-			end
-		end
-		if shoptype == "youtool" then
-			for _, v in pairs(Config.Shops.youtool.Items) do
-				if v.name == itemResult[i].name then
-					table.insert(itemShopList.items, {
-						type = "item_standard",
-						name = itemInformation[itemResult[i].name].name,
-						label = itemInformation[itemResult[i].name].label,
-						limit = itemInformation[itemResult[i].name].limit,
-						rare = itemInformation[itemResult[i].name].rare,
-						can_remove = itemInformation[itemResult[i].name].can_remove,
-						price = itemInformation[itemResult[i].name].price,
-						count = 1
-					})
-				end
-			end
-		end
-		if shoptype == "prison" then
-			for _, v in pairs(Config.Shops.prisonshop.Items) do
-				if v.name == itemResult[i].name then
-					table.insert(itemShopList.items, {
-						type = "item_standard",
-						name = itemInformation[itemResult[i].name].name,
-						label = itemInformation[itemResult[i].name].label,
-						limit = itemInformation[itemResult[i].name].limit,
-						rare = itemInformation[itemResult[i].name].rare,
-						can_remove = itemInformation[itemResult[i].name].can_remove,
-						price = itemInformation[itemResult[i].name].price,
-						count = 1
-					})
-				end
-			end
-		end
-		if shoptype == "weaponshop" then
-			for _, v in pairs(Config.Shops.weaponshop.Items) do
-				if v.name == itemResult[i].name then
-					table.insert(itemShopList.items, {
-						type = "item_standard",
-						name = itemInformation[itemResult[i].name].name,
-						label = itemInformation[itemResult[i].name].label,
-						limit = itemInformation[itemResult[i].name].limit,
-						rare = itemInformation[itemResult[i].name].rare,
-						can_remove = itemInformation[itemResult[i].name].can_remove,
-						price = itemInformation[itemResult[i].name].price,
-						count = 1
-					})
-				end
+		for _, v in pairs(Config.Shops[shoptype].Items) do
+			if v.name == itemResult[i].name then
+				table.insert(itemShopList.items, {
+					type = "item_standard",
+					name = itemInformation[itemResult[i].name].name,
+					label = itemInformation[itemResult[i].name].label,
+					limit = itemInformation[itemResult[i].name].limit,
+					rare = itemInformation[itemResult[i].name].rare,
+					can_remove = itemInformation[itemResult[i].name].can_remove,
+					price = itemInformation[itemResult[i].name].price,
+					count = 1
+				})
 			end
 		end
 	end
-	if shoptype == "weaponshop" then
-		for _, v in pairs(Config.Shops.weaponshop.Weapons) do
+	if Config.Shops[shoptype].Weapons ~= nil then
+		for _, v in pairs(Config.Shops[shoptype].Weapons) do
 			table.insert(itemShopList.weapons, {
 				type = "item_weapon",
 				name = v.name,
@@ -569,4 +503,3 @@ AddEventHandler('invhud:usedAmmo', function(item)
 	local xPlayer = ESX.GetPlayerFromId(src)
 	xPlayer.removeInventoryItem(item, 1)
 end)
-		

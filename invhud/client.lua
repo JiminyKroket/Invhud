@@ -12,36 +12,38 @@ Citizen.CreateThread(function()
 		Citizen.Wait(10)
 	end
 	PlayerData = ESX.GetPlayerData()
-	if Config.Blips.Use then
-		for k,v in pairs(Config.Shops) do
+	for k,v in pairs(Config.Shops) do
+		if v.Blips.Use then
 			for i = 1,#v.Locations do
-				CreateBlip(v.Locations[i], Config.Names[k], 1.0, Config.Colors[k], Config.Blips[k])
+				CreateBlip(v.Locations[i], k, v.Blips.Scale, v.Blips.Color, v.Blips.Sprite, v.Blips.Display)
 			end
 		end
 	end
 	while true do
 		Citizen.Wait(5)
 		DisableControlAction(0, Config.OpenControl)
-		if Config.Markers.Use then
-			local ped = PlayerPedId()
-			local pos = GetEntityCoords(ped)
-			for k,v in pairs(Config.Shops) do
+		local ped = PlayerPedId()
+		local pos = GetEntityCoords(ped)
+		for k,v in pairs(Config.Shops) do
+			if v.Markers.Use then
 				for i = 1,#v.Locations do
 					local dis = #(pos - v.Locations[i])
-					if dis <= Config.Markers.Draw then
-						DrawMarker(Config.Markers.Type, v.Locations[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
-						if Config.Markers.UseText then
-							DrawShopText(v.Locations[i].x, v.Locations[i].y, v.Locations[i].z+1.0, k..' shop')
+					if dis <= v.Markers.Draw then
+						DrawMarker(v.Markers.Type, v.Locations[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+						if v.Markers.UseText then
+							DrawShopText(v.Locations[i].x, v.Locations[i].y, v.Locations[i].z+1.0, k, v.Markers.RGB)
 						end
 					end
 				end
 			end
-			for k,v in pairs(Config.Stash) do
+		end
+		for k,v in pairs(Config.Stash) do
+			if v.markertype ~= 0 then
 				local dis = #(pos - v.coords)
-				if dis <= Config.Markers.Draw then
-					DrawMarker(Config.Markers.Type, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, Config.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+				if dis <= v.draw then
+					DrawMarker(v.markertype, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
 					if Config.Markers.UseText then
-						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k)
+						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k, v.Markers.RGB)
 					end
 				end
 			end
@@ -131,7 +133,7 @@ Citizen.CreateThread(function()
 	end
 end)
 
-DrawShopText = function(x, y, z, text)
+DrawShopText = function(x, y, z, text, rgb)
 	local onScreen,_x,_y=World3dToScreen2d(x, y, z)
 	local px,py,pz=table.unpack(GetGameplayCamCoords())
 	local scale = 0.5
@@ -141,7 +143,7 @@ DrawShopText = function(x, y, z, text)
 		SetTextScale(scale, scale)
 		SetTextFont(0)
 		SetTextProportional(1)
-		SetTextColour(255, 255, 255, 255)
+		SetTextColour(math.floor(rgb.x), math.floor(rgb.y), math.floor(rgb.z), 255)
 		SetTextDropshadow(1, 1, 0, 0, 255)
 		SetTextEdge(0, 0, 0, 0, 150)
 		SetTextDropShadow()
@@ -781,11 +783,12 @@ IsPedHoldingWeapon = function(selWep, tabWep)
 	return hasWeap
 end
 
-CreateBlip = function(coords, text, radius, color, sprite)
+CreateBlip = function(coords, text, scale, color, sprite, display)
 	local blip = AddBlipForCoord(coords)
 	SetBlipSprite(blip, sprite)
 	SetBlipColour(blip, color)
-	SetBlipScale(blip, 0.8)
+	SetBlipScale(blip, scale)
+	SetBlipDisplay(blip, display)
 	SetBlipAsShortRange(blip, true)
 	BeginTextCommandSetBlipName('STRING')
 	AddTextComponentString(text)

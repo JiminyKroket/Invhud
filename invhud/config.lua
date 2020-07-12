@@ -10,41 +10,8 @@ Config.CurrencyIcon = '$'
 -- List of item names that will close ui when used
 Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "gps", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth"}
 
-Config.Blips = {
-	Use = true,
-	regular = 52,
-	robsliquor = 93,
-	youtool = 402,
-	prison = 52,
-	weaponshop = 110
-}
-
-Config.Markers = {
-	Use = true,
-	Type = 1,
-	Draw = 15,
-	UseText = true,
-	RGB = vector3(255, 255, 255)
-}
-
-Config.Names = {
-	regular = 'Convenience Store',
-	robsliquor = 'Liquor Store',
-	youtool = 'Hardware Store',
-	prison = 'Prison Shop',
-	weaponshop = 'Ammunation'
-}
-
-Config.Colors = {
-	regular = 2,
-	robsliquor = 2,
-	youtool = 2,
-	prison = 1,
-	weaponshop = 1
-}
-
 Config.Shops = {
-    regular = {
+    ['24/7 Convenience'] = {
         Locations = {
 			vector3(373.875,   325.896,  102.566),
 			vector3(2557.458,  382.282,  107.622),
@@ -81,10 +48,23 @@ Config.Shops = {
             {name = 'lemonade'},
             {name = 'icetea'}
         },
-		Marker = true
+		Markers = {
+			Use = true,
+			Type = 1,
+			Draw = 15,
+			UseText = true,
+			RGB = vector3(0, 255, 0)
+		},
+		Blips = {
+			Use = true,
+			Sprite = 52,
+			Color = 2,
+			Scale = 1.0,
+			Display = 4
+		}
     },
 
-    robsliquor = {
+    ['Robs Liquour'] = {
 		Locations = {
 			vector3(1135.808,  -982.281,  45.415),
 			vector3(-1222.915, -906.983,  11.326),
@@ -102,10 +82,23 @@ Config.Shops = {
             {name = 'whisky'},
             {name = 'grand_cru'}
         },
-		Marker = true
+		Markers = {
+			Use = true,
+			Type = 1,
+			Draw = 15,
+			UseText = true,
+			RGB = vector3(0, 255, 0)
+		},
+		Blips = {
+			Use = true,
+			Sprite = 93,
+			Color = 2,
+			Scale = 1.0,
+			Display = 4
+		}
 	},
 
-    youtool = {
+    ['You Tool'] = {
         Locations = {
             vector3(2748.0, 3473.0, 55.68),
         },
@@ -126,10 +119,23 @@ Config.Shops = {
             {name = 'plantpot'},
             {name = 'drugscales'}
         },
-		Marker = true
+		Markers = {
+			Use = true,
+			Type = 1,
+			Draw = 15,
+			UseText = true,
+			RGB = vector3(0, 255, 0)
+		},
+		Blips = {
+			Use = true,
+			Sprite = 402,
+			Color = 2,
+			Scale = 1.0,
+			Display = 4
+		}
     },
 
-    prison = {
+    ['Bolinkbroke Penitentiary'] = {
         Locations = {
             vector3(1728.41, 2584.31, 45.84),
         },
@@ -141,10 +147,23 @@ Config.Shops = {
             {name = 'sandwich'},
             {name = 'chips'}
         },
-		Marker = true
+		Markers = {
+			Use = true,
+			Type = 1,
+			Draw = 15,
+			UseText = true,
+			RGB = vector3(0, 255, 0)
+		},
+		Blips = {
+			Use = true,
+			Sprite = 52,
+			Color = 2,
+			Scale = 1.0,
+			Display = 4
+		}
     },
 
-    weaponshop = {
+    ['Ammunation'] = {
         Locations = {
             vector3(-662.180, -934.961, 20.829),
             vector3(810.25, -2157.60, 28.62),
@@ -171,7 +190,20 @@ Config.Shops = {
             {name = 'highcalrounds'},
             {name = 'speccalrounds'}
         },
-		Marker = true
+		Markers = {
+			Use = true,
+			Type = 1,
+			Draw = 15,
+			UseText = true,
+			RGB = vector3(0, 255, 0)
+		},
+		Blips = {
+			Use = true,
+			Sprite = 110,
+			Color = 2,
+			Scale = 1.0,
+			Display = 4
+		}
     },
 }
 
@@ -261,6 +293,7 @@ Config.Stash = {
         size = vector3(1.0, 1.0, 1.0),
         job = 'lspd',
         markerType = 2,
+		draw = 15,
         markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
@@ -269,6 +302,7 @@ Config.Stash = {
         size = vector3(1.0, 1.0, 1.0),
         job = 'bcso',
         markerType = 2,
+		draw = 15,
         markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
@@ -277,6 +311,7 @@ Config.Stash = {
         size = vector3(1.0, 1.0, 1.0),
         job = 'identifier',
         markerType = 2,
+		draw = 15,
         markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
@@ -285,6 +320,7 @@ Config.Stash = {
         size = vector3(1.0, 1.0, 1.0),
         job = 'identifier',
         markerType = 2,
+		draw = 15,
         markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     }
