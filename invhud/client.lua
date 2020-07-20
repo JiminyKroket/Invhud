@@ -217,21 +217,23 @@ setInventory = function(data, invType)
 
     if Config.IncludeWeapons and data.weapons ~= nil then
         for key, value in pairs(data.weapons) do
-            if data.weapons[key][1] ~= 'WEAPON_UNARMED' then
-                table.insert(
-                    items,
-                    {
-                        label = data.weapons[key][1].label,
-                        count = data.weapons[key][1].count,
-                        limit = -1,
-                        type = 'item_weapon',
-                        name = key,
-                        usable = false,
-                        rare = false,
-                        canRemove = false
-                    }
-                )
-            end
+			for i = 1,#data.weapons[key] do
+				if data.weapons[key][i] ~= 'WEAPON_UNARMED' then
+					table.insert(
+						items,
+						{
+							label = data.weapons[key][i].label,
+							count = data.weapons[key][i].count,
+							limit = -1,
+							type = 'item_weapon',
+							name = key,
+							usable = false,
+							rare = false,
+							canRemove = false
+						}
+					)
+				end
+			end
         end
     end
 

@@ -164,7 +164,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 					inventory = json.decode(result[1].data)
 					if IsInInv(inventory, data.item.name) then
 						xPlayer.removeWeapon(data.item.name)
-						inventory.weapons[data.item.name][1].count = inventory.weapons[data.item.name][1].count + count
+						table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
 						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 							['@owner'] = owner,
 							['@type'] = invType,
@@ -314,20 +314,21 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				if result[1] then
 					inventory = json.decode(result[1].data)
 					if IsInInv(inventory, data.item.name) then
-						if inventory.weapons[data.item.name][1].count >= 1 then
-							xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][1].count)
-							inventory.weapons[data.item.name] = nil
-							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-								['@owner'] = owner,
-								['@type'] = invType,
-								['@data'] = json.encode(inventory)
-							}, function(rowsChanged)
-								if rowsChanged then
-									print('Inventory updated for: '..owner..' with type: '..invType)
-								end
-							end)
-						else
-							Notify(src, 'There is not enough of that in the inventory')
+						for i = 1,#inventory.weapons[data.item.name] do
+							if inventory.weapons[data.item.name][i].count == data.item.count then
+								xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][i].count)
+								table.remove(inventory.weapons[data.item.name], i)
+								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+									['@owner'] = owner,
+									['@type'] = invType,
+									['@data'] = json.encode(inventory)
+								}, function(rowsChanged)
+									if rowsChanged then
+										print('Inventory updated for: '..owner..' with type: '..invType)
+									end
+								end)
+								break
+							end
 						end
 					else
 						Notify(src, 'There is not enough of that in the inventory')
