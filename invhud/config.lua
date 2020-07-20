@@ -2,13 +2,13 @@ Config = {}
 Config.Locale = 'en'
 Config.IncludeCash = true -- Include cash in inventory?
 Config.IncludeWeapons = true -- Include weapons in inventory?
-Config.IncludeAccounts = true -- Include accounts (bank, black money, ...)?
-Config.ExcludeAccountsList = {'bank', 'credit'} -- List of accounts names to exclude from inventory
+Config.IncludeBlackMoney = true -- Include black money in inventory?
 Config.OpenControl = 82 -- Key for opening inventory. Edit html/js/config.js to change key for closing it.
-Config.CurrencyIcon = '$'
+Config.CurrencyIcon = '$' -- Currency icon used for non html text
 
 -- List of item names that will close ui when used
-Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "gps", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth"}
+Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth", 'lowcalrounds',
+	'shotcalrounds', 'midcalrounds', 'highcalrounds', 'speccalrounds'}
 
 Config.Shops = {
     ['24/7 Convenience'] = {

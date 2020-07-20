@@ -696,24 +696,21 @@ loadPlayerInventory = function(inv)
 				table.insert(items, moneyData)
 			end
 
-			if Config.IncludeAccounts and accounts ~= nil then
+			if Config.IncludeBlackMoney and accounts ~= nil then
 				for key, value in pairs(accounts) do
-					if not shouldSkipAccount(accounts[key].name) then
-						local canDrop = accounts[key].name == 'money' or accounts[key].name == 'black_money'
-						if accounts[key].name ~= 'money' then
-							if accounts[key].money > 0 then
-								accountData = {
-									label = accounts[key].label,
-									count = accounts[key].money,
-									type = 'item_account',
-									name = accounts[key].name,
-									usable = false,
-									rare = false,
-									limit = -1,
-									canRemove = canDrop
-								}
-								table.insert(items, accountData)
-							end
+					if accounts[key].name == 'black_money' then
+						if accounts[key].money > 0 then
+							accountData = {
+								label = accounts[key].label,
+								count = accounts[key].money,
+								type = 'item_account',
+								name = accounts[key].name,
+								usable = false,
+								rare = false,
+								limit = -1,
+								canRemove = true
+							}
+							table.insert(items, accountData)
 						end
 					end
 				end
@@ -894,24 +891,21 @@ setPlayerInventoryData = function()
 			table.insert(items, moneyData)
 		end
 
-		if Config.IncludeAccounts and accounts ~= nil then
+		if Config.IncludeBlackMoney and accounts ~= nil then
 			for key, value in pairs(accounts) do
-				if not shouldSkipAccount(accounts[key].name) then
-					local canDrop = accounts[key].name == 'money' or accounts[key].name == 'black_money'
-					if accounts[key].name ~= 'money' then
-						if accounts[key].money > 0 then
-							accountData = {
-								label = accounts[key].label,
-								count = accounts[key].money,
-								type = 'item_account',
-								name = accounts[key].name,
-								usable = false,
-								rare = false,
-								limit = -1,
-								canRemove = canDrop
-							}
-							table.insert(items, accountData)
-						end
+				if accounts[key].name == 'black_money' then
+					if accounts[key].money > 0 then
+						accountData = {
+							label = accounts[key].label,
+							count = accounts[key].money,
+							type = 'item_account',
+							name = accounts[key].name,
+							usable = false,
+							rare = false,
+							limit = -1,
+							canRemove = canDrop
+						}
+						table.insert(items, accountData)
 					end
 				end
 			end
