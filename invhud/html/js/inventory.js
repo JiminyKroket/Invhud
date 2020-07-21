@@ -12,13 +12,13 @@ window.addEventListener("message", function (event) {
             $(".info-div").hide();
         } else if (type === "trunk") {
             $(".info-div").show();
-	} else if (type === "gbox") {
+		} else if (type === "gbox") {
             $(".info-div").show();
         } else if (type === "property") {
             $(".info-div").show();
-	} else if (type === "safe") {
+		} else if (type === "safe") {
             $(".info-div").show();
-	} else if (type === "stash") {
+		} else if (type === "stash") {
             $(".info-div").show();
         } else if (type === "player") {
             $(".info-div").show();
@@ -394,6 +394,12 @@ $(document).ready(function () {
             } else if (type === "player" && itemInventory === "main") {
                 disableInventory(500);
                 $.post("http://invhud/PutIntoPlayer", JSON.stringify({
+                    item: itemData,
+                    number: parseInt($("#count").val())
+                }));
+            } else if (type === "shop" && itemInventory === "main") {
+                disableInventory(500);
+                $.post("http://invhud/SellToShop", JSON.stringify({
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
