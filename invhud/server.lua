@@ -532,7 +532,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					xPlayer.addAccountMoneyMoney(shop.Account, totalPrice)
+					xPlayer.addAccountMoney(shop.Account, totalPrice)
 					xPlayer.removeWeapon(v.name, 0)
 					Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 				end
