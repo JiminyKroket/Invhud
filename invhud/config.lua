@@ -12,13 +12,13 @@ Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "jo
 	'shotcalrounds', 'midcalrounds', 'highcalrounds', 'speccalrounds'
 }
 
-Config.BuyBackVar = 0.5 -- SET VALUE FROM 0.0-1.0, AMOUNT OF ITEM PRICE GIVEN WHEN SELLING TO SHOP
 Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYPE(TYPE OF SHOP, 'purchase', 'sell', 'mix' AVAILABLE, CHOOSE WHAT THE PLAYER CAN DO AT THAT SHOP),
-	-- ACCOUNT(PLAYER ACCOUNT TO GIVE/TAKE MONEY FROM), LOCATIONS(SHOP LOCATIONS), ITEMS(ITEMS SHOP CAN SELL/BUY), MARKERS(USE MARKERS?, WHAT SHAPE?, HOW FAR?, SHOW NAME?, WHAT COLOR?)
-	-- BLIPS(USE BLIPS?, WHAT PICTURE?, WHAT COLOR?, HOW BIG?, WHERE TO DISPLAY?)
+	-- ACCOUNT(PLAYER ACCOUNT TO GIVE/TAKE MONEY FROM), LOCATIONS(SHOP LOCATIONS), BUYBACK(SET VALUE FROM 0.0-1.0, AMOUNT OF ITEM PRICE GIVEN WHEN SELLING TO SHOP),
+	-- ITEMS(ITEMS SHOP CAN SELL/BUY), MARKERS(USE MARKERS?, WHAT SHAPE?, HOW FAR?, SHOW NAME?, WHAT COLOR?), BLIPS(USE BLIPS?, WHAT PICTURE?, WHAT COLOR?, HOW BIG?, WHERE TO DISPLAY?)
     ['24/7 Convenience'] = {
 		Type = 'purchase',
 		Account = 'money',
+		BuyBack = 0.5,
         Locations = {
 			vector3(373.875,   325.896,  102.566),
 			vector3(2557.458,  382.282,  107.622),
@@ -74,6 +74,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 	['24/7 Black Market'] = {
 		Type = 'purchase',
 		Account = 'black_money',
+		BuyBack = 0.5,
         Locations = {
 			vector3(379.83, 356.55, 101.59),
 			vector3(2553.08, 399.43, 107.56),
@@ -128,6 +129,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
     ['Robs Liquour'] = {
 		Type = 'purchase',
 		Account = 'money',
+		BuyBack = 0.5,
 		Locations = {
 			vector3(1135.808,  -982.281,  45.415),
 			vector3(-1222.915, -906.983,  11.326),
@@ -164,6 +166,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
     ['You Tool'] = {
 		Type = 'purchase',
 		Account = 'money',
+		BuyBack = 0.5,
         Locations = {
             vector3(2748.0, 3473.0, 55.68),
         },
@@ -203,6 +206,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
     ['Bolinkbroke Penitentiary'] = {
 		Type = 'purchase',
 		Account = 'money',
+		BuyBack = 0.5,
         Locations = {
             vector3(1728.41, 2584.31, 45.84),
         },
@@ -233,6 +237,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
     ['Ammunation'] = {
 		Type = 'purchase',
 		Account = 'money',
+		BuyBack = 0.5,
         Locations = {
             vector3(-662.180, -934.961, 20.829),
             vector3(810.25, -2157.60, 28.62),

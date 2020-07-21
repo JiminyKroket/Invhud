@@ -508,7 +508,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 			local list = itemShopList.items
 			for k,v in pairs(list) do
 				if v.name == item then
-					local totalPrice = count * v.price * Config.BuyBackVar
+					local totalPrice = count * v.price * shop.BuyBack
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
@@ -528,7 +528,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
             local list = itemShopList.weapons
 			for k,v in pairs(list) do
 				if v.name == item then
-					local totalPrice = 1 * v.price * Config.BuyBackVar
+					local totalPrice = 1 * v.price * shop.BuyBack
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
