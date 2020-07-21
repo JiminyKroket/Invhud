@@ -1,6 +1,6 @@
 local isInInventory = false
-local targetPlayer, targetPlayerName, shopData, openedTrunk
-local trunkData, gBoxData, stashData, propertyData, safeData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}
+local targetPlayer, targetPlayerName, openedTrunk
+local trunkData, gBoxData, stashData, propertyData, safeData, shopData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}, {}
 ESX = nil
 
 Citizen.CreateThread(function()
@@ -42,7 +42,7 @@ Citizen.CreateThread(function()
 				local dis = #(pos - v.coords)
 				if dis <= v.draw then
 					DrawMarker(v.markertype, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
-					if Config.Markers.UseText then
+					if v.useText then
 						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k, v.Markers.RGB)
 					end
 				end
@@ -54,6 +54,7 @@ Citizen.CreateThread(function()
 			if not IsPedSittingInAnyVehicle(ped) then
 				local inZone, zoneIn = InShopZone(pos)
 				if inZone then
+					shopData = Config.Shops[zoneIn]
 					if Config.NeedsWeaponLicense then
 						if zoneIn ~= 'weaponshop' or Licenses['firearm'] ~= nil then
 							ESX.TriggerServerCallback('invhud:getShopItems', function(data)
@@ -279,6 +280,7 @@ end
 
 RegisterNUICallback('PutIntoGBox', function(data, cb)
 	if not IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are not in a car somehow')
 		return
 	end
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
@@ -304,6 +306,7 @@ end)
 
 RegisterNUICallback('TakeFromGBox', function(data, cb)
 	if not IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are not in a car somehow')
 		return
 	end
 
@@ -322,6 +325,7 @@ end)
 
 RegisterNUICallback('PutIntoTrunk', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
@@ -347,6 +351,7 @@ end)
 
 RegisterNUICallback('TakeFromTrunk', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
 
@@ -365,6 +370,7 @@ end)
 
 RegisterNUICallback('PutIntoProperty', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
@@ -390,6 +396,7 @@ end)
 
 RegisterNUICallback('TakeFromProperty', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
 
@@ -408,6 +415,7 @@ end)
 
 RegisterNUICallback('PutIntoSafe', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
@@ -433,6 +441,7 @@ end)
 
 RegisterNUICallback('TakeFromSafe', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
 
@@ -451,17 +460,42 @@ end)
 
 RegisterNUICallback('TakeFromShop', function(data, cb)
 	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
 		return
 	end
+	if shopData.Type ~= 'purchase' and shopData.Type ~= 'mix' then
+		Notify('This shop does not sell items')
+		return
+	else
+		if type(data.number) == 'number' and math.floor(data.number) == data.number then
+			TriggerServerEvent('invhud:SellItemToPlayer', data.item.type, data.item.name, tonumber(data.number), shopData)
+		end
 
-	if type(data.number) == 'number' and math.floor(data.number) == data.number then
-		TriggerServerEvent('invhud:SellItemToPlayer', data.item.type, data.item.name, tonumber(data.number))
+		Wait(150)
+		loadPlayerInventory()
+
+		cb('ok')
 	end
+end)
 
-	Wait(150)
-	loadPlayerInventory()
+RegisterNUICallback('SellToShop', function(data, cb)
+	if IsPedSittingInAnyVehicle(PlayerPedId()) then
+		Notify('You are in a car somehow')
+		return
+	end
+	if shopData.Type ~= 'sell' and shopData.Type ~= 'mix' then
+		Notify('This shop does not purchase items')
+		return
+	else
+		if type(data.number) == 'number' and math.floor(data.number) == data.number then
+			TriggerServerEvent('invhud:SellItemToShop', data.item.type, data.item.name, tonumber(data.number), shopData)
+		end
 
-	cb('ok')
+		Wait(150)
+		loadPlayerInventory()
+
+		cb('ok')
+	end
 end)
 
 RegisterNUICallback('PutIntoStash', function(data, cb)

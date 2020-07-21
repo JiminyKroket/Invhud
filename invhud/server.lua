@@ -2,18 +2,18 @@ ESX = nil
 ServerItems = {}
 itemShopList = {}
 
-TriggerEvent("esx:getSharedObject", function(obj) ESX = obj end)
+TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
 Notify = function(src, text, timer)
 	if timer == nil then
 		timer = 5000
 	end
 	-- TriggerClientEvent('mythic_notify:client:SendAlert', src, { type = 'inform', text = text, length = timer, style = { ['background-color'] = '#ffffff', ['color'] = '#000000' } })
-	-- TriggerClientEvent("pNotify:SendNotification", src, {text = text, type = "error", queue = GetCurrentResourceName(), timeout = timer, layout = "bottomCenter"})
+	-- TriggerClientEvent('pNotify:SendNotification', src, {text = text, type = 'error', queue = GetCurrentResourceName(), timeout = timer, layout = 'bottomCenter'})
 	TriggerClientEvent('esx:showNotification', src, text)
 end
 
-ESX.RegisterServerCallback("invhud:getPlayerInventory", function(source, cb, target)
+ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target)
 	local tPlayer = ESX.GetPlayerFromId(target)
 
 	if tPlayer ~= nil then
@@ -23,14 +23,14 @@ ESX.RegisterServerCallback("invhud:getPlayerInventory", function(source, cb, tar
 	end
 end)
 
-RegisterServerEvent("invhud:tradePlayerItem")
-AddEventHandler("invhud:tradePlayerItem", function(from, target, type, itemName, itemCount)
+RegisterServerEvent('invhud:tradePlayerItem')
+AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName, itemCount)
 	local src = from
 
 	local xPlayer = ESX.GetPlayerFromId(src)
 	local tPlayer = ESX.GetPlayerFromId(target)
 
-	if type == "item_standard" then
+	if type == 'item_standard' then
 		local xItem = xPlayer.getInventoryItem(itemName)
 		local tItem = tPlayer.getInventoryItem(itemName)
 		
@@ -59,14 +59,14 @@ AddEventHandler("invhud:tradePlayerItem", function(from, target, type, itemName,
 				Notify(xPlayer.source, 'You do not have enough of that item to give')
 			end
 		end
-	elseif type == "item_account" then
+	elseif type == 'item_account' then
 		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
 			xPlayer.removeAccountMoney(itemName, itemCount)
 			tPlayer.addAccountMoney(itemName, itemCount)
 		else
 			Notify(xPlayer.source, 'You do not have enough in that account to give')
 		end
-	elseif type == "item_weapon" then
+	elseif type == 'item_weapon' then
 		if not tPlayer.hasWeapon(itemName) then
 			xPlayer.removeWeapon(itemName)
 			tPlayer.addWeapon(itemName, itemCount)
@@ -373,7 +373,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	end
 end)
 
-ESX.RegisterServerCallback("invhud:getShopItems", function(source, cb, shoptype)
+ESX.RegisterServerCallback('invhud:getShopItems', function(source, cb, shoptype)
 	itemShopList = {items = {}, weapons = {}}
 	local itemResult = MySQL.Sync.fetchAll('SELECT * FROM items')
 	local itemInformation = {}
@@ -390,11 +390,14 @@ ESX.RegisterServerCallback("invhud:getShopItems", function(source, cb, shoptype)
 		itemInformation[itemResult[i].name].rare = itemResult[i].rare
 		itemInformation[itemResult[i].name].can_remove = itemResult[i].can_remove
 		itemInformation[itemResult[i].name].price = itemResult[i].price
+		if Config.Shops[shoptype].Account == 'black_money' then
+			itemInformation[itemResult[i].name].price = itemInformation[itemResult[i].name].price * 2
+		end
 
 		for _, v in pairs(Config.Shops[shoptype].Items) do
 			if v.name == itemResult[i].name then
 				table.insert(itemShopList.items, {
-					type = "item_standard",
+					type = 'item_standard',
 					name = itemInformation[itemResult[i].name].name,
 					label = itemInformation[itemResult[i].name].label,
 					limit = itemInformation[itemResult[i].name].limit,
@@ -408,8 +411,11 @@ ESX.RegisterServerCallback("invhud:getShopItems", function(source, cb, shoptype)
 	end
 	if Config.Shops[shoptype].Weapons ~= nil then
 		for _, v in pairs(Config.Shops[shoptype].Weapons) do
+			if Config.Shops[shoptype].Account == 'black_money' then
+				v.price = v.price * 2
+			end
 			table.insert(itemShopList.weapons, {
-				type = "item_weapon",
+				type = 'item_weapon',
 				name = v.name,
 				label = v.label,
 				limit = 1,
@@ -425,11 +431,11 @@ ESX.RegisterServerCallback("invhud:getShopItems", function(source, cb, shoptype)
 	cb(itemShopList)
 end)
 
-RegisterNetEvent("invhud:SellItemToPlayer")
-AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
+RegisterServerEvent('invhud:SellItemToPlayer')
+AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
-    if invType == "item_standard" then
+    if invType == 'item_standard' then
 		local tItem = xPlayer.getInventoryItem(item)
 		if xPlayer.canCarryItem ~= nil then
 			if xPlayer.canCarryItem(item, count) then
@@ -438,9 +444,9 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
 					if v.name == item then
 						local totalPrice = count * v.price
 						if xPlayer.getMoney() >= totalPrice then
-							xPlayer.removeMoney(totalPrice)
+							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addInventoryItem(item, count)
-							Notify(source, 'You purchased '..count.." "..v.label)
+							Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 						else
 							Notify(source, 'You do not have enough money!')
 						end
@@ -456,9 +462,9 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
 					if v.name == item then
 						local totalPrice = count * v.price
 						if xPlayer.getMoney() >= totalPrice then
-							xPlayer.removeMoney(totalPrice)
+							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addInventoryItem(item, count)
-							Notify(source, 'You purchased '..count.." "..v.label)
+							Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 						else
 							Notify(source, 'You do not have enough money!')
 						end
@@ -470,7 +476,7 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
 		end
 	end
 	
-	if invType == "item_weapon" then
+	if invType == 'item_weapon' then
 		local targetWeapon = xPlayer.hasWeapon(tostring(item))
         if not targetWeapon then
             local list = itemShopList.weapons
@@ -478,9 +484,9 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
 				if v.name == item then
 					local totalPrice = 1 * v.price
 					if xPlayer.getMoney() >= totalPrice then
-						xPlayer.removeMoney(totalPrice)
+						xPlayer.removeAccountMoney(shop.Account, totalPrice)
 						xPlayer.addWeapon(v.name, v.ammo)
-						Notify(source, 'You purchased a '..v.label)
+						Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 					else
 						Notify(source, 'You do not have enough money!')
 					end
@@ -488,6 +494,51 @@ AddEventHandler("invhud:SellItemToPlayer",function(invType, item, count)
             end
         else
             Notify(source, 'You already own this weapon!' )
+        end
+	end
+end)
+
+RegisterServerEvent('invhud:SellItemToShop')
+AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    if invType == 'item_standard' then
+		local tItem = xPlayer.getInventoryItem(item)
+		if tItem.count >= count then
+			local list = itemShopList.items
+			for k,v in pairs(list) do
+				if v.name == item then
+					local totalPrice = count * v.price * Config.BuyBackVar
+					if totalPrice < 1 then
+						totalPrice = 0
+					end
+					xPlayer.addAccountMoney(shop.Account, totalPrice)
+					xPlayer.removeInventoryItem(item, count)
+					Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+				end
+			end
+		else
+			Notify(source, 'You do not have '..count..' '..item..' in your inventory!')
+		end
+	end
+	
+	if invType == 'item_weapon' then
+		local targetWeapon = xPlayer.hasWeapon(tostring(item))
+        if targetWeapon then
+            local list = itemShopList.weapons
+			for k,v in pairs(list) do
+				if v.name == item then
+					local totalPrice = 1 * v.price * Config.BuyBackVar
+					if totalPrice < 1 then
+						totalPrice = 0
+					end
+					xPlayer.addAccountMoneyMoney(shop.Account, totalPrice)
+					xPlayer.removeWeapon(v.name, 0)
+					Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+				end
+            end
+        else
+            Notify(source, 'You do not own this weapon!' )
         end
 	end
 end)

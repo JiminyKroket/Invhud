@@ -5,13 +5,20 @@ Config.IncludeWeapons = true -- Include weapons in inventory?
 Config.IncludeBlackMoney = true -- Include black money in inventory?
 Config.OpenControl = 82 -- Key for opening inventory. Edit html/js/config.js to change key for closing it.
 Config.CurrencyIcon = '$' -- Currency icon used for non html text
+Config.NeedsWeaponsLicense = true -- Player needs weapon license to use weapon shop?
 
 -- List of item names that will close ui when used
 Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth", 'lowcalrounds',
-	'shotcalrounds', 'midcalrounds', 'highcalrounds', 'speccalrounds'}
+	'shotcalrounds', 'midcalrounds', 'highcalrounds', 'speccalrounds'
+}
 
-Config.Shops = {
+Config.BuyBackVar = 0.5 -- SET VALUE FROM 0.0-1.0, AMOUNT OF ITEM PRICE GIVEN WHEN SELLING TO SHOP
+Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYPE(TYPE OF SHOP, 'purchase', 'sell', 'mix' AVAILABLE, CHOOSE WHAT THE PLAYER CAN DO AT THAT SHOP),
+	-- ACCOUNT(PLAYER ACCOUNT TO GIVE/TAKE MONEY FROM), LOCATIONS(SHOP LOCATIONS), ITEMS(ITEMS SHOP CAN SELL/BUY), MARKERS(USE MARKERS?, WHAT SHAPE?, HOW FAR?, SHOW NAME?, WHAT COLOR?)
+	-- BLIPS(USE BLIPS?, WHAT PICTURE?, WHAT COLOR?, HOW BIG?, WHERE TO DISPLAY?)
     ['24/7 Convenience'] = {
+		Type = 'purchase',
+		Account = 'money',
         Locations = {
 			vector3(373.875,   325.896,  102.566),
 			vector3(2557.458,  382.282,  107.622),
@@ -63,8 +70,64 @@ Config.Shops = {
 			Display = 4
 		}
     },
+	
+	['24/7 Black Market'] = {
+		Type = 'purchase',
+		Account = 'black_money',
+        Locations = {
+			vector3(379.83, 356.55, 101.59),
+			vector3(2553.08, 399.43, 107.56),
+			vector3(-3047.65, 590.06, 6.78),
+			vector3(-3248.03, 1009.90, 11.47),
+			vector3(541.79, 2663.72, 41.17),
+			vector3(1953.03, 3753.31, 31.21),
+			vector3(2670.60, 3286.36, 54.24),
+            vector3(1741.49, 6419.75, 34.04),
+            vector3(-40.92, -1747.86, 28.33),
+			vector3(1160.64, -311.81, 68.28),
+			vector3(-725.28, -904.76, 19.45),
+			vector3(-1829.39, 801.23, 137.41),
+            vector3(1702.57,  4916.74,  41.08),
+        },
+        Items = {
+            {name = 'bread'},
+            {name = 'water'},
+            {name = 'cigarette'},
+            {name = 'lighter'},
+            {name = 'rollingpaper'},
+            {name = 'phone'},
+            {name = 'sandwich'},
+            {name = 'hamburger'},
+            {name = 'cupcake'},
+            {name = 'chips'},
+            {name = 'pistachio'},
+            {name = 'chocolate'},
+            {name = 'cashew'},
+            {name = 'cocacola'},
+            {name = 'drpepper'},
+            {name = 'energy'},
+            {name = 'lemonade'},
+            {name = 'icetea'}
+        },
+		Markers = {
+			Use = true,
+			Type = 1,
+			Draw = 5,
+			UseText = true,
+			RGB = vector3(255, 0, 0)
+		},
+		Blips = {
+			Use = false,
+			Sprite = 52,
+			Color = 2,
+			Scale = 1.0,
+			Display = 4
+		}
+    },
 
     ['Robs Liquour'] = {
+		Type = 'purchase',
+		Account = 'money',
 		Locations = {
 			vector3(1135.808,  -982.281,  45.415),
 			vector3(-1222.915, -906.983,  11.326),
@@ -99,6 +162,8 @@ Config.Shops = {
 	},
 
     ['You Tool'] = {
+		Type = 'purchase',
+		Account = 'money',
         Locations = {
             vector3(2748.0, 3473.0, 55.68),
         },
@@ -136,6 +201,8 @@ Config.Shops = {
     },
 
     ['Bolinkbroke Penitentiary'] = {
+		Type = 'purchase',
+		Account = 'money',
         Locations = {
             vector3(1728.41, 2584.31, 45.84),
         },
@@ -164,6 +231,8 @@ Config.Shops = {
     },
 
     ['Ammunation'] = {
+		Type = 'purchase',
+		Account = 'money',
         Locations = {
             vector3(-662.180, -934.961, 20.829),
             vector3(810.25, -2157.60, 28.62),
@@ -290,6 +359,7 @@ Config.Bullets = {
 Config.Stash = {
     ['LSPD'] = {
         coords = vector3(452.16, -980.14, 29.69),
+		useText = true,
         size = vector3(1.0, 1.0, 1.0),
         job = 'lspd',
         markerType = 2,
@@ -299,6 +369,7 @@ Config.Stash = {
     },
     ['BCSO'] = {
         coords = vector3(1851.20, 3690.78, 33.27),
+		useText = true,
         size = vector3(1.0, 1.0, 1.0),
         job = 'bcso',
         markerType = 2,
@@ -308,6 +379,7 @@ Config.Stash = {
     },
     ['1'] = {
         coords = vector3(1848.28, 3689.40, 33.27),
+		useText = true,
         size = vector3(1.0, 1.0, 1.0),
         job = 'identifier',
         markerType = 2,
@@ -317,6 +389,7 @@ Config.Stash = {
     },
     ['2'] = {
         coords = vector3(444.37, -980.02, 29.69),
+		useText = true,
         size = vector3(1.0, 1.0, 1.0),
         job = 'identifier',
         markerType = 2,
