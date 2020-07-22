@@ -1,3 +1,7 @@
+ALTER TABLE `items`
+	ADD COLUMN `price` INT(11) NOT NULL DEFAULT 1
+;
+
 INSERT INTO `items` (`name`, `label`, `price`) VALUES
 	('lowcalrounds', 'Low Caliber Clip', 25),
 	('shotcalrounds', 'Shell Caliber Clip', 25),
