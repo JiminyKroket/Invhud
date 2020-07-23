@@ -43,7 +43,7 @@ Citizen.CreateThread(function()
 				if dis <= v.draw then
 					DrawMarker(v.markertype, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
 					if v.useText then
-						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k, v.Markers.RGB)
+						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k, v.markerColour)
 					end
 				end
 			end
