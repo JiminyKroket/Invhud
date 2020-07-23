@@ -443,7 +443,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if xPlayer.getMoney() >= totalPrice then
+						if xPlayer.getAccount(shop.Account).money >= totalPrice then
 							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addInventoryItem(item, count)
 							Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
@@ -461,7 +461,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if xPlayer.getMoney() >= totalPrice then
+						if xPlayer.getAccount(shop.Account).money >= totalPrice then
 							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addInventoryItem(item, count)
 							Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
@@ -483,7 +483,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 			for k,v in pairs(list) do
 				if v.name == item then
 					local totalPrice = 1 * v.price
-					if xPlayer.getMoney() >= totalPrice then
+					if xPlayer.getAccount(shop.Account).money >= totalPrice then
 						xPlayer.removeAccountMoney(shop.Account, totalPrice)
 						xPlayer.addWeapon(v.name, v.ammo)
 						Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
