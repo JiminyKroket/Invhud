@@ -38,10 +38,10 @@ Citizen.CreateThread(function()
 			end
 		end
 		for k,v in pairs(Config.Stash) do
-			if v.markertype ~= 0 then
+			if v.markerType ~= -1 then
 				local dis = #(pos - v.coords)
 				if dis <= v.draw then
-					DrawMarker(v.markertype, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
+					DrawMarker(v.markerType, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, v.size.x, v.size.y, v.size.z, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
 					if v.useText then
 						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k, v.markerColour)
 					end
