@@ -24,16 +24,8 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
 end)
 
 AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCount)
-	local playerId = source
-	local sourceXPlayer = ESX.GetPlayerFromId(playerId)
-	local targetXPlayer = ESX.GetPlayerFromId(target)
-	if type == 'item_money' then
-		if sourceXPlayer.getMoney() >= itemCount then
-			sourceXPlayer.removeMoney(itemCount)
-			targetXPlayer.addMoney(itemCount)
-		else
-			Notify(sourceXPlayer.source, 'You do not have enough money to give them that')
-		end
+	if type == 'item_account' then
+		itemName = 'cash'
 	end
 end)
 
