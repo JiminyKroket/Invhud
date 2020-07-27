@@ -23,12 +23,6 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
 	end
 end)
 
-AddEventHandler('esx:giveInventoryItem', function(target, type, itemName, itemCount)
-	if type == 'item_account' then
-		itemName = 'cash'
-	end
-end)
-
 RegisterServerEvent('invhud:tradePlayerItem')
 AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName, itemCount)
 	local src = from
