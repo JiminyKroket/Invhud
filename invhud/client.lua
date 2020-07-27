@@ -678,6 +678,9 @@ RegisterNUICallback('GiveItem', function(data, cb)
 		if data.item.type == 'item_weapon' then
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
+		if data.item.name == 'money' then
+			data.item.name = 'cash'
+		end
 
 		TriggerServerEvent('esx:giveInventoryItem', data.player, data.item.type, data.item.name, count)
 		Wait(250)
