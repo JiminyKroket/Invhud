@@ -443,12 +443,22 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if xPlayer.getAccount(shop.Account).money >= totalPrice then
-							xPlayer.removeAccountMoney(shop.Account, totalPrice)
-							xPlayer.addInventoryItem(item, count)
-							Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+							if xPlayer.getAccount(shop.Account).money >= totalPrice then
+								xPlayer.removeAccountMoney(shop.Account, totalPrice)
+								xPlayer.addInventoryItem(item, count)
+								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+							else
+								Notify(source, 'You do not have enough money!')
+							end
 						else
-							Notify(source, 'You do not have enough money!')
+							if xPlayer.getMoney() >= totalPrice then
+								xPlayer.removeMoney()
+								xPlayer.addInventoryItem(item, count)
+								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)\
+							else
+								Notify(source, 'You do not have enough money!')
+							end
 						end
 					end
 				end
@@ -461,12 +471,22 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if xPlayer.getAccount(shop.Account).money >= totalPrice then
-							xPlayer.removeAccountMoney(shop.Account, totalPrice)
-							xPlayer.addInventoryItem(item, count)
-							Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+							if xPlayer.getAccount(shop.Account).money >= totalPrice then
+								xPlayer.removeAccountMoney(shop.Account, totalPrice)
+								xPlayer.addInventoryItem(item, count)
+								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+							else
+								Notify(source, 'You do not have enough money!')
+							end
 						else
-							Notify(source, 'You do not have enough money!')
+							if xPlayer.getMoney() >= totalPrice then
+								xPlayer.removeMoney()
+								xPlayer.addInventoryItem(item, count)
+								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)\
+							else
+								Notify(source, 'You do not have enough money!')
+							end
 						end
 					end
 				end
@@ -483,12 +503,22 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 			for k,v in pairs(list) do
 				if v.name == item then
 					local totalPrice = 1 * v.price
-					if xPlayer.getAccount(shop.Account).money >= totalPrice then
-						xPlayer.removeAccountMoney(shop.Account, totalPrice)
-						xPlayer.addWeapon(v.name, v.ammo)
-						Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+						if xPlayer.getAccount(shop.Account).money >= totalPrice then
+							xPlayer.removeAccountMoney(shop.Account, totalPrice)
+							xPlayer.addWeapon(v.name, v.ammo)
+							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						else
+							Notify(source, 'You do not have enough money!')
+						end
 					else
-						Notify(source, 'You do not have enough money!')
+						if xPlayer.getMoney() >= totalPrice then
+							xPlayer.removeMoney(totalPrice)
+							xPlayer.addWeapon(v.name, v.ammo)
+							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						else
+							Notify(source, 'You do not have enough money!')
+						end
 					end
 				end
             end
@@ -512,9 +542,15 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					xPlayer.addAccountMoney(shop.Account, totalPrice)
-					xPlayer.removeInventoryItem(item, count)
-					Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+						xPlayer.addAccountMoney(shop.Account, totalPrice)
+						xPlayer.removeInventoryItem(item, count)
+						Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					else
+						xPlayer.addMoney(totalPrice)
+						xPlayer.removeInventoryItem(item, count)
+						Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					end
 				end
 			end
 		else
@@ -532,9 +568,15 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					xPlayer.addAccountMoney(shop.Account, totalPrice)
-					xPlayer.removeWeapon(v.name, 0)
-					Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+						xPlayer.addAccountMoney(shop.Account, totalPrice)
+						xPlayer.removeWeapon(v.name, 0)
+						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					else
+						xPlayer.removeMoney(totalPrice)
+						xPlayer.removeWeapon(v.name, 0)
+						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					end
 				end
             end
         else
