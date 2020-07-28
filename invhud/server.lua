@@ -455,7 +455,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							if xPlayer.getMoney() >= totalPrice then
 								xPlayer.removeMoney()
 								xPlayer.addInventoryItem(item, count)
-								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)\
+								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 							else
 								Notify(source, 'You do not have enough money!')
 							end
@@ -483,7 +483,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							if xPlayer.getMoney() >= totalPrice then
 								xPlayer.removeMoney()
 								xPlayer.addInventoryItem(item, count)
-								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)\
+								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 							else
 								Notify(source, 'You do not have enough money!')
 							end
