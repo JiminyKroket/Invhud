@@ -23,6 +23,20 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
 	end
 end)
 
+AddEventHandler('esx:giveInventoryItem', function(target, itemType, itemName, count)
+	local src = source
+	local xPlayer = ESX.GetPlayerFromId(src)
+	local xTarget = ESX.GetPlayerFromId(target)
+	if itemName == 'money' or itemName == 'cash' then
+		if xPlayer.getMoney() >= count then
+			xPlayer.removeMoney(count)
+			xTarget.addMoney(count)
+		else
+			Notify(xPlayer.source, 'You do not have enough money')
+		end
+	end
+end)
+
 RegisterServerEvent('invhud:tradePlayerItem')
 AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName, itemCount)
 	local src = from
@@ -443,7 +457,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+						if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
 							if xPlayer.getAccount(shop.Account).money >= totalPrice then
 								xPlayer.removeAccountMoney(shop.Account, totalPrice)
 								xPlayer.addInventoryItem(item, count)
@@ -471,7 +485,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+						if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
 							if xPlayer.getAccount(shop.Account).money >= totalPrice then
 								xPlayer.removeAccountMoney(shop.Account, totalPrice)
 								xPlayer.addInventoryItem(item, count)
@@ -503,7 +517,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 			for k,v in pairs(list) do
 				if v.name == item then
 					local totalPrice = 1 * v.price
-					if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+					if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
 						if xPlayer.getAccount(shop.Account).money >= totalPrice then
 							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addWeapon(v.name, v.ammo)
@@ -542,7 +556,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+					if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
 						xPlayer.addAccountMoney(shop.Account, totalPrice)
 						xPlayer.removeInventoryItem(item, count)
 						Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
@@ -568,7 +582,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					if shop.Account ~= 'money' then -- I FUCKING HATE ESX
+					if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
 						xPlayer.addAccountMoney(shop.Account, totalPrice)
 						xPlayer.removeWeapon(v.name, 0)
 						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
