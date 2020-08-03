@@ -4,6 +4,12 @@ itemShopList = {}
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
+for k,v in pairs(Config.Shops) do
+	if v.Society.Name then
+		TriggerEvent('esx_society:registerSociety', v.Society.Name, v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, {type = 'public'})
+	end
+end
+
 Notify = function(src, text, timer)
 	if timer == nil then
 		timer = 5000
@@ -462,6 +468,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								xPlayer.removeAccountMoney(shop.Account, totalPrice)
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+								if shop.Society.Name then
+									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+										account.addMoney(amount)
+									end)
+								end
 							else
 								Notify(source, 'You do not have enough money!')
 							end
@@ -470,6 +481,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								xPlayer.removeMoney()
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+								if shop.Society.Name then
+									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+										account.addMoney(amount)
+									end)
+								end
 							else
 								Notify(source, 'You do not have enough money!')
 							end
@@ -490,6 +506,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								xPlayer.removeAccountMoney(shop.Account, totalPrice)
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+								if shop.Society.Name then
+									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+										account.addMoney(amount)
+									end)
+								end
 							else
 								Notify(source, 'You do not have enough money!')
 							end
@@ -498,6 +519,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								xPlayer.removeMoney()
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+								if shop.Society.Name then
+									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+										account.addMoney(amount)
+									end)
+								end
 							else
 								Notify(source, 'You do not have enough money!')
 							end
@@ -522,6 +548,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addWeapon(v.name, v.ammo)
 							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+							if shop.Society.Name then
+								TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+									account.addMoney(totalPrice)
+								end)
+							end
 						else
 							Notify(source, 'You do not have enough money!')
 						end
@@ -530,6 +561,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							xPlayer.removeMoney(totalPrice)
 							xPlayer.addWeapon(v.name, v.ammo)
 							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+							if shop.Society.Name then
+								TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+									account.addMoney(totalPrice)
+								end)
+							end
 						else
 							Notify(source, 'You do not have enough money!')
 						end
@@ -556,14 +592,34 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
-						xPlayer.addAccountMoney(shop.Account, totalPrice)
-						xPlayer.removeInventoryItem(item, count)
-						Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+					if shop.Society.Name then
+						TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+							if account.money >= totalPrice then
+								if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+									xPlayer.addAccountMoney(shop.Account, totalPrice)
+									xPlayer.removeInventoryItem(item, count)
+									Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+									account.removeMoney(totalPrice)
+								else
+									xPlayer.addMoney(totalPrice)
+									xPlayer.removeInventoryItem(item, count)
+									Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+									account.removeMoney(totalPrice)
+								end
+							else
+								Notify(source, 'The shop does not have enough money')
+							end
+						end)
 					else
-						xPlayer.addMoney(totalPrice)
-						xPlayer.removeInventoryItem(item, count)
-						Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						if shop.Account ~= 'money' or shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+							xPlayer.addAccountMoney(shop.Account, totalPrice)
+							xPlayer.removeInventoryItem(item, count)
+							Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						else
+							xPlayer.addMoney(totalPrice)
+							xPlayer.removeInventoryItem(item, count)
+							Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+						end
 					end
 				end
 			end
