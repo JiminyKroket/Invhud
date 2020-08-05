@@ -516,7 +516,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							end
 						else
 							if xPlayer.getMoney() >= totalPrice then
-								xPlayer.removeMoney()
+								xPlayer.removeMoney(totalPrice)
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 								if shop.Society.Name then
