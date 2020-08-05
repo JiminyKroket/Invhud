@@ -750,6 +750,22 @@ loadPlayerInventory = function(inv)
 
 				table.insert(items, moneyData)
 			end
+			-- USE THE LOWER INCLUDECASH IF YOU HAVE ESX 1.1 AND NOTICE MONEY DOES NOT DROP/GIVE
+				
+			--if Config.IncludeCash and money ~= nil and money > 0 then
+				--moneyData = {
+				   -- label = _U("cash"),
+				   -- name = "cash",
+				   -- type = "item_money",
+				   -- count = money,
+				   -- usable = false,
+				   -- rare = false,
+				   -- limit = -1,
+				   -- canRemove = true
+				--}
+
+				--table.insert(items, moneyData)
+		    	--end
 
 			if Config.IncludeBlackMoney and accounts ~= nil then
 				for key, value in pairs(accounts) do
@@ -945,6 +961,23 @@ setPlayerInventoryData = function()
 
 			table.insert(items, moneyData)
 		end
+			
+		-- USE THE LOWER INCLUDECASH IF YOU HAVE ESX 1.1 AND NOTICE MONEY DOES NOT DROP/GIVE
+				
+		--if Config.IncludeCash and money ~= nil and money > 0 then
+			--moneyData = {
+			   -- label = _U("cash"),
+			   -- name = "cash",
+			   -- type = "item_money",
+			   -- count = money,
+			   -- usable = false,
+			   -- rare = false,
+			   -- limit = -1,
+			   -- canRemove = true
+			--}
+
+			--table.insert(items, moneyData)
+		--end
 
 		if Config.IncludeBlackMoney and accounts ~= nil then
 			for key, value in pairs(accounts) do
