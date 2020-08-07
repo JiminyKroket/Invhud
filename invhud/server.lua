@@ -146,6 +146,12 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 				if result[1] then
 					inventory = json.decode(result[1].data)
 					if IsInInv(inventory, data.item.name) then
+						if xItem.limit ~= nil then
+							if inventory.items[data.item.name][1].count + count > xItem.limit then
+								Notify(src, 'This inventory can not hold enough of that item')
+								return
+							end
+						end
 						xPlayer.removeInventoryItem(data.item.name, count)
 						inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count + count
 						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
@@ -158,6 +164,12 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 							end
 						end)
 					else
+						if xItem.limit ~= nil then
+							if count > xItem.limit then
+								Notify(src, 'This inventory can not hold enough of that item')
+								return
+							end
+						end
 						xPlayer.removeInventoryItem(data.item.name, count)
 						inventory.items[data.item.name] = {}
 						table.insert(inventory.items[data.item.name], {count = count, label = data.item.label})
@@ -291,7 +303,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'There is not enough of that in the inventory')
+				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		else
 			if xItem.count + count <= xItem.limit then
@@ -324,7 +336,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'There is not enough of that in the inventory')
+				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		end
 	elseif data.item.type == 'item_weapon' then
@@ -516,7 +528,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							end
 						else
 							if xPlayer.getMoney() >= totalPrice then
-								xPlayer.removeMoney(totalPrice)
+								xPlayer.removeMoney()
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 								if shop.Society.Name then
