@@ -6,6 +6,7 @@ ESX_InventoryHUD rework
 Major rework on inventoryhud. Will no longer support individual inventorytype.lua files (i.e. trunk.lua, property.lua, player.lua).
 Code condensed specifically for my development.
 
+Copy your cash.png and rename it to money.png to have picture for cash in inventory
 
 To open another player inventory you will need to call from client side TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(closestPlayer), GetPlayerName(closestPlayer)) or from server side TriggerClientEvent('invhud:openPlayerInventory', targetPlayerServerId, targetPlayerName)
 
