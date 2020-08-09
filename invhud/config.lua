@@ -499,7 +499,7 @@ Config.Stash = {
         job = 'lspd',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
+        markerColour = { x = 255, y = 255, z = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
     ['BCSO'] = {
@@ -509,7 +509,7 @@ Config.Stash = {
         job = 'bcso',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
+        markerColour = { x = 255, y = 255, z = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
     ['1'] = {
@@ -519,7 +519,7 @@ Config.Stash = {
         job = 'identifier',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
+        markerColour = { x = 255, y = 255, z = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
     ['2'] = {
@@ -529,7 +529,7 @@ Config.Stash = {
         job = 'identifier',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
+        markerColour = { x = 255, y = 255, z = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     }
 }
