@@ -21,14 +21,14 @@ Don't attempt to call from server.
 
 To open a property inventory use 
 ```
-local propertyID = 'IMustBeAString'
+local propertyID = 'I Must Be A String Unique To The Property'
 TriggerEvent('invhud:openPropertyInv', propertyID)
 ```
 Don't attempt to call from server.
 
 To open a safe inventory use 
 ```
-local safeID = 'IMustBeAString'
+local safeID = 'I Must Be A String Unique To The Safe'
 TriggerEvent('invhud:openSafeInv', safeID)
 ```
 **YOU WILL NEED TO REPLACE ANY ESX_INVENTORYHUD EVENTS IN PLAYERSAFES WITH THE PROPER INVHUD EVENT**
