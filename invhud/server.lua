@@ -19,6 +19,21 @@ Notify = function(src, text, timer)
 	TriggerClientEvent('esx:showNotification', src, text)
 end
 
+ESX.RegisterServerCallback('invhud:getPlayerLicenses', function(source, cb)
+	local xPlayer = ESX.GetPlayerFromId(source)
+	MySQL.Async.fetchAll('SELECT type FROM user_licenses WHERE owner = @owner', {
+		['@owner'] = xPlayer.identifier
+	}, function(result)
+		local licenses = {}
+
+		for  i = 1,#result do
+			table.insert(licenses, result[i].type)
+		end
+
+		cb(licenses)
+	end)
+end)
+
 ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target)
 	local tPlayer = ESX.GetPlayerFromId(target)
 
@@ -55,16 +70,20 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName,
 		local tItem = tPlayer.getInventoryItem(itemName)
 		
 		if xPlayer.canCarryItem ~= nil then
-			if itemCount > 0 and xItem.count >= itemCount then
-				if tPlayer.canCarryItem(itemName, itemCount) then
-					xPlayer.removeInventoryItem(itemName, itemCount)
-					tPlayer.addInventoryItem(itemName, itemCount)
+			if xPlayer.maxWeight ~= nil then
+				if itemCount > 0 and xItem.count >= itemCount then
+					if tPlayer.canCarryItem(itemName, itemCount) then
+						xPlayer.removeInventoryItem(itemName, itemCount)
+						tPlayer.addInventoryItem(itemName, itemCount)
+					else
+						Notify(xPlayer.source, 'This player can not carry that much')
+						Notify(tPlayer.source, 'You can not carry that much')
+					end
 				else
-					Notify(xPlayer.source, 'This player can not carry that much')
-					Notify(tPlayer.source, 'You can not carry that much')
+					Notify(xPlayer.source, 'You do not have enough of that item to give')
 				end
 			else
-				Notify(xPlayer.source, 'You do not have enough of that item to give')
+				Notify(src, 'Max weight error, relog')
 			end
 		else
 			if itemCount > 0 and xItem.count >= itemCount then
@@ -173,6 +192,8 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						xPlayer.removeInventoryItem(data.item.name, count)
 						inventory.items[data.item.name] = {}
 						table.insert(inventory.items[data.item.name], {count = count, label = data.item.label})
+						print(inventory.items[data.item.name].count)
+						print(inventory.items[data.item.name][1].count)
 						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 							['@owner'] = owner,
 							['@type'] = invType,
@@ -273,37 +294,41 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	if data.item.type == 'item_standard' then
 		local xItem = xPlayer.getInventoryItem(data.item.name)
 		if xPlayer.canCarryItem ~= nil then
-			if xPlayer.canCarryItem(data.item.name, count) then
-				local inventory = {}
-				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-					if result[1] then
-						inventory = json.decode(result[1].data)
-						if IsInInv(inventory, data.item.name) then
-							if inventory.items[data.item.name][1].count >= count then
-								xPlayer.addInventoryItem(data.item.name, count)
-								inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count - count
-								if inventory.items[data.item.name][1].count <= 0 then
-									inventory.items[data.item.name] = nil
-								end
-								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-									['@owner'] = owner,
-									['@type'] = invType,
-									['@data'] = json.encode(inventory)
-								}, function(rowsChanged)
-									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
+			if xPlayer.maxWeight ~= nil then
+				if xPlayer.canCarryItem(data.item.name, count) then
+					local inventory = {}
+					MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+						if result[1] then
+							inventory = json.decode(result[1].data)
+							if IsInInv(inventory, data.item.name) then
+								if inventory.items[data.item.name][1].count >= count then
+									xPlayer.addInventoryItem(data.item.name, count)
+									inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count - count
+									if inventory.items[data.item.name][1].count <= 0 then
+										inventory.items[data.item.name] = nil
 									end
-								end)
+									MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+										['@owner'] = owner,
+										['@type'] = invType,
+										['@data'] = json.encode(inventory)
+									}, function(rowsChanged)
+										if rowsChanged then
+											print('Inventory updated for: '..owner..' with type: '..invType)
+										end
+									end)
+								else
+									Notify(src, 'There is not enough of that in the inventory')
+								end
 							else
 								Notify(src, 'There is not enough of that in the inventory')
 							end
-						else
-							Notify(src, 'There is not enough of that in the inventory')
 						end
-					end
-				end)
+					end)
+				else
+					Notify(src, 'You do not have that much of '..data.item.name)
+				end
 			else
-				Notify(src, 'You do not have that much of '..data.item.name)
+				Notify(src, 'Max weight error, relog')
 			end
 		else
 			if xItem.count + count <= xItem.limit then
@@ -470,42 +495,46 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
     if invType == 'item_standard' then
 		local tItem = xPlayer.getInventoryItem(item)
 		if xPlayer.canCarryItem ~= nil then
-			if xPlayer.canCarryItem(item, count) then
-				local list = itemShopList.items
-				for k,v in pairs(list) do
-					if v.name == item then
-						local totalPrice = count * v.price
-						if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
-							if xPlayer.getAccount(shop.Account).money >= totalPrice then
-								xPlayer.removeAccountMoney(shop.Account, totalPrice)
-								xPlayer.addInventoryItem(item, count)
-								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
-								if shop.Society.Name then
-									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
-										account.addMoney(amount)
-									end)
+			if xPlayer.maxWeight ~= nil then
+				if xPlayer.canCarryItem(item, count) then
+					local list = itemShopList.items
+					for k,v in pairs(list) do
+						if v.name == item then
+							local totalPrice = count * v.price
+							if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+								if xPlayer.getAccount(shop.Account).money >= totalPrice then
+									xPlayer.removeAccountMoney(shop.Account, totalPrice)
+									xPlayer.addInventoryItem(item, count)
+									Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+									if shop.Society.Name then
+										TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+											account.addMoney(amount)
+										end)
+									end
+								else
+									Notify(source, 'You do not have enough money!')
 								end
 							else
-								Notify(source, 'You do not have enough money!')
-							end
-						else
-							if xPlayer.getMoney() >= totalPrice then
-								xPlayer.removeMoney(totalPrice)
-								xPlayer.addInventoryItem(item, count)
-								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
-								if shop.Society.Name then
-									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
-										account.addMoney(amount)
-									end)
+								if xPlayer.getMoney() >= totalPrice then
+									xPlayer.removeMoney(totalPrice)
+									xPlayer.addInventoryItem(item, count)
+									Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+									if shop.Society.Name then
+										TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+											account.addMoney(amount)
+										end)
+									end
+								else
+									Notify(source, 'You do not have enough money!')
 								end
-							else
-								Notify(source, 'You do not have enough money!')
 							end
 						end
 					end
+				else
+					Notify(source, 'You do not have enough space in your inventory!')
 				end
 			else
-				Notify(source, 'You do not have enough space in your inventory!')
+				Notify(src, 'Max weight error, relog')
 			end
 		else
 			if tItem.count + count <= tItem.limit then

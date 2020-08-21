@@ -12,6 +12,11 @@ Citizen.CreateThread(function()
 		Citizen.Wait(10)
 	end
 	PlayerData = ESX.GetPlayerData()
+	ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
+		for i = 1, #licenses, 1 do
+			Licenses[licenses[i]] = true
+		end
+	end)
 	for k,v in pairs(Config.Shops) do
 		if v.Blips.Use then
 			for i = 1,#v.Locations.Store do
@@ -74,8 +79,8 @@ Citizen.CreateThread(function()
 				local inZone, zoneIn = InShopZone(pos)
 				if inZone then
 					shopData = Config.Shops[zoneIn]
-					if Config.NeedsWeaponLicense then
-						if zoneIn ~= 'weaponshop' or Licenses['firearm'] ~= nil then
+					if Config.WeaponLicense.Needs then
+						if zoneIn ~= 'weaponshop' or Licenses[Config.WeaponLicense.Name] ~= nil then
 							ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 								setShopInventory(data)
 								openInventory('shop')
@@ -655,7 +660,7 @@ RegisterNUICallback('UseItem', function(data, cb)
 	TriggerServerEvent('esx:useItem', data.item.name)
 
 	if shouldCloseInventory(data.item.name) then
-		closeInventory()
+		TriggerEvent('invhud:closeInventory')
 	else
 		Citizen.Wait(250)
 		loadPlayerInventory()
@@ -750,6 +755,7 @@ loadPlayerInventory = function(inv)
 
 				table.insert(items, moneyData)
 			end
+			
 			-- USE THE LOWER INCLUDECASH IF YOU HAVE ESX 1.1 AND NOTICE MONEY DOES NOT DROP/GIVE
 				
 			--if Config.IncludeCash and money ~= nil and money > 0 then
@@ -765,8 +771,9 @@ loadPlayerInventory = function(inv)
 				--}
 
 				--table.insert(items, moneyData)
-		    	--end
-
+			--end
+			
+			
 			if Config.IncludeBlackMoney and accounts ~= nil then
 				for key, value in pairs(accounts) do
 					if accounts[key].name == 'black_money' then
@@ -896,13 +903,6 @@ AddEventHandler('invhud:usedAmmo', function(key)
 	end
 end)
 
-RegisterNetEvent('invhud:GetLicenses')
-AddEventHandler('invhud:GetLicenses', function (licenses)
-    for i = 1, #licenses, 1 do
-        Licenses[licenses[i].type] = true
-    end
-end)
-
 RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function()
 	PlayerData = ESX.GetPlayerData()
@@ -910,7 +910,7 @@ end)
 
 AddEventHandler('onResourceStop', function(resource)
 	if resource == GetCurrentResourceName() then
-		closeInventory()
+		TriggerEvent('invhud:closeInventory')
 	end
 end)
 
@@ -961,7 +961,7 @@ setPlayerInventoryData = function()
 
 			table.insert(items, moneyData)
 		end
-			
+		
 		-- USE THE LOWER INCLUDECASH IF YOU HAVE ESX 1.1 AND NOTICE MONEY DOES NOT DROP/GIVE
 				
 		--if Config.IncludeCash and money ~= nil and money > 0 then
@@ -978,6 +978,7 @@ setPlayerInventoryData = function()
 
 			--table.insert(items, moneyData)
 		--end
+
 
 		if Config.IncludeBlackMoney and accounts ~= nil then
 			for key, value in pairs(accounts) do

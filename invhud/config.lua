@@ -5,7 +5,10 @@ Config.IncludeWeapons = true -- Include weapons in inventory?
 Config.IncludeBlackMoney = true -- Include black money in inventory?
 Config.OpenControl = 82 -- Key for opening inventory. Edit html/js/config.js to change key for closing it.
 Config.CurrencyIcon = '$' -- Currency icon used for non html text
-Config.NeedsWeaponsLicense = true -- Player needs weapon license to use weapon shop?
+Config.WeaponLicense = { -- Weapon license options, do players need one, what is the name of the one they need
+	Needs = true,
+	Name = 'firearm'
+}
 
 -- List of item names that will close ui when used
 Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth", 'lowcalrounds',
@@ -499,7 +502,7 @@ Config.Stash = {
         job = 'lspd',
         markerType = 2,
 		draw = 15,
-        markerColour = { x = 255, y = 255, z = 255 },
+        markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
     ['BCSO'] = {
@@ -509,7 +512,7 @@ Config.Stash = {
         job = 'bcso',
         markerType = 2,
 		draw = 15,
-        markerColour = { x = 255, y = 255, z = 255 },
+        markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
     ['1'] = {
@@ -519,7 +522,7 @@ Config.Stash = {
         job = 'identifier',
         markerType = 2,
 		draw = 15,
-        markerColour = { x = 255, y = 255, z = 255 },
+        markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     },
     ['2'] = {
@@ -529,7 +532,7 @@ Config.Stash = {
         job = 'identifier',
         markerType = 2,
 		draw = 15,
-        markerColour = { x = 255, y = 255, z = 255 },
+        markerColour = { r = 255, g = 255, b = 255 },
         msg = 'Open Stash ~INPUT_CONTEXT~'
     }
 }
