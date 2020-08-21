@@ -12,11 +12,13 @@ Citizen.CreateThread(function()
 		Citizen.Wait(10)
 	end
 	PlayerData = ESX.GetPlayerData()
-	ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
-		for i = 1, #licenses, 1 do
-			Licenses[licenses[i]] = true
-		end
-	end)
+	if Config.WeaponLicense.Need then
+		ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
+			for i = 1, #licenses, 1 do
+				Licenses[licenses[i]] = true
+			end
+		end)
+	end
 	for k,v in pairs(Config.Shops) do
 		if v.Blips.Use then
 			for i = 1,#v.Locations.Store do
