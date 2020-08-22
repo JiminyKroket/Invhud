@@ -8,6 +8,12 @@ Code condensed specifically for my development.
 
 Copy your cash.png and rename it to money.png to have picture for cash in inventory
 
+**TO USE LIMITS IN SECONDARY INVENTORIES**
+Run the following sql query:
+ALTER TABLE `items` ADD COLUMN `limit` INT(11) NOT NULL DEFAULT 50;
+Then go to the end of line 26 of your es_extended\server\common.lua, create a new line by pressing 'Enter/Return', add the following: limit = v.limit,
+Finally go to the end of line 249 of your es_extended\server\main.lua, create a new line by pressing 'Enter/Return', add the following: limit = item.limit,
+
 To open another player inventory you will need to call from client side 
 ```
 local cP, cD = ESX.Game.GetClosestPlayer()
