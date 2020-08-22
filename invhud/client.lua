@@ -119,7 +119,7 @@ Citizen.CreateThread(function()
 						if DoesEntityExist(veh) then
 							local plate = ESX.Game.GetVehicleProperties(veh).plate
 							trunkData.plate = plate
-							local trunk = GetEntityBoneIndexByName(veh, 'boot')
+							local trunk = GetEntityBoneIndexByName(veh, 'platelight')
 							local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
 							local dis = #(pos - trunkPos)
 							if dis < 2.5 then
