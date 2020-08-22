@@ -131,9 +131,18 @@ end
 
 InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 	local total = 0
-	local itemWeight = xPlayer.getInventoryItem(name).weight
+	local xItem = xPlayer.getInventoryItem(name)
+	local itemWeight
+	if xItem ~= nil then
+		itemWeight = xPlayer.getInventoryItem(name).weight
+		itemWeight = itemWeight * count
+	elseif Config.Weight.WeaponWeights[name] then
+		itemWeight = Config.Weight.WeaponWeights[name]
+		itemWeight = itemWeight * (count*0.1)
+	else
+		itemWeight = 1
+	end
 	totWeight = totWeight * 1.00
-	itemWeight = itemWeight * count
 	for k,v in pairs(inv.items) do
 		local xItem = xPlayer.getInventoryItem(k)
 		if xItem.weight ~= nil then
@@ -143,10 +152,12 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 		end
 	end
 	for k,v in pairs(inv.weapons) do
-		if Config.Weight.WeaponWeights[k] then
-			total = total + (Config.Weight.WeaponWeights[k] + (v*0.1))
-		else
-			total = total + 1
+		for i = 1,#v do
+			if Config.Weight.WeaponWeights[k] then
+				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.1))
+			else
+				total = total + 1
+			end
 		end
 	end
 	if total + itemWeight > totWeight then
