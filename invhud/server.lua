@@ -129,16 +129,50 @@ IsInInv = function(inv, item)
 	return false
 end
 
-ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id)
+InvCanCarry = function(xPlayer, inv, name, count, totWeight)
+	local total = 0
+	local itemWeight = xPlayer.getInventoryItem(name).weight
+	totWeight = totWeight * 1.00
+	itemWeight = itemWeight * count
+	for k,v in pairs(inv.items) do
+		local xItem = xPlayer.getInventoryItem(k)
+		if xItem.weight ~= nil then
+			total = total + xItem.weight * v[1].count
+		else
+			total = total + 1
+		end
+	end
+	for k,v in pairs(inv.weapons) do
+		if Config.Weight.WeaponWeights[k] then
+			total = total + (Config.Weight.WeaponWeights[k] + (v*0.1))
+		else
+			total = total + 1
+		end
+	end
+	if total + itemWeight > totWeight then
+		return false
+	else
+		return true
+	end
+end
+
+ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class)
 	local xPlayer = ESX.GetPlayerFromId(source)
+	local weightLimit = 500
+	if class ~= nil then
+		if Config.Weight.VehicleClassLimits[class] then
+			weightLimit = Config.Weight.VehicleClassLimits[class][type]
+		end
+	end
 	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = type}, function(result)
 		if result[1] then
 			cb(json.decode(result[1].data))
 		else
-			MySQL.Async.execute('INSERT INTO `inventories` (owner, type, data) VALUES (@id, @type, @data)', {
+			MySQL.Async.execute('INSERT INTO `inventories` (owner, type, data, `limit`) VALUES (@id, @type, @data, @limit)', {
 				['@id'] = id,
 				['@type'] = type,
-				['@data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0})
+				['@data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}),
+				['@limit'] = weightLimit
 			}, function(rowsChanged)
 				if rowsChanged then
 					print('Inventory created for: '..id..' with type: '..type)
@@ -165,44 +199,38 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 				if result[1] then
 					inventory = json.decode(result[1].data)
 					if IsInInv(inventory, data.item.name) then
-						if xItem.limit ~= nil then
-							if inventory.items[data.item.name][1].count + count > xItem.limit then
-								Notify(src, 'This inventory can not hold enough of that item')
-								return
-							end
+						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+							xPlayer.removeInventoryItem(data.item.name, count)
+							inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count + count
+							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+								['@owner'] = owner,
+								['@type'] = invType,
+								['@data'] = json.encode(inventory)
+							}, function(rowsChanged)
+								if rowsChanged then
+									print('Inventory updated for: '..owner..' with type: '..invType)
+								end
+							end)
+						else
+							Notify(src, 'This inventory can not hold enough of that item')
 						end
-						xPlayer.removeInventoryItem(data.item.name, count)
-						inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count + count
-						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-							['@owner'] = owner,
-							['@type'] = invType,
-							['@data'] = json.encode(inventory)
-						}, function(rowsChanged)
-							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
-							end
-						end)
 					else
-						if xItem.limit ~= nil then
-							if count > xItem.limit then
-								Notify(src, 'This inventory can not hold enough of that item')
-								return
-							end
+						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+							xPlayer.removeInventoryItem(data.item.name, count)
+							inventory.items[data.item.name] = {}
+							table.insert(inventory.items[data.item.name], {count = count, label = data.item.label})
+							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+								['@owner'] = owner,
+								['@type'] = invType,
+								['@data'] = json.encode(inventory)
+							}, function(rowsChanged)
+								if rowsChanged then
+									print('Inventory updated for: '..owner..' with type: '..invType)
+								end
+							end)
+						else
+							Notify(src, 'This inventory can not hold enough of that item')
 						end
-						xPlayer.removeInventoryItem(data.item.name, count)
-						inventory.items[data.item.name] = {}
-						table.insert(inventory.items[data.item.name], {count = count, label = data.item.label})
-						print(inventory.items[data.item.name].count)
-						print(inventory.items[data.item.name][1].count)
-						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-							['@owner'] = owner,
-							['@type'] = invType,
-							['@data'] = json.encode(inventory)
-						}, function(rowsChanged)
-							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
-							end
-						end)
 					end
 				end
 			end)
@@ -216,30 +244,38 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 				if result[1] then
 					inventory = json.decode(result[1].data)
 					if IsInInv(inventory, data.item.name) then
-						xPlayer.removeWeapon(data.item.name)
-						table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
-						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-							['@owner'] = owner,
-							['@type'] = invType,
-							['@data'] = json.encode(inventory)
-						}, function(rowsChanged)
-							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
-							end
-						end)
+						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+							xPlayer.removeWeapon(data.item.name)
+							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
+							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+								['@owner'] = owner,
+								['@type'] = invType,
+								['@data'] = json.encode(inventory)
+							}, function(rowsChanged)
+								if rowsChanged then
+									print('Inventory updated for: '..owner..' with type: '..invType)
+								end
+							end)
+						else
+							Notify(src, 'Inventory cannot hold that weapon')
+						end
 					else
-						xPlayer.removeWeapon(data.item.name)
-						inventory.weapons[data.item.name] = {}
-						table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
-						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-							['@owner'] = owner,
-							['@type'] = invType,
-							['@data'] = json.encode(inventory)
-						}, function(rowsChanged)
-							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
-							end
-						end)
+						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+							xPlayer.removeWeapon(data.item.name)
+							inventory.weapons[data.item.name] = {}
+							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
+							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+								['@owner'] = owner,
+								['@type'] = invType,
+								['@data'] = json.encode(inventory)
+							}, function(rowsChanged)
+								if rowsChanged then
+									print('Inventory updated for: '..owner..' with type: '..invType)
+								end
+							end)
+						else
+							Notify(src, 'Inventory cannot hold that weapon')
+						end
 					end
 				end
 			end)

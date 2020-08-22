@@ -118,6 +118,7 @@ Citizen.CreateThread(function()
 						local veh = ESX.Game.GetVehicleInDirection()
 						if DoesEntityExist(veh) then
 							local plate = ESX.Game.GetVehicleProperties(veh).plate
+							local class = GetVehicleClass(veh)
 							trunkData.plate = plate
 							local trunk = GetEntityBoneIndexByName(veh, 'platelight')
 							local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
@@ -130,7 +131,7 @@ Citizen.CreateThread(function()
 										SetVehicleDoorOpen(veh, 5)
 										openedTrunk = veh
 										openInventory('trunk')
-									end, 'trunk', plate)
+									end, 'trunk', plate, class)
 								else
 									Notify('This trunk is locked')
 								end
@@ -146,11 +147,12 @@ Citizen.CreateThread(function()
 				local veh = GetVehiclePedIsIn(ped, true)
 				if DoesEntityExist(veh) then
 					local plate = ESX.Game.GetVehicleProperties(veh).plate
+							local class = GetVehicleClass(veh)
 					gBoxData.plate = plate
 					ESX.TriggerServerCallback('invhud:getInv', function(data)
 						setInventory(data, 'gbox')
 						openInventory('gbox')
-					end, 'gbox', plate)
+					end, 'gbox', plate, class)
 				end
 			end
 		end

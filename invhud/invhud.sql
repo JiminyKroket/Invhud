@@ -17,3 +17,5 @@ CREATE TABLE IF NOT EXISTS `inventories` (
   `data` longtext NOT NULL DEFAULT '',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE `inventories` ADD COLUMN `limit` int(11) NOT NULL DEFAULT 100;

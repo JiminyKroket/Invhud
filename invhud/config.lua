@@ -6,13 +6,100 @@ Config.IncludeBlackMoney = true -- Include black money in inventory?
 Config.OpenControl = 82 -- Key for opening inventory. Edit html/js/config.js to change key for closing it.
 Config.CurrencyIcon = '$' -- Currency icon used for non html text
 Config.WeaponLicense = { -- Weapon license options, do players need one, what is the name of the one they need
-	Needs = true,
+	Needs = false,
 	Name = 'firearm'
 }
 
 -- List of item names that will close ui when used
-Config.CloseUiItems = {"headbag", "fishingrod", "tunerlaptop", "binoculars", "joint", "cigarette", "cigar", "fixkit", "rollingpaper", "cocaine", "meth", 'lowcalrounds',
+Config.CloseUiItems = {'headbag', 'fishingrod', 'tunerlaptop', 'binoculars', 'joint', 'cigarette', 'cigar', 'fixkit', 'rollingpaper', 'cocaine', 'meth', 'lowcalrounds',
 	'shotcalrounds', 'midcalrounds', 'highcalrounds', 'speccalrounds'
+}
+
+Config.Weight = {
+	WeaponWeights = {
+		['WEAPON_STUNGUN'] = 2,
+		['WEAPON_FLAREGUN'] = 2,
+		['WEAPON_SNSPISTOL'] = 2,
+		['WEAPON_SNSPISTOL_MK2'] = 2,
+		['WEAPON_PISTOL'] = 2,
+		['WEAPON_PISTOL_MK2'] = 2,
+		['WEAPON_COMBATPISTOL'] = 2,
+		['WEAPON_HEAVYPISTOL'] = 2,
+		['WEAPON_VINTAGEPISTOL'] = 2,
+		['WEAPON_MARKSMANPISTOL'] = 2,
+		['WEAPON_DOUBLEACTION'] = 2,
+		['WEAPON_MICROSMG'] = 2,
+		['WEAPON_MACHINEPISTOL'] = 2,
+		['WEAPON_MINISMG'] = 2,
+		['WEAPON_APPISTOL'] = 2,
+		['WEAPON_PISTOL50'] = 2,
+		['WEAPON_REVOLVER'] = 2,
+		['WEAPON_REVOLVER_MK2'] = 2,
+		['WEAPON_COMBATPDW'] = 2,
+		['WEAPON_SMG'] = 2,
+		['WEAPON_SMG_MK2'] = 2,
+		['WEAPON_ASSAULTSMG'] = 2,
+		['WEAPON_CARBINERIFLE'] = 2,
+		['WEAPON_GUSENBERG'] = 2,
+		['WEAPON_SPECIALCARBINE'] = 2,
+		['WEAPON_BULLPUPRIFLE'] = 2,
+		['WEAPON_COMPACTRIFLE'] = 2,
+		['WEAPON_DBSHOTGUN'] = 2,
+		['WEAPON_MUSKET'] = 2,
+		['WEAPON_MG'] = 2,
+		['WEAPON_COMBATMG'] = 2,
+		['WEAPON_ASSAULTRIFLE'] = 2,
+		['WEAPON_ASSAULTRIFLE_MK2'] = 2,
+		['WEAPON_CARBINERIFLE_MK2'] = 2,
+		['WEAPON_ADVANCEDRIFLE'] = 2,
+		['WEAPON_SPECIALCARBINE_MK2'] = 2,
+		['WEAPON_BULLPUPRIFLE_MK2'] = 2,
+		['WEAPON_PUMPSHOTGUN'] = 2,
+		['WEAPON_SAWNOFFSHOTGUN'] = 2,
+		['WEAPON_COMBATMG_MK2'] = 2,
+		['WEAPON_PUMPSHOTGUN_MK2'] = 2,
+		['WEAPON_BULLPUPSHOTGUN'] = 2,
+		['WEAPON_AUTOSHOTGUN'] = 2,
+		['WEAPON_GRENADELAUNCHER'] = 2,
+		['WEAPON_COMPACTLAUNCHER'] = 2,
+		['WEAPON_ASSAULTSHOTGUN'] = 2,
+		['WEAPON_HEAVYSHOTGUN'] = 2,
+		['WEAPON_MARKSMANRIFLE'] = 2,
+		['WEAPON_MARKSMANRIFLE_MK2'] = 2,
+		['WEAPON_SNIPERRIFLE'] = 2,
+		['WEAPON_MINIGUN'] = 2,
+		['WEAPON_HEAVYSNIPER'] = 2,
+		['WEAPON_HEAVYSNIPER_MK2'] = 2,
+		['WEAPON_FIREWORK'] = 2,
+		['WEAPON_RPG'] = 2,
+		['WEAPON_HOMINGLAUNCHER'] = 2,
+		['WEAPON_RAILGUN'] = 2,
+	},
+	
+	VehicleClassLimits = {
+		[0] = {['gbox'] = 30, ['trunk'] = 200},
+		[1] = {['gbox'] = 30, ['trunk'] = 200},
+		[2] = {['gbox'] = 30, ['trunk'] = 200},
+		[3] = {['gbox'] = 30, ['trunk'] = 200},
+		[4] = {['gbox'] = 30, ['trunk'] = 200},
+		[5] = {['gbox'] = 30, ['trunk'] = 200},
+		[6] = {['gbox'] = 30, ['trunk'] = 200},
+		[7] = {['gbox'] = 30, ['trunk'] = 200},
+		[8] = {['gbox'] = 30, ['trunk'] = 200},
+		[9] = {['gbox'] = 30, ['trunk'] = 200},
+		[10] = {['gbox'] = 30, ['trunk'] = 200},
+		[11] = {['gbox'] = 30, ['trunk'] = 200},
+		[12] = {['gbox'] = 30, ['trunk'] = 200},
+		[13] = {['gbox'] = 30, ['trunk'] = 200},
+		[14] = {['gbox'] = 30, ['trunk'] = 200},
+		[15] = {['gbox'] = 30, ['trunk'] = 200},
+		[16] = {['gbox'] = 30, ['trunk'] = 200},
+		[17] = {['gbox'] = 30, ['trunk'] = 200},
+		[18] = {['gbox'] = 30, ['trunk'] = 200},
+		[19] = {['gbox'] = 30, ['trunk'] = 200},
+		[20] = {['gbox'] = 30, ['trunk'] = 200},
+		[21] = {['gbox'] = 30, ['trunk'] = 200}
+	}
 }
 
 Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYPE(TYPE OF SHOP, 'purchase', 'sell', 'mix' AVAILABLE, CHOOSE WHAT THE PLAYER CAN DO AT THAT SHOP),
@@ -383,12 +470,12 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			},
         },
         Weapons = {
-            {name = "WEAPON_FLASHLIGHT", label = 'Flashlight', price = 20},
-            {name = "WEAPON_STUNGUN", label = 'Tazer', price = 120},
-            {name = "WEAPON_KNIFE", label = 'Knife', price = 60},
-            {name = "WEAPON_BAT", label = 'Baseball Bat', price = 20},
-            {name = "WEAPON_PISTOL", label = '9mm Pistol', price = 200},
-            {name = "WEAPON_PUMPSHOTGUN", label = 'Pump-Shotgun', price = 600}
+            {name = 'WEAPON_FLASHLIGHT', label = 'Flashlight', price = 20},
+            {name = 'WEAPON_STUNGUN', label = 'Tazer', price = 120},
+            {name = 'WEAPON_KNIFE', label = 'Knife', price = 60},
+            {name = 'WEAPON_BAT', label = 'Baseball Bat', price = 20},
+            {name = 'WEAPON_PISTOL', label = '9mm Pistol', price = 200},
+            {name = 'WEAPON_PUMPSHOTGUN', label = 'Pump-Shotgun', price = 600}
         },
         Items = {
             {name = 'lowcalrounds'},
