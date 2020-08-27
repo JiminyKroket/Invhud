@@ -889,7 +889,12 @@ RegisterCommand('invhud:openInventory', function(raw)
 				end
 				if DoesEntityExist(veh) then
 					local plate = ESX.Game.GetVehicleProperties(veh).plate
-					local class = GetVehicleClass(veh)
+					local model, class = ESX.Game.GetVehicleProperties(veh).model
+					if not Config.Weight.VehicleLimits.CustomModels[model] then
+						class = GetVehicleClass(veh)
+					else
+						class = model
+					end
 					trunkData.plate = plate
 					local trunk = GetEntityBoneIndexByName(veh, 'platelight')
 					if trunk == -1 then
@@ -921,7 +926,12 @@ RegisterCommand('invhud:openInventory', function(raw)
 		local veh = GetVehiclePedIsIn(ped, true)
 		if DoesEntityExist(veh) then
 			local plate = ESX.Game.GetVehicleProperties(veh).plate
-			local class = GetVehicleClass(veh)
+			local model, class = ESX.Game.GetVehicleProperties(veh).model
+			if not Config.Weight.VehicleLimits.CustomModels[model] then
+				class = GetVehicleClass(veh)
+			else
+				class = model
+			end
 			gBoxData.plate = plate
 			ESX.TriggerServerCallback('invhud:getInv', function(data)
 				setInventory(data, 'gbox')
@@ -931,7 +941,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 	end
 end)
 
-RegisterKeyMapping('invhud:openInventory', 'Open the inventory menu', 'keyboard', 'comma')
+RegisterKeyMapping('invhud:openInventory', 'Open the inventory menu', 'keyboard', Config.OpenKeyName)
 
 -------------PLAYER----------------
 

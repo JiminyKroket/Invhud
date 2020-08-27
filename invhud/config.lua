@@ -25,7 +25,9 @@ Config.CloseUiItems = {'headbag', 'fishingrod', 'tunerlaptop', 'binoculars', 'jo
 	'shotcalrounds', 'midcalrounds', 'highcalrounds', 'speccalrounds'
 }
 
-Config.Weight = {
+Config.Weight = { -- SET ALL WEIGHT INFORMATION HERE:ADDWEAPONSTOPLAYERWEIGHT(SHOULD THE SCRIPT ADD WEAPON WEIGHT TO THE PLAYER INVENTORY?), WEAPONWEIGHTS(HOW MUCH DOES EACH WEAPON WEIGH?)
+	-- VEHICLECLASSLIMITS(HOW MUCH WEIGHT SHOULD EACH VEHICLE CLASS HOLD IN THE GLOVEBOX AND TRUNK?)
+	AddWeaponsToPlayerWeight = false,
 	WeaponWeights = {
 		['WEAPON_STUNGUN'] = 2,
 		['WEAPON_FLAREGUN'] = 2,
@@ -86,29 +88,34 @@ Config.Weight = {
 		['WEAPON_RAILGUN'] = 2,
 	},
 	
-	VehicleClassLimits = { -- FOR VEHICLE CLASSES WITHOUT TRUNKS, GLOVEBOX IS WEIGHTED AS AN INTERIOR(BOATS/HELICOPTERS/CYCLES/TRAINS)
-		[0] = {['gbox'] = 30, ['trunk'] = 200}, -- COMPACTS
-		[1] = {['gbox'] = 30, ['trunk'] = 200}, -- SEDANS
-		[2] = {['gbox'] = 60, ['trunk'] = 200}, -- SUVS
-		[3] = {['gbox'] = 30, ['trunk'] = 250}, -- COUPES
-		[4] = {['gbox'] = 30, ['trunk'] = 400}, -- MUSCLES
-		[5] = {['gbox'] = 20, ['trunk'] = 200}, -- SPORTS CLASSICS
-		[6] = {['gbox'] = 20, ['trunk'] = 200}, -- SPORTS
-		[7] = {['gbox'] = 20, ['trunk'] = 250}, -- SUPERS
-		[8] = {['gbox'] = 20, ['trunk'] = 30}, -- MOTORCYCLES
-		[9] = {['gbox'] = 30, ['trunk'] = 400}, -- OFF-ROAD
-		[10] = {['gbox'] = 30, ['trunk'] = 800}, -- INDUSTRIAL
-		[11] = {['gbox'] = 30, ['trunk'] = 6000}, -- UTILITY
-		[12] = {['gbox'] = 30, ['trunk'] = 1600}, -- VANS
-		[13] = {['gbox'] = 5, ['trunk'] = 0}, -- BICYCLES
-		[14] = {['gbox'] = 100, ['trunk'] = 0}, -- BOATS
-		[15] = {['gbox'] = 100, ['trunk'] = 0}, -- HELICOPTERS
-		[16] = {['gbox'] = 100, ['trunk'] = 0}, -- PLANES
-		[17] = {['gbox'] = 30, ['trunk'] = 200}, -- SERVICE
-		[18] = {['gbox'] = 30, ['trunk'] = 200}, -- EMERGENCY
-		[19] = {['gbox'] = 30, ['trunk'] = 200}, -- MILITARY
-		[20] = {['gbox'] = 60, ['trunk'] = 400}, -- COMMERCIAL
-		[21] = {['gbox'] = 3000, ['trunk'] = 0} -- TRAINS
+	VehicleLimits = { -- FOR VEHICLE CLASSES WITHOUT TRUNKS, GLOVEBOX IS WEIGHTED AS AN INTERIOR(BOATS/HELICOPTERS/CYCLES/TRAINS)
+		Classes = {
+			[0] = {['gbox'] = 30, ['trunk'] = 200}, -- COMPACTS
+			[1] = {['gbox'] = 30, ['trunk'] = 200}, -- SEDANS
+			[2] = {['gbox'] = 60, ['trunk'] = 200}, -- SUVS
+			[3] = {['gbox'] = 30, ['trunk'] = 250}, -- COUPES
+			[4] = {['gbox'] = 30, ['trunk'] = 400}, -- MUSCLES
+			[5] = {['gbox'] = 20, ['trunk'] = 200}, -- SPORTS CLASSICS
+			[6] = {['gbox'] = 20, ['trunk'] = 200}, -- SPORTS
+			[7] = {['gbox'] = 20, ['trunk'] = 250}, -- SUPERS
+			[8] = {['gbox'] = 20, ['trunk'] = 30}, -- MOTORCYCLES
+			[9] = {['gbox'] = 30, ['trunk'] = 400}, -- OFF-ROAD
+			[10] = {['gbox'] = 30, ['trunk'] = 800}, -- INDUSTRIAL
+			[11] = {['gbox'] = 30, ['trunk'] = 6000}, -- UTILITY
+			[12] = {['gbox'] = 30, ['trunk'] = 1600}, -- VANS
+			[13] = {['gbox'] = 5, ['trunk'] = 0}, -- BICYCLES
+			[14] = {['gbox'] = 100, ['trunk'] = 0}, -- BOATS
+			[15] = {['gbox'] = 100, ['trunk'] = 0}, -- HELICOPTERS
+			[16] = {['gbox'] = 100, ['trunk'] = 0}, -- PLANES
+			[17] = {['gbox'] = 30, ['trunk'] = 200}, -- SERVICE
+			[18] = {['gbox'] = 30, ['trunk'] = 200}, -- EMERGENCY
+			[19] = {['gbox'] = 30, ['trunk'] = 200}, -- MILITARY
+			[20] = {['gbox'] = 60, ['trunk'] = 400}, -- COMMERCIAL
+			[21] = {['gbox'] = 3000, ['trunk'] = 0} -- TRAINS
+		},
+		CustomModels = {
+			['zentorno'] = {['gbox'] = 15, ['trunk'] = 50},
+		}
 	}
 }
 
