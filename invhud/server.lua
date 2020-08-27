@@ -21,6 +21,15 @@ Notify = function(src, text, timer)
 	TriggerClientEvent('esx:showNotification', src, text)
 end
 
+doRound = function(value, numDecimalPlaces)
+	if numDecimalPlaces then
+		local power = 10^numDecimalPlaces
+		return math.floor((value * power) + 0.5) / (power)
+	else
+		return math.floor(value + 0.5)
+	end
+end
+
 IsInInv = function(inv, item)
 	for k,v in pairs(inv.items) do
 		if item == k then
@@ -74,7 +83,7 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 			end
 		end
 	end
-	if total + itemWeight > totWeight then
+	if doRound(total, 2) + doRound(itemWeight, 2) > doRound(totWeight, 2) then
 		return false
 	else
 		return true
@@ -131,7 +140,7 @@ ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 			end
 		end
 	end
-	cb(total)
+	cb(doRound(total))
 end)
 
 ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, class)
@@ -168,40 +177,38 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 end)
 
 RegisterServerEvent('invhud:removeWeight')
-AddEventHandler('invhud:removeWeight', function(gun, ammo)
-	local src = source
-	local xPlayer = ESX.GetPlayerFromId(src)
-	local weight
-	if Config.Weight.WeaponWeights[gun] then
-		weight = Config.Weight.WeaponWeights[gun] + (ammo*0.01)
-	else
-		weight = 5 + (ammo*0.01)
-		print(string.format('Weapon weight not set for %s, defaulted to 5',gun))
+AddEventHandler('invhud:removeWeight', function(source, gun, ammo)
+	local xPlayer = ESX.GetPlayerFromId(source)
+	if Config.Weight.AddWeaponsToPlayerWeight then
+		local weight
+		if Config.Weight.WeaponWeights[gun] then
+			weight = Config.Weight.WeaponWeights[gun] + (ammo*0.01)
+		else
+			weight = 5 + (ammo*0.01)
+			print(string.format('Weapon weight not set for %s, defaulted to 5',gun))
+		end
+		local newWeight = xPlayer.maxWeight - weight
+		xPlayer.setMaxWeight(doRound(newWeight, 2))
 	end
-	print('changing weight')
-	local newWeight = xPlayer.maxWeight - weight
-	print(newWeight)
-	xPlayer.setMaxWeight(newWeight)
 end)
 
 RegisterServerEvent('esx:removeInventoryItem')
 AddEventHandler('esx:removeInventoryItem', function(itemType, itemName, count)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-	print(itemType)
-	if itemType == 'item_weapon' then
-		itemName = string.upper(itemName)
-		local weight
-		if Config.Weight.WeaponWeights[itemName] then
-			weight = Config.Weight.WeaponWeights[itemName] + (count*0.01)
-		else
-			weight = 5 + (count*0.01)
-			print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
+	if Config.Weight.AddWeaponsToPlayerWeight then
+		if itemType == 'item_weapon' then
+			itemName = string.upper(itemName)
+			local weight
+			if Config.Weight.WeaponWeights[itemName] then
+				weight = Config.Weight.WeaponWeights[itemName] + (count*0.01)
+			else
+				weight = 5 + (count*0.01)
+				print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
+			end
+			local newWeight = xPlayer.maxWeight + weight
+			xPlayer.setMaxWeight(doRound(newWeight, 2))
 		end
-		print('changing weight')
-		local newWeight = xPlayer.maxWeight + weight
-		print(newWeight)
-		xPlayer.setMaxWeight(newWeight)
 	end
 end)
 
@@ -219,7 +226,7 @@ AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
 		end
 	end
 	local newWeight = xPlayer.maxWeight - total
-	xPlayer.setMaxWeight(newWeight)
+	xPlayer.setMaxWeight(doRound(newWeight, 2))
 end)
 
 RegisterServerEvent('invhud:tradePlayerItem')
@@ -285,12 +292,21 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 				weight = 5 + (itemCount*0.01)
 				print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
 			end
+			if Config.Weight.AddWeaponsToPlayerWeight then
+				local newWeight = tPlayer.maxWeight - weight
+				if newWeight <= doRound(0, 2) then
+					Notify(source, 'Can not hold weapon')
+					return
+				end
+			end
 			xPlayer.removeWeapon(itemName)
 			tPlayer.addWeapon(itemName, itemCount)
-			local newWeight = xPlayer.maxWeight + weight
-			xPlayer.setMaxWeight(newWeight)
-			newWeight = tPlayer.maxWeight - weight
-			tPlayer.setMaxWeight(newWeight)
+			if Config.Weight.AddWeaponsToPlayerWeight then
+				local newWeight = xPlayer.maxWeight + weight
+				xPlayer.setMaxWeight(doRound(newWeight, 2))
+				newWeight = tPlayer.maxWeight - weight
+				tPlayer.setMaxWeight(doRound(newWeight, 2))
+			end
 		else
 			Notify(xPlayer.source, 'This person already has this weapon, just give them ammo')
 		end
@@ -367,8 +383,10 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 					if IsInInv(inventory, data.item.name) then
 						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 							xPlayer.removeWeapon(data.item.name)
-							local newWeight = xPlayer.maxWeight + weight
-							xPlayer.setMaxWeight(newWeight)
+							if Config.Weight.AddWeaponsToPlayerWeight then
+								local newWeight = xPlayer.maxWeight + weight
+								xPlayer.setMaxWeight(doRound(newWeight, 2))
+							end
 							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
 							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 								['@owner'] = owner,
@@ -386,7 +404,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 							xPlayer.removeWeapon(data.item.name)
 							local newWeight = xPlayer.maxWeight + weight
-							xPlayer.setMaxWeight(newWeight)
+							xPlayer.setMaxWeight(doRound(newWeight, 2))
 							inventory.weapons[data.item.name] = {}
 							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
 							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
@@ -535,6 +553,13 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				weight = 5 + (data.item.count*0.01)
 				print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
 			end
+			if Config.Weight.AddWeaponsToPlayerWeight then
+				local newWeight = xPlayer.maxWeight - weight
+				if newWeight <= doRound(0, 2) then
+					Notify(source, 'Can not hold weapon')
+					return
+				end
+			end
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
@@ -542,8 +567,10 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 						for i = 1,#inventory.weapons[data.item.name] do
 							if inventory.weapons[data.item.name][i].count == data.item.count then
 								xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][i].count)
-								local newWeight = xPlayer.maxWeight - weight
-								xPlayer.setMaxWeight(newWeight)
+								if Config.Weight.AddWeaponsToPlayerWeight then
+									local newWeight = xPlayer.maxWeight - weight
+									xPlayer.setMaxWeight(doRound(newWeight, 2))
+								end
 								table.remove(inventory.weapons[data.item.name], i)
 								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 									['@owner'] = owner,

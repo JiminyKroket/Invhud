@@ -9,10 +9,31 @@ Citizen.CreateThread(function()
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 		Citizen.Wait(10)
 	end
-	while not ESX.IsPlayerLoaded() do
-		Citizen.Wait(10)
-	end
+	while not ESX.IsPlayerLoaded() do Citizen.Wait(10) end
+	while not HasCollisionLoadedAroundEntity(PlayerPedId()) do Citizen.Wait(10) end
 	PlayerData = ESX.GetPlayerData()
+	if Config.Weight.AddWeaponsToPlayerWeight then
+		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
+			items = {}
+			weapons = data.weapons
+			local playerPed = PlayerPedId()
+			for key, value in pairs(weapons) do
+				local weaponHash = GetHashKey(weapons[key].name)
+				if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
+					local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
+					table.insert(
+						items,
+						{
+							label = weapons[key].label,
+							count = ammo,
+							name = weapons[key].name,
+						}
+					)
+				end
+			end
+			TriggerServerEvent('invhud:setPlayerWeaponWeight', items)
+		end, GetPlayerServerId(PlayerId()))
+	end
 	if Config.Use.Licenses then
 		ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
 			for i = 1, #licenses, 1 do
@@ -225,6 +246,203 @@ setShopInventory = function(data)
             itemList = items
         }
     )
+end
+
+InShopZone = function(pos)
+	local inShop, shopIn = false, nil
+	for k,v in pairs(Config.Shops) do
+		for i = 1,#v.Locations.Store do
+			local dis = #(pos - v.Locations.Store[i])
+			if dis < 1.5 then
+				inShop = true
+				shopIn = k
+			end
+		end
+	end
+	return inShop, shopIn
+end
+
+InStashZone = function(pos)
+	local atStash, stashAt = false, nil
+	for k,v in pairs(Config.Stash) do
+		local dis = #(pos - v.coords)
+		if dis < 1.5 and (PlayerData.job.name == v.job or v.job == 'identifier') then
+			atStash = true
+			stashAt = k
+		end
+	end
+	return atStash, stashAt
+end
+
+openInventory = function(invType)
+    loadPlayerInventory()
+    isInInventory = true
+    SendNUIMessage(
+        {
+            action = 'display',
+            type = invType
+        }
+    )
+    SetNuiFocus(true, true)
+end
+
+closeInventory = function()
+    isInInventory = false
+	if openedTrunk then
+		SetVehicleDoorShut(openedTrunk, 5, false, false)
+		openedTrunk = nil
+	end
+    SendNUIMessage(
+        {
+            action = 'hide'
+        }
+    )
+    SetNuiFocus(false, false)
+end
+
+shouldCloseInventory = function(itemName)
+    for index, value in ipairs(Config.CloseUiItems) do
+        if value == itemName then
+            return true
+        end
+    end
+
+    return false
+end
+
+loadPlayerInventory = function(inv)
+	if not inv then
+		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
+			items = {}
+			inventory = data.inventory
+			accounts = data.accounts
+			money = data.money
+			weapons = data.weapons
+
+			if Inclusions.Cash and money ~= nil and money > 0 then
+				if not Config.ESX1Point1  then
+					moneyData = {
+						label = _U('cash'),
+						name = 'money',
+						type = 'item_account',
+						count = money,
+						usable = false,
+						rare = false,
+						limit = -1,
+						canRemove = true
+					}
+
+					table.insert(items, moneyData)
+				else
+					moneyData = {
+						label = _U("cash"),
+						name = "cash",
+						type = "item_money",
+						count = money,
+						usable = false,
+						rare = false,
+						limit = -1,
+						canRemove = true
+					}
+
+					table.insert(items, moneyData)
+				end
+			end
+
+			if Inclusions.Dirty and accounts ~= nil then
+				for key, value in pairs(accounts) do
+					if accounts[key].name == 'black_money' then
+						if accounts[key].money > 0 then
+							accountData = {
+								label = accounts[key].label,
+								count = accounts[key].money,
+								type = 'item_account',
+								name = accounts[key].name,
+								usable = false,
+								rare = false,
+								limit = -1,
+								canRemove = true
+							}
+							table.insert(items, accountData)
+						end
+					end
+				end
+			end
+
+			if inventory ~= nil then
+				for key, value in pairs(inventory) do
+					if inventory[key].count <= 0 then
+						inventory[key] = nil
+					else
+						inventory[key].type = 'item_standard'
+						inventory[key].id = id
+						table.insert(items, inventory[key])
+					end
+				end
+			end
+
+			if Inclusions.Weapons and weapons ~= nil then
+				for key, value in pairs(weapons) do
+					local weaponHash = GetHashKey(weapons[key].name)
+					local playerPed = PlayerPedId()
+					if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
+						local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
+						table.insert(
+							items,
+							{
+								label = weapons[key].label,
+								count = ammo,
+								limit = -1,
+								type = 'item_weapon',
+								name = weapons[key].name,
+								usable = false,
+								rare = false,
+								canRemove = true
+							}
+						)
+					end
+				end
+			end
+			playerInv = items
+			SendNUIMessage(
+				{
+					action = 'setItems',
+					itemList = items
+				}
+			)
+		end, GetPlayerServerId(PlayerId()))
+	else
+		items = inv
+		playerInv = items
+		SendNUIMessage(
+			{
+				action = 'setItems',
+				itemList = items
+			}
+		)
+	end
+end
+
+IsPedHoldingWeapon = function(selWep, tabWep)
+	local hasWeap
+	for i = 1,#Config.Bullets[tabWep] do
+		if selWep == Config.Bullets[tabWep][i] then
+			hasWeap = true
+		end
+	end
+	return hasWeap
+end
+
+CreateBlip = function(coords, text, scale, color, sprite, display)
+	local blip = AddBlipForCoord(coords)
+	SetBlipSprite(blip, sprite)
+	SetBlipColour(blip, color)
+	SetBlipScale(blip, scale)
+	SetBlipDisplay(blip, display)
+	SetBlipAsShortRange(blip, true)
+	BeginTextCommandSetBlipName('STRING')
+	AddTextComponentString(text)
+	EndTextCommandSetBlipName(blip)
 end
 
 RegisterNUICallback('PutIntoGBox', function(data, cb)
@@ -490,58 +708,6 @@ RegisterNUICallback('TakeFromStash', function(data, cb)
 	cb('ok')
 end)
 
-InShopZone = function(pos)
-	local inShop, shopIn = false, nil
-	for k,v in pairs(Config.Shops) do
-		for i = 1,#v.Locations.Store do
-			local dis = #(pos - v.Locations.Store[i])
-			if dis < 1.5 then
-				inShop = true
-				shopIn = k
-			end
-		end
-	end
-	return inShop, shopIn
-end
-
-InStashZone = function(pos)
-	local atStash, stashAt = false, nil
-	for k,v in pairs(Config.Stash) do
-		local dis = #(pos - v.coords)
-		if dis < 1.5 and (PlayerData.job.name == v.job or v.job == 'identifier') then
-			atStash = true
-			stashAt = k
-		end
-	end
-	return atStash, stashAt
-end
-
-openInventory = function(invType)
-    loadPlayerInventory()
-    isInInventory = true
-    SendNUIMessage(
-        {
-            action = 'display',
-            type = invType
-        }
-    )
-    SetNuiFocus(true, true)
-end
-
-closeInventory = function()
-    isInInventory = false
-	if openedTrunk then
-		SetVehicleDoorShut(openedTrunk, 5, false, false)
-		openedTrunk = nil
-	end
-    SendNUIMessage(
-        {
-            action = 'hide'
-        }
-    )
-    SetNuiFocus(false, false)
-end
-
 RegisterNUICallback('NUIFocusOff', function()
 	TriggerEvent('invhud:closeInventory')
 end)
@@ -628,7 +794,7 @@ RegisterNUICallback('GiveItem', function(data, cb)
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
 
-		TriggerServerEvent('esx:giveInventoryItem', data.player, data.item.type, data.item.name, count)
+		TriggerServerEvent('esx:tradePlayerItem', GetPlayerServerId(PlayerId()), data.player, data.item.type, data.item.name, count)
 		Wait(250)
 		loadPlayerInventory()
 	else
@@ -636,161 +802,6 @@ RegisterNUICallback('GiveItem', function(data, cb)
 	end
 	cb('ok')
 end)
-
-shouldCloseInventory = function(itemName)
-    for index, value in ipairs(Config.CloseUiItems) do
-        if value == itemName then
-            return true
-        end
-    end
-
-    return false
-end
-
-shouldSkipAccount = function(accountName)
-    for index, value in ipairs(Config.ExcludeAccountsList) do
-        if value == accountName then
-            return true
-        end
-    end
-
-    return false
-end
-
-loadPlayerInventory = function(inv)
-	if not inv then
-		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-			items = {}
-			inventory = data.inventory
-			accounts = data.accounts
-			money = data.money
-			weapons = data.weapons
-
-			if Inclusions.Cash and money ~= nil and money > 0 then
-				if not Config.ESX1Point1  then
-					moneyData = {
-						label = _U('cash'),
-						name = 'money',
-						type = 'item_account',
-						count = money,
-						usable = false,
-						rare = false,
-						limit = -1,
-						canRemove = true
-					}
-
-					table.insert(items, moneyData)
-				else
-					moneyData = {
-						label = _U("cash"),
-						name = "cash",
-						type = "item_money",
-						count = money,
-						usable = false,
-						rare = false,
-						limit = -1,
-						canRemove = true
-					}
-
-					table.insert(items, moneyData)
-				end
-			end
-
-			if Inclusions.Dirty and accounts ~= nil then
-				for key, value in pairs(accounts) do
-					if accounts[key].name == 'black_money' then
-						if accounts[key].money > 0 then
-							accountData = {
-								label = accounts[key].label,
-								count = accounts[key].money,
-								type = 'item_account',
-								name = accounts[key].name,
-								usable = false,
-								rare = false,
-								limit = -1,
-								canRemove = true
-							}
-							table.insert(items, accountData)
-						end
-					end
-				end
-			end
-
-			if inventory ~= nil then
-				for key, value in pairs(inventory) do
-					if inventory[key].count <= 0 then
-						inventory[key] = nil
-					else
-						inventory[key].type = 'item_standard'
-						inventory[key].id = id
-						table.insert(items, inventory[key])
-					end
-				end
-			end
-
-			if Inclusions.Weapons and weapons ~= nil then
-				for key, value in pairs(weapons) do
-					local weaponHash = GetHashKey(weapons[key].name)
-					local playerPed = PlayerPedId()
-					if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
-						local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
-						table.insert(
-							items,
-							{
-								label = weapons[key].label,
-								count = ammo,
-								limit = -1,
-								type = 'item_weapon',
-								name = weapons[key].name,
-								usable = false,
-								rare = false,
-								canRemove = true
-							}
-						)
-					end
-				end
-			end
-			playerInv = items
-			SendNUIMessage(
-				{
-					action = 'setItems',
-					itemList = items
-				}
-			)
-		end, GetPlayerServerId(PlayerId()))
-	else
-		items = inv
-		playerInv = items
-		SendNUIMessage(
-			{
-				action = 'setItems',
-				itemList = items
-			}
-		)
-	end
-end
-
-IsPedHoldingWeapon = function(selWep, tabWep)
-	local hasWeap
-	for i = 1,#Config.Bullets[tabWep] do
-		if selWep == Config.Bullets[tabWep][i] then
-			hasWeap = true
-		end
-	end
-	return hasWeap
-end
-
-CreateBlip = function(coords, text, scale, color, sprite, display)
-	local blip = AddBlipForCoord(coords)
-	SetBlipSprite(blip, sprite)
-	SetBlipColour(blip, color)
-	SetBlipScale(blip, scale)
-	SetBlipDisplay(blip, display)
-	SetBlipAsShortRange(blip, true)
-	BeginTextCommandSetBlipName('STRING')
-	AddTextComponentString(text)
-	EndTextCommandSetBlipName(blip)
-end
 
 RegisterNetEvent('invhud:openPropertyInv')
 AddEventHandler('invhud:openPropertyInv', function(name)
@@ -841,6 +852,7 @@ AddEventHandler('invhud:closeInventory', function()
 end)
 
 RegisterCommand('invhud:openInventory', function(raw)
+	if not HasCollisionLoadedAroundEntity(PlayerPedId()) then return end
 	local ped = PlayerPedId()
 	local pos = GetEntityCoords(ped)
 	if not IsPedSittingInAnyVehicle(ped) then
