@@ -134,17 +134,17 @@ ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 	cb(total)
 end)
 
-ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class)
+ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, class)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local weightLimit = 500
 	if class ~= nil then
 		if type(class) == 'number' then
 			if Config.Weight.VehicleLimits.Class[class] then
-				weightLimit = Config.Weight.VehicleLimits.Class[class][type]
+				weightLimit = Config.Weight.VehicleLimits.Class[class][invType]
 			end
 		elseif type(class) == 'string' then
 			if Config.Weight.VehicleLimits.CustomModels[class] then
-				weightLimit = Config.Weight.VehicleLimits.CustomModels[class][type]
+				weightLimit = Config.Weight.VehicleLimits.CustomModels[class][invType]
 			end
 		end
 	end
@@ -154,15 +154,15 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class
 		else
 			MySQL.Async.execute('INSERT INTO `inventories` (owner, type, data, `limit`) VALUES (@id, @type, @data, @limit)', {
 				['@id'] = id,
-				['@type'] = type,
+				['@type'] = invType,
 				['@data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}),
 				['@limit'] = weightLimit
 			}, function(rowsChanged)
 				if rowsChanged then
-					print('Inventory created for: '..id..' with type: '..type)
+					print('Inventory created for: '..id..' with type: '..invType)
 				end
 			end)
-			cb({['owner'] = id, ['type'] = type, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
+			cb({['owner'] = id, ['type'] = invType, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
 		end
 	end)
 end)
@@ -223,13 +223,13 @@ AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
 end)
 
 RegisterServerEvent('invhud:tradePlayerItem')
-AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName, itemCount)
+AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemName, itemCount)
 	local src = from
 
 	local xPlayer = ESX.GetPlayerFromId(src)
 	local tPlayer = ESX.GetPlayerFromId(target)
 
-	if type == 'item_standard' then
+	if invType == 'item_standard' then
 		local xItem = xPlayer.getInventoryItem(itemName)
 		local tItem = tPlayer.getInventoryItem(itemName)
 		
@@ -262,21 +262,21 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName,
 				Notify(xPlayer.source, 'You do not have enough of that item to give')
 			end
 		end
-	elseif type == 'item_account' then
+	elseif invType == 'item_account' then
 		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
 			xPlayer.removeAccountMoney(itemName, itemCount)
 			tPlayer.addAccountMoney(itemName, itemCount)
 		else
 			Notify(xPlayer.source, 'You do not have enough in that account to give')
 		end
-	elseif type == 'item_money' then
+	elseif invType == 'item_money' then
 		if xPlayer.getMoney() >= count then
 			xPlayer.removeMoney(count)
 			xTarget.addMoney(count)
 		else
 			Notify(xPlayer.source, 'You do not have enough money')
 		end
-	elseif type == 'item_weapon' then
+	elseif invType == 'item_weapon' then
 		if not tPlayer.hasWeapon(itemName) then
 			local weight
 			if Config.Weight.WeaponWeights[itemName] then
