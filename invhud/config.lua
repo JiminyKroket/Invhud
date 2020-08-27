@@ -1,14 +1,24 @@
 Config = {}
 Config.Locale = 'en'
-Config.IncludeCash = true -- Include cash in inventory?
-Config.IncludeWeapons = true -- Include weapons in inventory?
-Config.IncludeBlackMoney = true -- Include black money in inventory?
-Config.OpenControl = 82 -- Key for opening inventory. Edit html/js/config.js to change key for closing it.
-Config.CurrencyIcon = '$' -- Currency icon used for non html text
-Config.WeaponLicense = { -- Weapon license options, do players need one, what is the name of the one they need
-	Needs = false,
-	Name = 'firearm'
+
+Config.ESX1Point1 = false -- SET TRUE IF USING ESX1.1 OR LOWER
+
+Config.Use = {
+	Licenses = false,
+	Societies = false
 }
+
+Config.IncludeOptions = { -- SET ALL NON-ITEM INCLUDED OPTIONS HERE:CASH(INCLUDE PLAYER CASH IN THEIR INVENTORY? WILL ALWAYS SHOW CASH IN SECONDARY IF PRESENT), DIRTY(INCLUDE
+	-- PLAYER BLACK_MONEY IN THEIR INVENTORY? WILL ALWAYS SHOW BLACK_MONEY IN SECONDARY IF PRESENT), WEAPONS(INCLUDE PLAYER WEAPONS IN THEIR INVENTORY? DOES NOT CREATE WEAPONS
+	-- AS ITEMS, SIMPLY ADD THEM AS OPTIONS TO DROP/GIVE/PLACE IN SECONDARY INVENTORY. WILL ALWAYS SHOW WEAPONS IN SECONDARY IF PRESENT)
+	Cash = true,
+	Dirty = true,
+	Weapons = true
+}
+
+Config.OpenKeyName = 'comma' -- SET KEY MAPPED VALUE FOR OPEN INVENTORY COMMAND(PLAYERS CAN ADJUST THEIR OWN KEY MAP VALUE IN GAME)
+
+Config.CurrencyIcon = '$' -- SET CURRENCY ICON FOR NON HTML INSTANCES(NOTIFCATIONS MOSTLY)
 
 -- List of item names that will close ui when used
 Config.CloseUiItems = {'headbag', 'fishingrod', 'tunerlaptop', 'binoculars', 'joint', 'cigarette', 'cigar', 'fixkit', 'rollingpaper', 'cocaine', 'meth', 'lowcalrounds',
@@ -76,29 +86,29 @@ Config.Weight = {
 		['WEAPON_RAILGUN'] = 2,
 	},
 	
-	VehicleClassLimits = {
-		[0] = {['gbox'] = 30, ['trunk'] = 200},
-		[1] = {['gbox'] = 30, ['trunk'] = 200},
-		[2] = {['gbox'] = 30, ['trunk'] = 200},
-		[3] = {['gbox'] = 30, ['trunk'] = 200},
-		[4] = {['gbox'] = 30, ['trunk'] = 200},
-		[5] = {['gbox'] = 30, ['trunk'] = 200},
-		[6] = {['gbox'] = 30, ['trunk'] = 200},
-		[7] = {['gbox'] = 30, ['trunk'] = 200},
-		[8] = {['gbox'] = 30, ['trunk'] = 200},
-		[9] = {['gbox'] = 30, ['trunk'] = 200},
-		[10] = {['gbox'] = 30, ['trunk'] = 200},
-		[11] = {['gbox'] = 30, ['trunk'] = 200},
-		[12] = {['gbox'] = 30, ['trunk'] = 200},
-		[13] = {['gbox'] = 30, ['trunk'] = 200},
-		[14] = {['gbox'] = 30, ['trunk'] = 200},
-		[15] = {['gbox'] = 30, ['trunk'] = 200},
-		[16] = {['gbox'] = 30, ['trunk'] = 200},
-		[17] = {['gbox'] = 30, ['trunk'] = 200},
-		[18] = {['gbox'] = 30, ['trunk'] = 200},
-		[19] = {['gbox'] = 30, ['trunk'] = 200},
-		[20] = {['gbox'] = 30, ['trunk'] = 200},
-		[21] = {['gbox'] = 30, ['trunk'] = 200}
+	VehicleClassLimits = { -- FOR VEHICLE CLASSES WITHOUT TRUNKS, GLOVEBOX IS WEIGHTED AS AN INTERIOR(BOATS/HELICOPTERS/CYCLES/TRAINS)
+		[0] = {['gbox'] = 30, ['trunk'] = 200}, -- COMPACTS
+		[1] = {['gbox'] = 30, ['trunk'] = 200}, -- SEDANS
+		[2] = {['gbox'] = 60, ['trunk'] = 200}, -- SUVS
+		[3] = {['gbox'] = 30, ['trunk'] = 250}, -- COUPES
+		[4] = {['gbox'] = 30, ['trunk'] = 400}, -- MUSCLES
+		[5] = {['gbox'] = 20, ['trunk'] = 200}, -- SPORTS CLASSICS
+		[6] = {['gbox'] = 20, ['trunk'] = 200}, -- SPORTS
+		[7] = {['gbox'] = 20, ['trunk'] = 250}, -- SUPERS
+		[8] = {['gbox'] = 20, ['trunk'] = 30}, -- MOTORCYCLES
+		[9] = {['gbox'] = 30, ['trunk'] = 400}, -- OFF-ROAD
+		[10] = {['gbox'] = 30, ['trunk'] = 800}, -- INDUSTRIAL
+		[11] = {['gbox'] = 30, ['trunk'] = 6000}, -- UTILITY
+		[12] = {['gbox'] = 30, ['trunk'] = 1600}, -- VANS
+		[13] = {['gbox'] = 5, ['trunk'] = 0}, -- BICYCLES
+		[14] = {['gbox'] = 100, ['trunk'] = 0}, -- BOATS
+		[15] = {['gbox'] = 100, ['trunk'] = 0}, -- HELICOPTERS
+		[16] = {['gbox'] = 100, ['trunk'] = 0}, -- PLANES
+		[17] = {['gbox'] = 30, ['trunk'] = 200}, -- SERVICE
+		[18] = {['gbox'] = 30, ['trunk'] = 200}, -- EMERGENCY
+		[19] = {['gbox'] = 30, ['trunk'] = 200}, -- MILITARY
+		[20] = {['gbox'] = 60, ['trunk'] = 400}, -- COMMERCIAL
+		[21] = {['gbox'] = 3000, ['trunk'] = 0} -- TRAINS
 	}
 }
 
@@ -433,6 +443,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 
     ['Ammunation'] = {
 		Type = 'purchase',
+		NeedsLicense = 'firearm',
 		Account = 'money',
 		Society = {
 			Name = false,
@@ -589,8 +600,8 @@ Config.Stash = {
         job = 'lspd',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
-        msg = 'Open Stash ~INPUT_CONTEXT~'
+        markerColour = vector3(0, 255, 0),
+        msg = 'Los Santos Police Stash'
     },
     ['BCSO'] = {
         coords = vector3(1851.20, 3690.78, 33.27),
@@ -599,18 +610,18 @@ Config.Stash = {
         job = 'bcso',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
-        msg = 'Open Stash ~INPUT_CONTEXT~'
+        markerColour = vector3(0, 255, 0),
+        msg = 'Blaine County Sheriff Stash'
     },
     ['1'] = {
         coords = vector3(1848.28, 3689.40, 33.27),
 		useText = true,
         size = vector3(1.0, 1.0, 1.0),
         job = 'identifier',
-        markerType = 2,
+        markerType = -1,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
-        msg = 'Open Stash ~INPUT_CONTEXT~'
+        markerColour = vector3(0, 255, 0),
+        msg = 'Player Stash'
     },
     ['2'] = {
         coords = vector3(444.37, -980.02, 29.69),
@@ -619,7 +630,7 @@ Config.Stash = {
         job = 'identifier',
         markerType = 2,
 		draw = 15,
-        markerColour = { r = 255, g = 255, b = 255 },
-        msg = 'Open Stash ~INPUT_CONTEXT~'
+        markerColour = vector3(0, 255, 0),
+        msg = 'Player Stash'
     }
 }

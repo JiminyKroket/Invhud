@@ -1,6 +1,7 @@
 local isInInventory = false
 local targetPlayer, targetPlayerName, openedTrunk
 local trunkData, gBoxData, stashData, propertyData, safeData, shopData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}, {}
+local Inclusions = Config.IncludeOptions
 ESX = nil
 
 Citizen.CreateThread(function()
@@ -12,7 +13,7 @@ Citizen.CreateThread(function()
 		Citizen.Wait(10)
 	end
 	PlayerData = ESX.GetPlayerData()
-	if Config.WeaponLicense.Need then
+	if Config.Use.Licenses then
 		ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
 			for i = 1, #licenses, 1 do
 				Licenses[licenses[i]] = true
@@ -28,7 +29,6 @@ Citizen.CreateThread(function()
 	end
 	while true do
 		Citizen.Wait(5)
-		DisableControlAction(0, Config.OpenControl)
 		local ped = PlayerPedId()
 		local pos = GetEntityCoords(ped)
 		local dis
@@ -64,95 +64,15 @@ Citizen.CreateThread(function()
 			end
 		end
 		for k,v in pairs(Config.Stash) do
-			if v.markerType ~= -1 then
-				local dis = #(pos - v.coords)
-				if dis <= v.draw then
-					DrawMarker(v.markerType, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, v.size.x, v.size.y, v.size.z, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
-					if v.useText then
-						DrawShopText(v.coords.x, v.coords.y, v.coords.z, k, v.markerColour)
-					end
-				end
-			end
-		end
-		if IsDisabledControlJustReleased(0, Config.OpenControl) then
-			local ped = PlayerPedId()
-			local pos = GetEntityCoords(ped)
-			if not IsPedSittingInAnyVehicle(ped) then
-				local inZone, zoneIn = InShopZone(pos)
-				if inZone then
-					shopData = Config.Shops[zoneIn]
-					if Config.WeaponLicense.Needs then
-						if zoneIn ~= 'weaponshop' or Licenses[Config.WeaponLicense.Name] ~= nil then
-							ESX.TriggerServerCallback('invhud:getShopItems', function(data)
-								setShopInventory(data)
-								openInventory('shop')
-							end, zoneIn)
-							Citizen.Wait(250)
-						else
-							Notify('You do not have a fire-arm license, we can not sell you guns')
-						end
-					else
-						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
-							setShopInventory(data)
-							openInventory('shop')
-						end, zoneIn)
-						Citizen.Wait(250)
-					end
-				else
-					local atStash, stashAt = InStashZone(pos)
-					if atStash then
-						if tonumber(stashAt) ~= nil then
-							ESX.TriggerServerCallback('invhud:getInv', function(data)
-								setInventory(data, 'stash')
-								openInventory('stash')
-								stashData.stash = PlayerData.identifier..stashAt
-							end, 'stash', PlayerData.identifier..stashAt)
-						else
-							ESX.TriggerServerCallback('invhud:getInv', function(data)
-								setInventory(data, 'stash')
-								openInventory('stash')
-								stashData.stash = stashAt
-							end, 'stash', stashAt)
-						end
-					else
-						local veh = ESX.Game.GetVehicleInDirection()
-						if DoesEntityExist(veh) then
-							local plate = ESX.Game.GetVehicleProperties(veh).plate
-							local class = GetVehicleClass(veh)
-							trunkData.plate = plate
-							local trunk = GetEntityBoneIndexByName(veh, 'platelight')
-							local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
-							local dis = #(pos - trunkPos)
-							if dis < 2.5 then
-								local lok = GetVehicleDoorLockStatus(veh)
-								if lok == 1 then
-									ESX.TriggerServerCallback('invhud:getInv', function(data)
-										setInventory(data, 'trunk')
-										SetVehicleDoorOpen(veh, 5)
-										openedTrunk = veh
-										openInventory('trunk')
-									end, 'trunk', plate, class)
-								else
-									Notify('This trunk is locked')
-								end
-							else
-								openInventory('normal')
-							end
-						else
-							openInventory('normal')
+			if PlayerData.job.name == v.job or v.job == 'identifier' then
+				if v.markerType ~= -1 then
+					local dis = #(pos - v.coords)
+					if dis <= v.draw then
+						DrawMarker(v.markerType, v.coords, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, v.size.x, v.size.y, v.size.z, v.markerColour.x, v.markerColour.y, v.markerColour.z, 200, false, false, 0, false, 0, 0, 0)
+						if v.useText then
+							DrawShopText(v.coords.x, v.coords.y, v.coords.z, v.msg, v.markerColour)
 						end
 					end
-				end
-			else
-				local veh = GetVehiclePedIsIn(ped, true)
-				if DoesEntityExist(veh) then
-					local plate = ESX.Game.GetVehicleProperties(veh).plate
-							local class = GetVehicleClass(veh)
-					gBoxData.plate = plate
-					ESX.TriggerServerCallback('invhud:getInv', function(data)
-						setInventory(data, 'gbox')
-						openInventory('gbox')
-					end, 'gbox', plate, class)
 				end
 			end
 		end
@@ -194,58 +114,59 @@ Notify = function(text, timer)
 end
 
 setInventory = function(data, invType)
-    SendNUIMessage(
-        {
-            action = 'setInfoText',
-            text = string.upper(invType)
-        }
-    )
+	local invText = '%s %s Weight: %s / %s'
+	ESX.TriggerServerCallback('invhud:doMath', function(total)
+		SendNUIMessage(
+			{
+				action = 'setInfoText',
+				text = invText:format(data.owner, data.type, tostring(total), tostring(data.limit))
+			}
+		)
+		data = json.decode(data.data)
+		items = {}
 
-    items = {}
+		if data.blackMoney > 0 then
+			blackData = {
+				label = _U('black_money'),
+				count = data.blackMoney,
+				type = 'item_account',
+				name = 'black_money',
+				usable = false,
+				rare = false,
+				limit = -1,
+				canRemove = false
+			}
+			table.insert(items, blackData)
+		end
+		
+		if data.cash > 0 then
+			cashData = {
+				label = 'cash',
+				count = data.cash,
+				type = 'item_money',
+				name = 'cash',
+				usable = false,
+				rare = false,
+				limit = -1,
+				canRemove = false
+			}
+			table.insert(items, cashData)
+		end
 
-    if data.blackMoney > 0 then
-        blackData = {
-            label = _U('black_money'),
-            count = data.blackMoney,
-            type = 'item_account',
-            name = 'black_money',
-            usable = false,
-            rare = false,
-            limit = -1,
-            canRemove = false
-        }
-        table.insert(items, blackData)
-    end
-	
-	if data.cash > 0 then
-        cashData = {
-            label = 'cash',
-            count = data.cash,
-            type = 'item_money',
-            name = 'cash',
-            usable = false,
-            rare = false,
-            limit = -1,
-            canRemove = false
-        }
-        table.insert(items, cashData)
-    end
+		if data.items ~= nil then
+			for key, value in pairs(data.items) do
+				data.items[key][1].name = key
+				data.items[key][1].label = value[1].label
+				data.items[key][1].type = 'item_standard'
+				data.items[key][1].usable = false
+				data.items[key][1].rare = false
+				data.items[key][1].limit = -1
+				data.items[key][1].canRemove = false
+				table.insert(items, data.items[key][1])
+			end
+		end
 
-    if data.items ~= nil then
-        for key, value in pairs(data.items) do
-			data.items[key][1].name = key
-			data.items[key][1].label = value[1].label
-			data.items[key][1].type = 'item_standard'
-			data.items[key][1].usable = false
-			data.items[key][1].rare = false
-			data.items[key][1].limit = -1
-			data.items[key][1].canRemove = false
-			table.insert(items, data.items[key][1])
-        end
-    end
-
-    if Config.IncludeWeapons and data.weapons ~= nil then
-        for key, value in pairs(data.weapons) do
+		for key, value in pairs(data.weapons) do
 			for i = 1,#data.weapons[key] do
 				if data.weapons[key][i] ~= 'WEAPON_UNARMED' then
 					table.insert(
@@ -263,15 +184,15 @@ setInventory = function(data, invType)
 					)
 				end
 			end
-        end
-    end
+		end
 
-    SendNUIMessage(
-        {
-            action = 'setSecondInventoryItems',
-            itemList = items
-        }
-    )
+	SendNUIMessage(
+			{
+				action = 'setSecondInventoryItems',
+				itemList = items
+			}
+		)
+	end, json.decode(data.data))
 end
 
 setShopInventory = function(data)
@@ -745,40 +666,37 @@ loadPlayerInventory = function(inv)
 			money = data.money
 			weapons = data.weapons
 
-			if Config.IncludeCash and money ~= nil and money > 0 then
-				moneyData = {
-					label = _U('cash'),
-					name = 'money',
-					type = 'item_account',
-					count = money,
-					usable = false,
-					rare = false,
-					limit = -1,
-					canRemove = true
-				}
+			if Inclusions.Cash and money ~= nil and money > 0 then
+				if not Config.ESX1Point1  then
+					moneyData = {
+						label = _U('cash'),
+						name = 'money',
+						type = 'item_account',
+						count = money,
+						usable = false,
+						rare = false,
+						limit = -1,
+						canRemove = true
+					}
 
-				table.insert(items, moneyData)
+					table.insert(items, moneyData)
+				else
+					moneyData = {
+						label = _U("cash"),
+						name = "cash",
+						type = "item_money",
+						count = money,
+						usable = false,
+						rare = false,
+						limit = -1,
+						canRemove = true
+					}
+
+					table.insert(items, moneyData)
+				end
 			end
-			
-			-- USE THE LOWER INCLUDECASH IF YOU HAVE ESX 1.1 AND NOTICE MONEY DOES NOT DROP/GIVE
-				
-			--if Config.IncludeCash and money ~= nil and money > 0 then
-				--moneyData = {
-				   -- label = _U("cash"),
-				   -- name = "cash",
-				   -- type = "item_money",
-				   -- count = money,
-				   -- usable = false,
-				   -- rare = false,
-				   -- limit = -1,
-				   -- canRemove = true
-				--}
 
-				--table.insert(items, moneyData)
-			--end
-			
-			
-			if Config.IncludeBlackMoney and accounts ~= nil then
+			if Inclusions.Dirty and accounts ~= nil then
 				for key, value in pairs(accounts) do
 					if accounts[key].name == 'black_money' then
 						if accounts[key].money > 0 then
@@ -810,7 +728,7 @@ loadPlayerInventory = function(inv)
 				end
 			end
 
-			if Config.IncludeWeapons and weapons ~= nil then
+			if Inclusions.Weapons and weapons ~= nil then
 				for key, value in pairs(weapons) do
 					local weaponHash = GetHashKey(weapons[key].name)
 					local playerPed = PlayerPedId()
@@ -922,6 +840,99 @@ AddEventHandler('invhud:closeInventory', function()
 	closeInventory()
 end)
 
+RegisterCommand('invhud:openInventory', function(raw)
+	local ped = PlayerPedId()
+	local pos = GetEntityCoords(ped)
+	if not IsPedSittingInAnyVehicle(ped) then
+		local inZone, zoneIn = InShopZone(pos)
+		if inZone then
+			shopData = Config.Shops[zoneIn]
+			if Config.Shops[zoneIn].NeedsLicense ~= nil then
+				if Licenses[Config.Shops[zoneIn].NeedsLicense] ~= nil then
+					ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+						setShopInventory(data)
+						openInventory('shop')
+					end, zoneIn)
+					Citizen.Wait(250)
+				else
+					Notify('You do not have a fire-arm license, we can not sell you guns')
+				end
+			else
+				ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+					setShopInventory(data)
+					openInventory('shop')
+				end, zoneIn)
+				Citizen.Wait(250)
+			end
+		else
+			local atStash, stashAt = InStashZone(pos)
+			if atStash then
+				if tonumber(stashAt) ~= nil then
+					ESX.TriggerServerCallback('invhud:getInv', function(data)
+						setInventory(data, 'stash')
+						openInventory('stash')
+						stashData.stash = PlayerData.identifier..stashAt
+					end, 'stash', PlayerData.identifier..stashAt)
+				else
+					ESX.TriggerServerCallback('invhud:getInv', function(data)
+						setInventory(data, 'stash')
+						openInventory('stash')
+						stashData.stash = stashAt
+					end, 'stash', stashAt)
+				end
+			else
+				local veh
+				if Config.ESX1Point1 then
+					veh = ESX.Game.GetClosestVehicle()
+				else
+					veh = ESX.Game.GetVehicleInDirection()
+				end
+				if DoesEntityExist(veh) then
+					local plate = ESX.Game.GetVehicleProperties(veh).plate
+					local class = GetVehicleClass(veh)
+					trunkData.plate = plate
+					local trunk = GetEntityBoneIndexByName(veh, 'platelight')
+					if trunk == -1 then
+						trunk = GetEntityBoneIndexByName(veh, 'taillight_l')
+					end
+					local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
+					local dis = #(pos - trunkPos)
+					if dis < 2.5 then
+						local lok = GetVehicleDoorLockStatus(veh)
+						if lok == 1 then
+							ESX.TriggerServerCallback('invhud:getInv', function(data)
+								setInventory(data, 'trunk')
+								SetVehicleDoorOpen(veh, 5)
+								openedTrunk = veh
+								openInventory('trunk')
+							end, 'trunk', plate, class)
+						else
+							Notify('This trunk is locked')
+						end
+					else
+						openInventory('normal')
+					end
+				else
+					openInventory('normal')
+				end
+			end
+		end
+	else
+		local veh = GetVehiclePedIsIn(ped, true)
+		if DoesEntityExist(veh) then
+			local plate = ESX.Game.GetVehicleProperties(veh).plate
+			local class = GetVehicleClass(veh)
+			gBoxData.plate = plate
+			ESX.TriggerServerCallback('invhud:getInv', function(data)
+				setInventory(data, 'gbox')
+				openInventory('gbox')
+			end, 'gbox', plate, class)
+		end
+	end
+end)
+
+RegisterKeyMapping('invhud:openInventory', 'Open the inventory menu', 'keyboard', 'comma')
+
 -------------PLAYER----------------
 
 RegisterNetEvent('invhud:openPlayerInventory')
@@ -950,41 +961,37 @@ setPlayerInventoryData = function()
 		accounts = data.accounts
 		money = data.money
 		weapons = data.weapons
+		if Inclusions.Cash and money ~= nil and money > 0 then
+			if notConfig.ESX1Point1  then
+				moneyData = {
+					label = _U('cash'),
+					name = 'money',
+					type = 'item_account',
+					count = money,
+					usable = false,
+					rare = false,
+					limit = -1,
+					canRemove = true
+				}
 
-		if Config.IncludeCash and money ~= nil and money > 0 then
-			moneyData = {
-				label = _U('cash'),
-				name = 'money',
-				type = 'item_account',
-				count = money,
-				usable = false,
-				rare = false,
-				limit = -1,
-				canRemove = true
-			}
+				table.insert(items, moneyData)
+			else
+				moneyData = {
+					label = _U("cash"),
+					name = "cash",
+					type = "item_money",
+					count = money,
+					usable = false,
+					rare = false,
+					limit = -1,
+					canRemove = true
+				}
 
-			table.insert(items, moneyData)
+				table.insert(items, moneyData)
+			end
 		end
-		
-		-- USE THE LOWER INCLUDECASH IF YOU HAVE ESX 1.1 AND NOTICE MONEY DOES NOT DROP/GIVE
-				
-		--if Config.IncludeCash and money ~= nil and money > 0 then
-			--moneyData = {
-			   -- label = _U("cash"),
-			   -- name = "cash",
-			   -- type = "item_money",
-			   -- count = money,
-			   -- usable = false,
-			   -- rare = false,
-			   -- limit = -1,
-			   -- canRemove = true
-			--}
 
-			--table.insert(items, moneyData)
-		--end
-
-
-		if Config.IncludeBlackMoney and accounts ~= nil then
+		if Inclusions.Dirty and accounts ~= nil then
 			for key, value in pairs(accounts) do
 				if accounts[key].name == 'black_money' then
 					if accounts[key].money > 0 then
@@ -996,7 +1003,7 @@ setPlayerInventoryData = function()
 							usable = false,
 							rare = false,
 							limit = -1,
-							canRemove = canDrop
+							canRemove = true
 						}
 						table.insert(items, accountData)
 					end
@@ -1016,7 +1023,7 @@ setPlayerInventoryData = function()
 			end
 		end
 
-		if Config.IncludeWeapons and weapons ~= nil then
+		if Inclusions.Weapons and weapons ~= nil then
 			for key, value in pairs(weapons) do
 				local weaponHash = GetHashKey(weapons[key].name)
 				local playerPed = PlayerPedId()

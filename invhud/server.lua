@@ -4,9 +4,11 @@ itemShopList = {}
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
-for k,v in pairs(Config.Shops) do
-	if v.Society.Name then
-		TriggerEvent('esx_society:registerSociety', v.Society.Name, v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, {type = 'public'})
+if Config.Use.Societies then
+	for k,v in pairs(Config.Shops) do
+		if v.Society.Name then
+			TriggerEvent('esx_society:registerSociety', v.Society.Name, v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, {type = 'public'})
+		end
 	end
 end
 
@@ -135,28 +137,36 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 	local itemWeight
 	if xItem ~= nil then
 		itemWeight = xPlayer.getInventoryItem(name).weight
+		if itemWeight == nil then
+			itemWeight = 100/(xPlayer.getInventoryItem(name).limit*0.1)
+		end
 		itemWeight = itemWeight * count
 	elseif Config.Weight.WeaponWeights[name] then
 		itemWeight = Config.Weight.WeaponWeights[name]
-		itemWeight = itemWeight * (count*0.1)
+		itemWeight = itemWeight * (count*0.01)
 	else
-		itemWeight = 1
+		itemWeight = 0.01
 	end
 	totWeight = totWeight * 1.00
 	for k,v in pairs(inv.items) do
 		local xItem = xPlayer.getInventoryItem(k)
-		if xItem.weight ~= nil then
-			total = total + xItem.weight * v[1].count
+		if xItem ~= nil then
+			if xItem.weight ~= nil then
+				total = total + xItem.weight * v[1].count
+			else
+				total = total + 100/(xItem.limit*0.1) * v[1].count
+			end
 		else
-			total = total + 1
+			total = total + 0.01
 		end
 	end
 	for k,v in pairs(inv.weapons) do
 		for i = 1,#v do
 			if Config.Weight.WeaponWeights[k] then
-				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.1))
+				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.01))
 			else
-				total = total + 1
+				total = total + 5
+				print('Weapon weight not set, defaulted to 5')
 			end
 		end
 	end
@@ -166,6 +176,34 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 		return true
 	end
 end
+
+ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
+	local xPlayer = ESX.GetPlayerFromId(source)
+	local total = 0
+	for k,v in pairs(inv.items) do
+		local xItem = xPlayer.getInventoryItem(k)
+		if xItem ~= nil then
+			if xItem.weight ~= nil then
+				total = total + xItem.weight * v[1].count
+			else
+				total = total + 100/(xItem.limit*0.1) * v[1].count
+			end
+		else
+			total = total + 0.01
+		end
+	end
+	for k,v in pairs(inv.weapons) do
+		for i = 1,#v do
+			if Config.Weight.WeaponWeights[k] then
+				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.01))
+			else
+				total = total + 5
+				print('Weapon weight not set, defaulted to 5')
+			end
+		end
+	end
+	cb(total)
+end)
 
 ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class)
 	local xPlayer = ESX.GetPlayerFromId(source)
@@ -177,7 +215,7 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class
 	end
 	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = type}, function(result)
 		if result[1] then
-			cb(json.decode(result[1].data))
+			cb(result[1])
 		else
 			MySQL.Async.execute('INSERT INTO `inventories` (owner, type, data, `limit`) VALUES (@id, @type, @data, @limit)', {
 				['@id'] = id,
@@ -189,7 +227,7 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class
 					print('Inventory created for: '..id..' with type: '..type)
 				end
 			end)
-			cb({items = {}, weapons = {}, blackMoney = 0, cash = 0})
+			cb({['owner'] = id, ['type'] = type, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
 		end
 	end)
 end)
