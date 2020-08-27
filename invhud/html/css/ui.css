@@ -131,10 +131,10 @@ input[type=number] {
     text-align: center;
     padding: 5px;
     background-color: rgba(17, 5, 17, 0.6);
-    width: 80%;
+    width: 300%;
     position: absolute;
     left: 50%;
-    top: 15%;
+    top: -5%;
     transform: translate(-50%, -50%);
 }
 
