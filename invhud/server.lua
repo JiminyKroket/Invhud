@@ -21,102 +21,6 @@ Notify = function(src, text, timer)
 	TriggerClientEvent('esx:showNotification', src, text)
 end
 
-ESX.RegisterServerCallback('invhud:getPlayerLicenses', function(source, cb)
-	local xPlayer = ESX.GetPlayerFromId(source)
-	MySQL.Async.fetchAll('SELECT type FROM user_licenses WHERE owner = @owner', {
-		['@owner'] = xPlayer.identifier
-	}, function(result)
-		local licenses = {}
-
-		for  i = 1,#result do
-			table.insert(licenses, result[i].type)
-		end
-
-		cb(licenses)
-	end)
-end)
-
-ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target)
-	local tPlayer = ESX.GetPlayerFromId(target)
-
-	if tPlayer ~= nil then
-		cb({inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout})
-	else
-		cb(nil)
-	end
-end)
-
-AddEventHandler('esx:giveInventoryItem', function(target, itemType, itemName, count)
-	local src = source
-	local xPlayer = ESX.GetPlayerFromId(src)
-	local xTarget = ESX.GetPlayerFromId(target)
-	if itemName == 'money' or itemName == 'cash' then
-		if xPlayer.getMoney() >= count then
-			xPlayer.removeMoney(count)
-			xTarget.addMoney(count)
-		else
-			Notify(xPlayer.source, 'You do not have enough money')
-		end
-	end
-end)
-
-RegisterServerEvent('invhud:tradePlayerItem')
-AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName, itemCount)
-	local src = from
-
-	local xPlayer = ESX.GetPlayerFromId(src)
-	local tPlayer = ESX.GetPlayerFromId(target)
-
-	if type == 'item_standard' then
-		local xItem = xPlayer.getInventoryItem(itemName)
-		local tItem = tPlayer.getInventoryItem(itemName)
-		
-		if xPlayer.canCarryItem ~= nil then
-			if xPlayer.maxWeight ~= nil then
-				if itemCount > 0 and xItem.count >= itemCount then
-					if tPlayer.canCarryItem(itemName, itemCount) then
-						xPlayer.removeInventoryItem(itemName, itemCount)
-						tPlayer.addInventoryItem(itemName, itemCount)
-					else
-						Notify(xPlayer.source, 'This player can not carry that much')
-						Notify(tPlayer.source, 'You can not carry that much')
-					end
-				else
-					Notify(xPlayer.source, 'You do not have enough of that item to give')
-				end
-			else
-				Notify(src, 'Max weight error, relog')
-			end
-		else
-			if itemCount > 0 and xItem.count >= itemCount then
-				if tItem.limit == -1 or (tItem.count + itemCount) <= tItem.limit then
-					xPlayer.removeInventoryItem(itemName, itemCount)
-					tPlayer.addInventoryItem(itemName, itemCount)
-				else
-					Notify(xPlayer.source, 'This player can not carry that much')
-					Notify(tPlayer.source, 'You can not carry that much')
-				end
-			else
-				Notify(xPlayer.source, 'You do not have enough of that item to give')
-			end
-		end
-	elseif type == 'item_account' then
-		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
-			xPlayer.removeAccountMoney(itemName, itemCount)
-			tPlayer.addAccountMoney(itemName, itemCount)
-		else
-			Notify(xPlayer.source, 'You do not have enough in that account to give')
-		end
-	elseif type == 'item_weapon' then
-		if not tPlayer.hasWeapon(itemName) then
-			xPlayer.removeWeapon(itemName)
-			tPlayer.addWeapon(itemName, itemCount)
-		else
-			Notify(xPlayer.source, 'This person already has this weapon, just give them ammo')
-		end
-	end
-end)
-
 IsInInv = function(inv, item)
 	for k,v in pairs(inv.items) do
 		if item == k then
@@ -177,6 +81,31 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 	end
 end
 
+ESX.RegisterServerCallback('invhud:getPlayerLicenses', function(source, cb)
+	local xPlayer = ESX.GetPlayerFromId(source)
+	MySQL.Async.fetchAll('SELECT type FROM user_licenses WHERE owner = @owner', {
+		['@owner'] = xPlayer.identifier
+	}, function(result)
+		local licenses = {}
+
+		for  i = 1,#result do
+			table.insert(licenses, result[i].type)
+		end
+
+		cb(licenses)
+	end)
+end)
+
+ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target)
+	local tPlayer = ESX.GetPlayerFromId(target)
+
+	if tPlayer ~= nil then
+		cb({inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout})
+	else
+		cb(nil)
+	end
+end)
+
 ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local total = 0
@@ -197,7 +126,7 @@ ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 			if Config.Weight.WeaponWeights[k] then
 				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.01))
 			else
-				total = total + 5
+				total = total + (5 + (v.count*0.01))
 				print('Weapon weight not set, defaulted to 5')
 			end
 		end
@@ -209,8 +138,14 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local weightLimit = 500
 	if class ~= nil then
-		if Config.Weight.VehicleClassLimits[class] then
-			weightLimit = Config.Weight.VehicleClassLimits[class][type]
+		if type(class) == 'number' then
+			if Config.Weight.VehicleLimits.Class[class] then
+				weightLimit = Config.Weight.VehicleLimits.Class[class][type]
+			end
+		elseif type(class) == 'string' then
+			if Config.Weight.VehicleLimits.CustomModels[class] then
+				weightLimit = Config.Weight.VehicleLimits.CustomModels[class][type]
+			end
 		end
 	end
 	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = type}, function(result)
@@ -230,6 +165,136 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, type, id, class
 			cb({['owner'] = id, ['type'] = type, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
 		end
 	end)
+end)
+
+RegisterServerEvent('invhud:removeWeight')
+AddEventHandler('invhud:removeWeight', function(gun, ammo)
+	local src = source
+	local xPlayer = ESX.GetPlayerFromId(src)
+	local weight
+	if Config.Weight.WeaponWeights[gun] then
+		weight = Config.Weight.WeaponWeights[gun] + (ammo*0.01)
+	else
+		weight = 5 + (ammo*0.01)
+		print(string.format('Weapon weight not set for %s, defaulted to 5',gun))
+	end
+	print('changing weight')
+	local newWeight = xPlayer.maxWeight - weight
+	print(newWeight)
+	xPlayer.setMaxWeight(newWeight)
+end)
+
+RegisterServerEvent('esx:removeInventoryItem')
+AddEventHandler('esx:removeInventoryItem', function(itemType, itemName, count)
+	local src = source
+	local xPlayer = ESX.GetPlayerFromId(src)
+	print(itemType)
+	if itemType == 'item_weapon' then
+		itemName = string.upper(itemName)
+		local weight
+		if Config.Weight.WeaponWeights[itemName] then
+			weight = Config.Weight.WeaponWeights[itemName] + (count*0.01)
+		else
+			weight = 5 + (count*0.01)
+			print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
+		end
+		print('changing weight')
+		local newWeight = xPlayer.maxWeight + weight
+		print(newWeight)
+		xPlayer.setMaxWeight(newWeight)
+	end
+end)
+
+RegisterServerEvent('invhud:setPlayerWeaponWeight')
+AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
+	local src = source
+	local xPlayer = ESX.GetPlayerFromId(src)
+	local total = 0
+	for key,value in pairs(weapons) do
+		if Config.Weight.WeaponWeights[value.name] then
+			total = total + (Config.Weight.WeaponWeights[value.name] + (value.count*0.01))
+		else
+			total = total + (5 + (value.count*0.01))
+			print(string.format('Weapon weight not set for %s, defaulted to 5',value.name))
+		end
+	end
+	local newWeight = xPlayer.maxWeight - total
+	xPlayer.setMaxWeight(newWeight)
+end)
+
+RegisterServerEvent('invhud:tradePlayerItem')
+AddEventHandler('invhud:tradePlayerItem', function(from, target, type, itemName, itemCount)
+	local src = from
+
+	local xPlayer = ESX.GetPlayerFromId(src)
+	local tPlayer = ESX.GetPlayerFromId(target)
+
+	if type == 'item_standard' then
+		local xItem = xPlayer.getInventoryItem(itemName)
+		local tItem = tPlayer.getInventoryItem(itemName)
+		
+		if xPlayer.canCarryItem ~= nil then
+			if xPlayer.maxWeight ~= nil then
+				if itemCount > 0 and xItem.count >= itemCount then
+					if tPlayer.canCarryItem(itemName, itemCount) then
+						xPlayer.removeInventoryItem(itemName, itemCount)
+						tPlayer.addInventoryItem(itemName, itemCount)
+					else
+						Notify(xPlayer.source, 'This player can not carry that much')
+						Notify(tPlayer.source, 'You can not carry that much')
+					end
+				else
+					Notify(xPlayer.source, 'You do not have enough of that item to give')
+				end
+			else
+				Notify(src, 'Max weight error, relog')
+			end
+		else
+			if itemCount > 0 and xItem.count >= itemCount then
+				if tItem.limit == -1 or (tItem.count + itemCount) <= tItem.limit then
+					xPlayer.removeInventoryItem(itemName, itemCount)
+					tPlayer.addInventoryItem(itemName, itemCount)
+				else
+					Notify(xPlayer.source, 'This player can not carry that much')
+					Notify(tPlayer.source, 'You can not carry that much')
+				end
+			else
+				Notify(xPlayer.source, 'You do not have enough of that item to give')
+			end
+		end
+	elseif type == 'item_account' then
+		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
+			xPlayer.removeAccountMoney(itemName, itemCount)
+			tPlayer.addAccountMoney(itemName, itemCount)
+		else
+			Notify(xPlayer.source, 'You do not have enough in that account to give')
+		end
+	elseif type == 'item_money' then
+		if xPlayer.getMoney() >= count then
+			xPlayer.removeMoney(count)
+			xTarget.addMoney(count)
+		else
+			Notify(xPlayer.source, 'You do not have enough money')
+		end
+	elseif type == 'item_weapon' then
+		if not tPlayer.hasWeapon(itemName) then
+			local weight
+			if Config.Weight.WeaponWeights[itemName] then
+				weight = Config.Weight.WeaponWeights[itemName] + (itemCount*0.01)
+			else
+				weight = 5 + (itemCount*0.01)
+				print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
+			end
+			xPlayer.removeWeapon(itemName)
+			tPlayer.addWeapon(itemName, itemCount)
+			local newWeight = xPlayer.maxWeight + weight
+			xPlayer.setMaxWeight(newWeight)
+			newWeight = tPlayer.maxWeight - weight
+			tPlayer.setMaxWeight(newWeight)
+		else
+			Notify(xPlayer.source, 'This person already has this weapon, just give them ammo')
+		end
+	end
 end)
 
 RegisterServerEvent('invhud:putItem')
@@ -289,12 +354,21 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 	elseif data.item.type == 'item_weapon' then
 		if xPlayer.hasWeapon(data.item.name) then
 			local inventory = {}
+			local weight
+			if Config.Weight.WeaponWeights[data.item.name] then
+				weight = Config.Weight.WeaponWeights[data.item.name] + (data.item.count*0.01)
+			else
+				weight = 5 + (data.item.count*0.01)
+				print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
+			end
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
 					if IsInInv(inventory, data.item.name) then
 						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 							xPlayer.removeWeapon(data.item.name)
+							local newWeight = xPlayer.maxWeight + weight
+							xPlayer.setMaxWeight(newWeight)
 							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
 							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 								['@owner'] = owner,
@@ -311,6 +385,8 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 					else
 						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 							xPlayer.removeWeapon(data.item.name)
+							local newWeight = xPlayer.maxWeight + weight
+							xPlayer.setMaxWeight(newWeight)
 							inventory.weapons[data.item.name] = {}
 							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
 							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
@@ -452,6 +528,13 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	elseif data.item.type == 'item_weapon' then
 		if not xPlayer.hasWeapon(data.item.name) then
 			local inventory = {}
+			local weight
+			if Config.Weight.WeaponWeights[data.item.name] then
+				weight = Config.Weight.WeaponWeights[data.item.name] + (data.item.count*0.01)
+			else
+				weight = 5 + (data.item.count*0.01)
+				print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
+			end
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
@@ -459,6 +542,8 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 						for i = 1,#inventory.weapons[data.item.name] do
 							if inventory.weapons[data.item.name][i].count == data.item.count then
 								xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][i].count)
+								local newWeight = xPlayer.maxWeight - weight
+								xPlayer.setMaxWeight(newWeight)
 								table.remove(inventory.weapons[data.item.name], i)
 								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 									['@owner'] = owner,
