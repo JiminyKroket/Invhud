@@ -8,6 +8,13 @@ Code condensed specifically for my development.
 
 Copy your cash.png and rename it to money.png to have picture for cash in inventory
 
+Need to add 
+```
+TriggerEvent('invhud:removeWeight', xPlayer.source, pickup.name, pickup.count)
+```
+To your es_extended server main.lua 'esx:onPickup' event for weapons
+
+
 To open another player inventory you will need to call from client side 
 ```
 local cP, cD = ESX.Game.GetClosestPlayer()
