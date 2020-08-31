@@ -7,7 +7,8 @@ TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 if Config.Use.Societies then
 	for k,v in pairs(Config.Shops) do
 		if v.Society.Name then
-			TriggerEvent('esx_society:registerSociety', v.Society.Name, v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, 'society_'..v.Society.Name, {type = 'public'})
+			local socString = string.format('society_%s', shop.Society.Name)
+			TriggerEvent('esx_society:registerSociety', v.Society.Name, v.Society.Name, socString, socString, socString, {type = 'public'})
 		end
 	end
 end
@@ -148,8 +149,8 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 	local weightLimit = 500
 	if class ~= nil then
 		if type(class) == 'number' then
-			if Config.Weight.VehicleLimits.Class[class] then
-				weightLimit = Config.Weight.VehicleLimits.Class[class][invType]
+			if Config.Weight.VehicleLimits.Classes[class] then
+				weightLimit = Config.Weight.VehicleLimits.Classes[class][invType]
 			end
 		elseif type(class) == 'string' then
 			if Config.Weight.VehicleLimits.CustomModels[class] then
@@ -157,7 +158,7 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 			end
 		end
 	end
-	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = type}, function(result)
+	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = invType}, function(result)
 		if result[1] then
 			cb(result[1])
 		else
@@ -216,17 +217,30 @@ RegisterServerEvent('invhud:setPlayerWeaponWeight')
 AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-	local total = 0
-	for key,value in pairs(weapons) do
-		if Config.Weight.WeaponWeights[value.name] then
-			total = total + (Config.Weight.WeaponWeights[value.name] + (value.count*0.01))
-		else
-			total = total + (5 + (value.count*0.01))
-			print(string.format('Weapon weight not set for %s, defaulted to 5',value.name))
+	while not xPlayer.maxWeight do
+		Citizen.Wait(10)
+		xPlayer = ESX.GetPlayerFromId(src)
+		weightWaits = weightWaits + 1
+		if weightWaits >= 50 then
+			print('Failed to receive maxWeight, are you running esx with limits? Turn off the config to add weapon weight to players')
+			return
 		end
 	end
-	local newWeight = xPlayer.maxWeight - total
-	xPlayer.setMaxWeight(doRound(newWeight, 2))
+	if xPlayer.maxWeight then
+		local total = 0
+		for key,value in pairs(weapons) do
+			if Config.Weight.WeaponWeights[value.name] then
+				total = total + (Config.Weight.WeaponWeights[value.name] + (value.count*0.01))
+			else
+				total = total + (5 + (value.count*0.01))
+				print(string.format('Weapon weight not set for %s, defaulted to 5',value.name))
+			end
+		end
+		local newWeight = xPlayer.maxWeight - total
+		xPlayer.setMaxWeight(doRound(newWeight, 2))
+	else
+		print('If you are running esx with weight, please have the player log out')
+	end
 end)
 
 RegisterServerEvent('invhud:tradePlayerItem')
@@ -698,14 +712,14 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 					for k,v in pairs(list) do
 						if v.name == item then
 							local totalPrice = count * v.price
-							if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+							if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 								if xPlayer.getAccount(shop.Account).money >= totalPrice then
 									xPlayer.removeAccountMoney(shop.Account, totalPrice)
 									xPlayer.addInventoryItem(item, count)
 									Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 									if shop.Society.Name then
-										TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
-											account.addMoney(amount)
+										TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
+											account.addMoney(totalPrice)
 										end)
 									end
 								else
@@ -717,8 +731,8 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 									xPlayer.addInventoryItem(item, count)
 									Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 									if shop.Society.Name then
-										TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
-											account.addMoney(amount)
+										TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
+											account.addMoney(totalPrice)
 										end)
 									end
 								else
@@ -739,14 +753,14 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				for k,v in pairs(list) do
 					if v.name == item then
 						local totalPrice = count * v.price
-						if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+						if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 							if xPlayer.getAccount(shop.Account).money >= totalPrice then
 								xPlayer.removeAccountMoney(shop.Account, totalPrice)
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 								if shop.Society.Name then
-									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
-										account.addMoney(amount)
+									TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
+										account.addMoney(totalPrice)
 									end)
 								end
 							else
@@ -758,8 +772,8 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								xPlayer.addInventoryItem(item, count)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 								if shop.Society.Name then
-									TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
-										account.addMoney(amount)
+									TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
+										account.addMoney(totalPrice)
 									end)
 								end
 							else
@@ -781,13 +795,13 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 			for k,v in pairs(list) do
 				if v.name == item then
 					local totalPrice = 1 * v.price
-					if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+					if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 						if xPlayer.getAccount(shop.Account).money >= totalPrice then
 							xPlayer.removeAccountMoney(shop.Account, totalPrice)
 							xPlayer.addWeapon(v.name, v.ammo)
 							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 							if shop.Society.Name then
-								TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+								TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
 									account.addMoney(totalPrice)
 								end)
 							end
@@ -800,7 +814,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							xPlayer.addWeapon(v.name, v.ammo)
 							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 							if shop.Society.Name then
-								TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+								TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
 									account.addMoney(totalPrice)
 								end)
 							end
@@ -831,9 +845,9 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 						totalPrice = 0
 					end
 					if shop.Society.Name then
-						TriggerEvent('esx_addonaccount:getSharedAccount', shop.Society.Name, function(account)
+						TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
 							if account.money >= totalPrice then
-								if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+								if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 									xPlayer.addAccountMoney(shop.Account, totalPrice)
 									xPlayer.removeInventoryItem(item, count)
 									Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
@@ -849,7 +863,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 							end
 						end)
 					else
-						if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+						if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 							xPlayer.addAccountMoney(shop.Account, totalPrice)
 							xPlayer.removeInventoryItem(item, count)
 							Notify(source, 'You sold '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
@@ -876,7 +890,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					if shop.Account ~= 'money' and shop.Account ~= 'cash' then -- I FUCKING HATE ESX
+					if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 						xPlayer.addAccountMoney(shop.Account, totalPrice)
 						xPlayer.removeWeapon(v.name, 0)
 						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
