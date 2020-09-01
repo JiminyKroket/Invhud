@@ -12,7 +12,7 @@ Need to add
 ```
 TriggerEvent('invhud:removeWeight', xPlayer.source, pickup.name, pickup.count)
 ```
-To your es_extended server main.lua 'esx:onPickup' event for weapons
+To your es_extended server main.lua 'esx:onPickup' event if wishing to have weapons count towards player weight
 
 
 To open another player inventory you will need to call from client side 
