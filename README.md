@@ -28,8 +28,9 @@ Don't attempt to call from server.
 
 To open a property inventory use 
 ```
-local propertyID = 'I Must Be A String Unique To The Property'
-TriggerEvent('invhud:openPropertyInv', propertyID)
+local propertyID = 'I Must Be A String Unique To The Property' -- REQUIRED
+local propertyShell = 'shell_name_for_property' -- NOT REQUIRED (FOR USE WITH SHELL HOUSING TO GIVE WEIGHT LIMITS BASED ON SHELL)
+TriggerEvent('invhud:openPropertyInv', propertyID, propertyShell)
 ```
 Don't attempt to call from server.
 
