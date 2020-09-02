@@ -475,7 +475,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 
     ['Ammunation'] = {
 		Type = 'purchase',
-		NeedsLicense = 'firearm',
+		NeedsLicense = 'weapon',
 		Account = 'money',
 		Society = {
 			Name = false,
