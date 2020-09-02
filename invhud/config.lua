@@ -117,6 +117,30 @@ Config.Weight = { -- SET ALL WEIGHT INFORMATION HERE:ADDWEAPONSTOPLAYERWEIGHT(SH
 		CustomModels = {
 			['zentorno'] = {['gbox'] = 15, ['trunk'] = 50},
 		}
+	},
+	
+	Houses = {
+		Shells = {
+			playerhouse_tier1 = 500,
+			shell_v16low = 500,
+			shell_lester = 500,
+			shell_trailer = 500,
+			shell_trevor = 500,
+			shell_frankaunt = 500,
+			shell_medium2 = 500,
+			shell_medium3 = 500,
+			breze_shell_01 = 500,
+			breze_shell_03 = 500,
+			shell_v16mid = 500,
+			shell_michael = 500,
+			breze_shell_02 = 500,
+			shell_ranch = 500,
+			shell_highendv2 = 500,
+			shell_apartment1 = 500,
+			shell_apartment2 = 500,
+			shell_highend = 500,
+			shell_apartment3 = 500,
+		},
 	}
 }
 

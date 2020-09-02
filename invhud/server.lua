@@ -148,14 +148,12 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local weightLimit = 500
 	if class ~= nil then
-		if type(class) == 'number' then
-			if Config.Weight.VehicleLimits.Classes[class] then
-				weightLimit = Config.Weight.VehicleLimits.Classes[class][invType]
-			end
-		elseif type(class) == 'string' then
-			if Config.Weight.VehicleLimits.CustomModels[class] then
-				weightLimit = Config.Weight.VehicleLimits.CustomModels[class][invType]
-			end
+		if Config.Weight.VehicleLimits.Classes[class] then
+			weightLimit = Config.Weight.VehicleLimits.Classes[class][invType]
+		elseif Config.Weight.VehicleLimits.CustomModels[class] then
+			weightLimit = Config.Weight.VehicleLimits.CustomModels[class][invType]
+		elseif Config.Weight.Houses.Shells[class] then
+			weightLimit = Config.Weight.Houses.Shells[class]
 		end
 	end
 	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = invType}, function(result)
