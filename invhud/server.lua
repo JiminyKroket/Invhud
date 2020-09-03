@@ -136,7 +136,7 @@ ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 			if Config.Weight.WeaponWeights[k] then
 				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.01))
 			else
-				total = total + (5 + (v.count*0.01))
+				total = total + (5 + (v[i].count*0.01))
 				print('Weapon weight not set, defaulted to 5')
 			end
 		end
