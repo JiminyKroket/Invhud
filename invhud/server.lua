@@ -7,7 +7,7 @@ TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 if Config.Use.Societies then
 	for k,v in pairs(Config.Shops) do
 		if v.Society.Name then
-			local socString = string.format('society_%s', shop.Society.Name)
+			local socString = string.format('society_%s', v.Society.Name)
 			TriggerEvent('esx_society:registerSociety', v.Society.Name, v.Society.Name, socString, socString, socString, {type = 'public'})
 		end
 	end
