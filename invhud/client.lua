@@ -859,16 +859,24 @@ RegisterCommand('invhud:openInventory', function(raw)
 	if not IsPedSittingInAnyVehicle(ped) then
 		local inZone, zoneIn = InShopZone(pos)
 		if inZone then
-			shopData = Config.Shops[zoneIn]
-			if Config.Shops[zoneIn].NeedsLicense ~= nil then
-				if Licenses[Config.Shops[zoneIn].NeedsLicense] ~= nil then
+			if Config.Use.Licenses then
+				shopData = Config.Shops[zoneIn]
+				if shopData.NeedsLicense ~= nil then
+					if Licenses[shopData.NeedsLicense] ~= nil then
+						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+							setShopInventory(data)
+							openInventory('shop')
+						end, zoneIn)
+						Citizen.Wait(250)
+					else
+						Notify('You do not have a fire-arm license, we can not sell you guns')
+					end
+				else
 					ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 						setShopInventory(data)
 						openInventory('shop')
 					end, zoneIn)
 					Citizen.Wait(250)
-				else
-					Notify('You do not have a fire-arm license, we can not sell you guns')
 				end
 			else
 				ESX.TriggerServerCallback('invhud:getShopItems', function(data)

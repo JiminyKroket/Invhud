@@ -121,25 +121,25 @@ Config.Weight = { -- SET ALL WEIGHT INFORMATION HERE:ADDWEAPONSTOPLAYERWEIGHT(SH
 	
 	Houses = {
 		Shells = {
-			playerhouse_tier1 = 500,
-			shell_v16low = 500,
-			shell_lester = 500,
-			shell_trailer = 500,
-			shell_trevor = 500,
-			shell_frankaunt = 500,
-			shell_medium2 = 500,
-			shell_medium3 = 500,
-			breze_shell_01 = 500,
-			breze_shell_03 = 500,
-			shell_v16mid = 500,
-			shell_michael = 500,
-			breze_shell_02 = 500,
-			shell_ranch = 500,
-			shell_highendv2 = 500,
-			shell_apartment1 = 500,
-			shell_apartment2 = 500,
-			shell_highend = 500,
-			shell_apartment3 = 500,
+			playerhouse_tier1 = 5000,
+			shell_v16low = 5000,
+			shell_lester = 5000,
+			shell_trailer = 5000,
+			shell_trevor = 5000,
+			shell_frankaunt = 5000,
+			shell_medium2 = 5000,
+			shell_medium3 = 5000,
+			breze_shell_01 = 5000,
+			breze_shell_03 = 5000,
+			shell_v16mid = 10000,
+			shell_michael = 10000,
+			breze_shell_02 = 5000,
+			shell_ranch = 15000,
+			shell_highendv2 = 15000,
+			shell_apartment1 = 15000,
+			shell_apartment2 = 15000,
+			shell_highend = 15000,
+			shell_apartment3 = 15000,
 		},
 	}
 }
@@ -475,7 +475,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 
     ['Ammunation'] = {
 		Type = 'purchase',
-		NeedsLicense = 'weapon',
+		NeedsLicense = 'firearm',
 		Account = 'money',
 		Society = {
 			Name = false,
