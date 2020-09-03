@@ -859,8 +859,8 @@ RegisterCommand('invhud:openInventory', function(raw)
 	if not IsPedSittingInAnyVehicle(ped) then
 		local inZone, zoneIn = InShopZone(pos)
 		if inZone then
+			shopData = Config.Shops[zoneIn]
 			if Config.Use.Licenses then
-				shopData = Config.Shops[zoneIn]
 				if shopData.NeedsLicense ~= nil then
 					if Licenses[shopData.NeedsLicense] ~= nil then
 						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
