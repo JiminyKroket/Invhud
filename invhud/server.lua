@@ -415,8 +415,10 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 					else
 						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 							xPlayer.removeWeapon(data.item.name)
-							local newWeight = xPlayer.maxWeight + weight
-							xPlayer.setMaxWeight(doRound(newWeight, 2))
+							if Config.Weight.AddWeaponsToPlayerWeight then
+								local newWeight = xPlayer.maxWeight + weight
+								xPlayer.setMaxWeight(doRound(newWeight, 2))
+							end
 							inventory.weapons[data.item.name] = {}
 							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
 							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
