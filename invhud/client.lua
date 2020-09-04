@@ -794,7 +794,7 @@ RegisterNUICallback('GiveItem', function(data, cb)
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
 
-		TriggerServerEvent('esx:tradePlayerItem', GetPlayerServerId(PlayerId()), data.player, data.item.type, data.item.name, count)
+		TriggerServerEvent('invhud:tradePlayerItem', GetPlayerServerId(PlayerId()), data.player, data.item.type, data.item.name, count)
 		Wait(250)
 		loadPlayerInventory()
 	else
