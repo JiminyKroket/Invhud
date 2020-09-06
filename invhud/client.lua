@@ -939,7 +939,16 @@ RegisterCommand('invhud:openInventory', function(raw)
 						openInventory('normal')
 					end
 				else
-					openInventory('normal')
+					if Config.Use.ForceSearch then
+						local cP, cD = ESX.Game.GetClosestPlayer()
+						if cD > 0 and cD < 3.0 then
+							TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+						else
+							openInventory('normal')
+						end
+					else
+						openInventory('normal')
+					end
 				end
 			end
 		end
