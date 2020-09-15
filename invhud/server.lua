@@ -68,7 +68,11 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 			if xItem.weight ~= nil then
 				total = total + xItem.weight * v[1].count
 			else
-				total = total + 100/(xItem.limit*0.1) * v[1].count
+				local itemLimit = xItem.limit
+				if itemLimit == -1 then
+					itemLimit = 100000
+				end
+				total = total + 100/(itemLimit*0.1) * v[1].count
 			end
 		else
 			total = total + 0.01
@@ -125,7 +129,11 @@ ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 			if xItem.weight ~= nil then
 				total = total + xItem.weight * v[1].count
 			else
-				total = total + 100/(xItem.limit*0.1) * v[1].count
+				local itemLimit = xItem.limit
+				if itemLimit == -1 then
+					itemLimit = 100000
+				end
+				total = total + 100/(itemLimit*0.1) * v[1].count
 			end
 		else
 			total = total + 0.01
@@ -524,7 +532,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				Notify(src, 'Max weight error, relog')
 			end
 		else
-			if xItem.count + count <= xItem.limit then
+			if xItem.limit == -1 or (xItem.count + count <= xItem.limit) then
 				local inventory = {}
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 					if result[1] then
