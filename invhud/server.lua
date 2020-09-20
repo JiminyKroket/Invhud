@@ -299,7 +299,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 	elseif invType == 'item_money' then
 		if xPlayer.getMoney() >= itemCount then
 			xPlayer.removeMoney(itemCount)
-			xTarget.addMoney(itemCount)
+			tPlayer.addMoney(itemCount)
 		else
 			Notify(xPlayer.source, 'You do not have enough money')
 		end
