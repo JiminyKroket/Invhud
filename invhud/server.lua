@@ -223,6 +223,7 @@ RegisterServerEvent('invhud:setPlayerWeaponWeight')
 AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
+	local weightWaits = 0
 	while not xPlayer.maxWeight do
 		Citizen.Wait(10)
 		xPlayer = ESX.GetPlayerFromId(src)
