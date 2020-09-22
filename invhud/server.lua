@@ -164,6 +164,9 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 			weightLimit = Config.Weight.Houses.Shells[class]
 		end
 	end
+	if invType == 'stash' then
+		weightLimit = Config.Weight.StashWeight
+	end
 	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = invType}, function(result)
 		if result[1] then
 			cb(result[1])
@@ -338,150 +341,154 @@ RegisterServerEvent('invhud:putItem')
 AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-	if data.item.type == 'item_money' then
-		data.item.type = 'item_account'
-		data.item.name = 'money'
-	end
-	if data.item.type == 'item_standard' then
-		local xItem = xPlayer.getInventoryItem(data.item.name)
-		if xItem.count >= count then
-			local inventory = {}
-			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-				if result[1] then
-					inventory = json.decode(result[1].data)
-					if IsInInv(inventory, data.item.name) then
-						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
-							xPlayer.removeInventoryItem(data.item.name, count)
-							inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count + count
-							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-								['@owner'] = owner,
-								['@type'] = invType,
-								['@data'] = json.encode(inventory)
-							}, function(rowsChanged)
-								if rowsChanged then
-									print('Inventory updated for: '..owner..' with type: '..invType)
-								end
-							end)
+	if xPlayer ~= nil and type(xPlayer) == 'table' then
+		if data.item.type == 'item_money' then
+			data.item.type = 'item_account'
+			data.item.name = 'money'
+		end
+		if data.item.type == 'item_standard' then
+			local xItem = xPlayer.getInventoryItem(data.item.name)
+			if xItem.count >= count then
+				local inventory = {}
+				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+					if result[1] then
+						inventory = json.decode(result[1].data)
+						if IsInInv(inventory, data.item.name) then
+							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+								xPlayer.removeInventoryItem(data.item.name, count)
+								inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count + count
+								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+									['@owner'] = owner,
+									['@type'] = invType,
+									['@data'] = json.encode(inventory)
+								}, function(rowsChanged)
+									if rowsChanged then
+										print('Inventory updated for: '..owner..' with type: '..invType)
+									end
+								end)
+							else
+								Notify(src, 'This inventory can not hold enough of that item')
+							end
 						else
-							Notify(src, 'This inventory can not hold enough of that item')
-						end
-					else
-						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
-							xPlayer.removeInventoryItem(data.item.name, count)
-							inventory.items[data.item.name] = {}
-							table.insert(inventory.items[data.item.name], {count = count, label = data.item.label})
-							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-								['@owner'] = owner,
-								['@type'] = invType,
-								['@data'] = json.encode(inventory)
-							}, function(rowsChanged)
-								if rowsChanged then
-									print('Inventory updated for: '..owner..' with type: '..invType)
-								end
-							end)
-						else
-							Notify(src, 'This inventory can not hold enough of that item')
+							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+								xPlayer.removeInventoryItem(data.item.name, count)
+								inventory.items[data.item.name] = {}
+								table.insert(inventory.items[data.item.name], {count = count, label = data.item.label})
+								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+									['@owner'] = owner,
+									['@type'] = invType,
+									['@data'] = json.encode(inventory)
+								}, function(rowsChanged)
+									if rowsChanged then
+										print('Inventory updated for: '..owner..' with type: '..invType)
+									end
+								end)
+							else
+								Notify(src, 'This inventory can not hold enough of that item')
+							end
 						end
 					end
-				end
-			end)
-		else
-			Notify(src, 'You do not have that much of '..data.item.name)
-		end
-	elseif data.item.type == 'item_weapon' then
-		if xPlayer.hasWeapon(data.item.name) then
-			local inventory = {}
-			local weight
-			if Config.Weight.WeaponWeights[data.item.name] then
-				weight = Config.Weight.WeaponWeights[data.item.name] + (data.item.count*0.01)
+				end)
 			else
-				weight = 5 + (data.item.count*0.01)
-				print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
+				Notify(src, 'You do not have that much of '..data.item.name)
 			end
-			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-				if result[1] then
-					inventory = json.decode(result[1].data)
-					if IsInInv(inventory, data.item.name) then
-						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
-							xPlayer.removeWeapon(data.item.name)
-							if Config.Weight.AddWeaponsToPlayerWeight then
-								local newWeight = xPlayer.maxWeight + weight
-								xPlayer.setMaxWeight(doRound(newWeight, 2))
-							end
-							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
-							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-								['@owner'] = owner,
-								['@type'] = invType,
-								['@data'] = json.encode(inventory)
-							}, function(rowsChanged)
-								if rowsChanged then
-									print('Inventory updated for: '..owner..' with type: '..invType)
+		elseif data.item.type == 'item_weapon' then
+			if xPlayer.hasWeapon(data.item.name) then
+				local inventory = {}
+				local weight
+				if Config.Weight.WeaponWeights[data.item.name] then
+					weight = Config.Weight.WeaponWeights[data.item.name] + (data.item.count*0.01)
+				else
+					weight = 5 + (data.item.count*0.01)
+					print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
+				end
+				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+					if result[1] then
+						inventory = json.decode(result[1].data)
+						if IsInInv(inventory, data.item.name) then
+							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+								xPlayer.removeWeapon(data.item.name)
+								if Config.Weight.AddWeaponsToPlayerWeight then
+									local newWeight = xPlayer.maxWeight + weight
+									xPlayer.setMaxWeight(doRound(newWeight, 2))
 								end
-							end)
-						else
-							Notify(src, 'Inventory cannot hold that weapon')
-						end
-					else
-						if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
-							xPlayer.removeWeapon(data.item.name)
-							if Config.Weight.AddWeaponsToPlayerWeight then
-								local newWeight = xPlayer.maxWeight + weight
-								xPlayer.setMaxWeight(doRound(newWeight, 2))
+								table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
+								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+									['@owner'] = owner,
+									['@type'] = invType,
+									['@data'] = json.encode(inventory)
+								}, function(rowsChanged)
+									if rowsChanged then
+										print('Inventory updated for: '..owner..' with type: '..invType)
+									end
+								end)
+							else
+								Notify(src, 'Inventory cannot hold that weapon')
 							end
-							inventory.weapons[data.item.name] = {}
-							table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
-							MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-								['@owner'] = owner,
-								['@type'] = invType,
-								['@data'] = json.encode(inventory)
-							}, function(rowsChanged)
-								if rowsChanged then
-									print('Inventory updated for: '..owner..' with type: '..invType)
-								end
-							end)
 						else
-							Notify(src, 'Inventory cannot hold that weapon')
+							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
+								xPlayer.removeWeapon(data.item.name)
+								if Config.Weight.AddWeaponsToPlayerWeight then
+									local newWeight = xPlayer.maxWeight + weight
+									xPlayer.setMaxWeight(doRound(newWeight, 2))
+								end
+								inventory.weapons[data.item.name] = {}
+								table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
+								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+									['@owner'] = owner,
+									['@type'] = invType,
+									['@data'] = json.encode(inventory)
+								}, function(rowsChanged)
+									if rowsChanged then
+										print('Inventory updated for: '..owner..' with type: '..invType)
+									end
+								end)
+							else
+								Notify(src, 'Inventory cannot hold that weapon')
+							end
 						end
 					end
-				end
-			end)
-		else
-			Notify(src, 'You do not have that weapon')
-		end
-	elseif data.item.type == 'item_account' then
-		local accountName, money
-		if data.item.name == 'money' then
-			accountName = 'cash'
-			money = xPlayer.getMoney()
-		elseif data.item.name == 'black_money' then
-			accountName = 'blackMoney'
-			money = xPlayer.getAccount(data.item.name).money
-		end
-		if money >= count then
-			local inventory = {}
-			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-				if result[1] then
-					inventory = json.decode(result[1].data)
-					if data.item.name == 'money' then
-						xPlayer.removeMoney(count)
-					else
-						xPlayer.removeAccountMoney(data.item.name, count)
-					end
-					inventory[accountName] = inventory[accountName] + count
-					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-						['@owner'] = owner,
-						['@type'] = invType,
-						['@data'] = json.encode(inventory)
-					}, function(rowsChanged)
-						if rowsChanged then
-							print('Inventory updated for: '..owner..' with type: '..invType)
+				end)
+			else
+				Notify(src, 'You do not have that weapon')
+			end
+		elseif data.item.type == 'item_account' then
+			local accountName, money
+			if data.item.name == 'money' then
+				accountName = 'cash'
+				money = xPlayer.getMoney()
+			elseif data.item.name == 'black_money' then
+				accountName = 'blackMoney'
+				money = xPlayer.getAccount(data.item.name).money
+			end
+			if money >= count then
+				local inventory = {}
+				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+					if result[1] then
+						inventory = json.decode(result[1].data)
+						if data.item.name == 'money' then
+							xPlayer.removeMoney(count)
+						else
+							xPlayer.removeAccountMoney(data.item.name, count)
 						end
-					end)
-				end
-			end)
-		else
-			Notify(src, 'You do not have enough cash to do that')
+						inventory[accountName] = inventory[accountName] + count
+						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+							['@owner'] = owner,
+							['@type'] = invType,
+							['@data'] = json.encode(inventory)
+						}, function(rowsChanged)
+							if rowsChanged then
+								print('Inventory updated for: '..owner..' with type: '..invType)
+							end
+						end)
+					end
+				end)
+			else
+				Notify(src, 'You do not have enough cash to do that')
+			end
 		end
+	else
+		print('no xPlayer table')
 	end
 end)
 
@@ -489,15 +496,52 @@ RegisterServerEvent('invhud:getItem')
 AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-	if data.item.type == 'item_money' then
-		data.item.type = 'item_account'
-		data.item.name = 'money'
-	end
-	if data.item.type == 'item_standard' then
-		local xItem = xPlayer.getInventoryItem(data.item.name)
-		if xPlayer.canCarryItem ~= nil then
-			if xPlayer.maxWeight ~= nil then
-				if xPlayer.canCarryItem(data.item.name, count) then
+	if xPlayer ~= nil and type(xPlayer) == 'table' then
+		if data.item.type == 'item_money' then
+			data.item.type = 'item_account'
+			data.item.name = 'money'
+		end
+		if data.item.type == 'item_standard' then
+			local xItem = xPlayer.getInventoryItem(data.item.name)
+			if xPlayer.canCarryItem ~= nil then
+				if xPlayer.maxWeight ~= nil then
+					if xPlayer.canCarryItem(data.item.name, count) then
+						local inventory = {}
+						MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
+							if result[1] then
+								inventory = json.decode(result[1].data)
+								if IsInInv(inventory, data.item.name) then
+									if inventory.items[data.item.name][1].count >= count then
+										xPlayer.addInventoryItem(data.item.name, count)
+										inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count - count
+										if inventory.items[data.item.name][1].count <= 0 then
+											inventory.items[data.item.name] = nil
+										end
+										MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+											['@owner'] = owner,
+											['@type'] = invType,
+											['@data'] = json.encode(inventory)
+										}, function(rowsChanged)
+											if rowsChanged then
+												print('Inventory updated for: '..owner..' with type: '..invType)
+											end
+										end)
+									else
+										Notify(src, 'There is not enough of that in the inventory')
+									end
+								else
+									Notify(src, 'There is not enough of that in the inventory')
+								end
+							end
+						end)
+					else
+						Notify(src, 'You do not have that much of '..data.item.name)
+					end
+				else
+					Notify(src, 'Max weight error, relog')
+				end
+			else
+				if xItem.limit == -1 or (xItem.count + count <= xItem.limit) then
 					local inventory = {}
 					MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 						if result[1] then
@@ -529,33 +573,47 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				else
 					Notify(src, 'You do not have that much of '..data.item.name)
 				end
-			else
-				Notify(src, 'Max weight error, relog')
 			end
-		else
-			if xItem.limit == -1 or (xItem.count + count <= xItem.limit) then
+		elseif data.item.type == 'item_weapon' then
+			if not xPlayer.hasWeapon(data.item.name) then
 				local inventory = {}
+				local weight
+				if Config.Weight.WeaponWeights[data.item.name] then
+					weight = Config.Weight.WeaponWeights[data.item.name] + (data.item.count*0.01)
+				else
+					weight = 5 + (data.item.count*0.01)
+					print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
+				end
+				if Config.Weight.AddWeaponsToPlayerWeight then
+					local newWeight = xPlayer.maxWeight - weight
+					if newWeight <= doRound(0, 2) then
+						Notify(source, 'Can not hold weapon')
+						return
+					end
+				end
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 					if result[1] then
 						inventory = json.decode(result[1].data)
 						if IsInInv(inventory, data.item.name) then
-							if inventory.items[data.item.name][1].count >= count then
-								xPlayer.addInventoryItem(data.item.name, count)
-								inventory.items[data.item.name][1].count = inventory.items[data.item.name][1].count - count
-								if inventory.items[data.item.name][1].count <= 0 then
-									inventory.items[data.item.name] = nil
-								end
-								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-									['@owner'] = owner,
-									['@type'] = invType,
-									['@data'] = json.encode(inventory)
-								}, function(rowsChanged)
-									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
+							for i = 1,#inventory.weapons[data.item.name] do
+								if inventory.weapons[data.item.name][i].count == data.item.count then
+									xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][i].count)
+									if Config.Weight.AddWeaponsToPlayerWeight then
+										local newWeight = xPlayer.maxWeight - weight
+										xPlayer.setMaxWeight(doRound(newWeight, 2))
 									end
-								end)
-							else
-								Notify(src, 'There is not enough of that in the inventory')
+									table.remove(inventory.weapons[data.item.name], i)
+									MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+										['@owner'] = owner,
+										['@type'] = invType,
+										['@data'] = json.encode(inventory)
+									}, function(rowsChanged)
+										if rowsChanged then
+											print('Inventory updated for: '..owner..' with type: '..invType)
+										end
+									end)
+									break
+								end
 							end
 						else
 							Notify(src, 'There is not enough of that in the inventory')
@@ -563,90 +621,43 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 					end
 				end)
 			else
-				Notify(src, 'You do not have that much of '..data.item.name)
+				Notify(src, 'You already have this weapon')
 			end
-		end
-	elseif data.item.type == 'item_weapon' then
-		if not xPlayer.hasWeapon(data.item.name) then
+		elseif data.item.type == 'item_account' then
+			local accountName
+			if data.item.name == 'money' then
+				accountName = 'cash'
+			elseif data.item.name == 'black_money' then
+				accountName = 'blackMoney'
+			end
 			local inventory = {}
-			local weight
-			if Config.Weight.WeaponWeights[data.item.name] then
-				weight = Config.Weight.WeaponWeights[data.item.name] + (data.item.count*0.01)
-			else
-				weight = 5 + (data.item.count*0.01)
-				print(string.format('Weapon weight not set for %s, defaulted to 5',data.item.name))
-			end
-			if Config.Weight.AddWeaponsToPlayerWeight then
-				local newWeight = xPlayer.maxWeight - weight
-				if newWeight <= doRound(0, 2) then
-					Notify(source, 'Can not hold weapon')
-					return
-				end
-			end
 			MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
 				if result[1] then
 					inventory = json.decode(result[1].data)
-					if IsInInv(inventory, data.item.name) then
-						for i = 1,#inventory.weapons[data.item.name] do
-							if inventory.weapons[data.item.name][i].count == data.item.count then
-								xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][i].count)
-								if Config.Weight.AddWeaponsToPlayerWeight then
-									local newWeight = xPlayer.maxWeight - weight
-									xPlayer.setMaxWeight(doRound(newWeight, 2))
-								end
-								table.remove(inventory.weapons[data.item.name], i)
-								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-									['@owner'] = owner,
-									['@type'] = invType,
-									['@data'] = json.encode(inventory)
-								}, function(rowsChanged)
-									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
-									end
-								end)
-								break
-							end
+					if inventory[accountName] >= count then
+						if data.item.name == 'money' then
+							xPlayer.addMoney(count)
+						else
+							xPlayer.addAccountMoney(data.item.name, count)
 						end
+						inventory[accountName] = inventory[accountName] - count
+						MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
+							['@owner'] = owner,
+							['@type'] = invType,
+							['@data'] = json.encode(inventory)
+						}, function(rowsChanged)
+							if rowsChanged then
+								print('Inventory updated for: '..owner..' with type: '..invType)
+							end
+						end)
 					else
 						Notify(src, 'There is not enough of that in the inventory')
 					end
 				end
 			end)
-		else
-			Notify(src, 'You already have this weapon')
 		end
-	elseif data.item.type == 'item_account' then
-		local accountName
-		if data.item.name == 'money' then
-			accountName = 'cash'
-		elseif data.item.name == 'black_money' then
-			accountName = 'blackMoney'
-		end
-		local inventory = {}
-		MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
-			if result[1] then
-				inventory = json.decode(result[1].data)
-				if inventory[accountName] >= count then
-					if data.item.name == 'money' then
-						xPlayer.addMoney(count)
-					else
-						xPlayer.addAccountMoney(data.item.name, count)
-					end
-					inventory[accountName] = inventory[accountName] - count
-					MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
-						['@owner'] = owner,
-						['@type'] = invType,
-						['@data'] = json.encode(inventory)
-					}, function(rowsChanged)
-						if rowsChanged then
-							print('Inventory updated for: '..owner..' with type: '..invType)
-						end
-					end)
-				else
-					Notify(src, 'There is not enough of that in the inventory')
-				end
-			end
-		end)
+	else
+		print('no xPlayer table')
 	end
 end)
 
