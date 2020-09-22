@@ -99,6 +99,9 @@ Citizen.CreateThread(function()
 		end
 		if isInInventory then
 			DisableAllControlActions(0)
+			if not NetworkIsPlayerConnected(PlayerId()) then
+				TriggerEvent('invhud:closeInventory')
+			end
 		end
 	end
 end)
