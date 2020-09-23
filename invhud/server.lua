@@ -31,6 +31,24 @@ doRound = function(value, numDecimalPlaces)
 	end
 end
 
+logText = function(who, what)
+	if Config.TextLog.Use then
+		local pname = who.identifier
+		local cname = who.name
+		local _source = who.source
+		local logitem = (GetCurrentResourceName()..': '..cname..what)
+		PerformHttpRequest(Config.TextLog.Webhook, function(err, text, headers) end, 
+			'POST', json.encode({username = (cname..' ['.._source..']'..' ['..pname..']'), content = logitem}), { ['Content-Type'] = 'application/json' }
+		)
+	else
+		local pname = who.identifier
+		local cname = who.name
+		local _source = who.source
+		local logitem = GetCurrentResourceName()..': '..cname..' ['.._source..']'..' ['..pname..'] '..what
+		print(logitem)
+	end
+end
+
 IsInInv = function(inv, item)
 	for k,v in pairs(inv.items) do
 		if item == k then
@@ -178,7 +196,7 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 				['@limit'] = weightLimit
 			}, function(rowsChanged)
 				if rowsChanged then
-					print('Inventory created for: '..id..' with type: '..invType)
+					logText(xPlayer, ' created inventory for '..id..' with type '..invType)
 				end
 			end)
 			cb({['owner'] = id, ['type'] = invType, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
@@ -324,6 +342,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 				end
 			end
 			xPlayer.removeWeapon(itemName)
+			xPlayer.removeWeaponAmmo(itemName, itemCount)
 			tPlayer.addWeapon(itemName, itemCount)
 			if Config.Weight.AddWeaponsToPlayerWeight then
 				local newWeight = xPlayer.maxWeight + weight
@@ -363,7 +382,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 									['@data'] = json.encode(inventory)
 								}, function(rowsChanged)
 									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
+										logText(xPlayer, ' added '..count..' '..data.item.name..' to inventory '..owner..' with type '..invType)
 									end
 								end)
 							else
@@ -380,7 +399,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 									['@data'] = json.encode(inventory)
 								}, function(rowsChanged)
 									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
+										logText(xPlayer, ' added '..count..' '..data.item.name..' to inventory '..owner..' with type '..invType)
 									end
 								end)
 							else
@@ -408,6 +427,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						if IsInInv(inventory, data.item.name) then
 							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 								xPlayer.removeWeapon(data.item.name)
+								xPlayer.removeWeaponAmmo(data.item.name, count)
 								if Config.Weight.AddWeaponsToPlayerWeight then
 									local newWeight = xPlayer.maxWeight + weight
 									xPlayer.setMaxWeight(doRound(newWeight, 2))
@@ -419,7 +439,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 									['@data'] = json.encode(inventory)
 								}, function(rowsChanged)
 									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
+										logText(xPlayer, ' added '..data.item.name..' to inventory '..owner..' with type '..invType..' holding '..count..' ammo')
 									end
 								end)
 							else
@@ -428,6 +448,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						else
 							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 								xPlayer.removeWeapon(data.item.name)
+								xPlayer.removeWeaponAmmo(data.item.name, count)
 								if Config.Weight.AddWeaponsToPlayerWeight then
 									local newWeight = xPlayer.maxWeight + weight
 									xPlayer.setMaxWeight(doRound(newWeight, 2))
@@ -440,7 +461,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 									['@data'] = json.encode(inventory)
 								}, function(rowsChanged)
 									if rowsChanged then
-										print('Inventory updated for: '..owner..' with type: '..invType)
+										logText(xPlayer, ' added '..data.item.name..' to inventory '..owner..' with type '..invType..' holding '..count..' ammo')
 									end
 								end)
 							else
@@ -478,7 +499,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 							['@data'] = json.encode(inventory)
 						}, function(rowsChanged)
 							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
+								logText(xPlayer, ' added '..count..' '..data.item.name..' to inventory '..owner..' with type '..invType)
 							end
 						end)
 					end
@@ -488,7 +509,8 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 			end
 		end
 	else
-		print('no xPlayer table')
+		local infoTab = {identifier = 'Not Valid', name = 'Not Valid', source = 'Not Valid'}
+		logText(infoTab, 'Player source not valid, possible cheat')
 	end
 end)
 
@@ -523,7 +545,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 											['@data'] = json.encode(inventory)
 										}, function(rowsChanged)
 											if rowsChanged then
-												print('Inventory updated for: '..owner..' with type: '..invType)
+												logText(xPlayer, ' took '..count..' '..data.item.name..' from inventory '..owner..' with type '..invType)
 											end
 										end)
 									else
@@ -559,7 +581,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 										['@data'] = json.encode(inventory)
 									}, function(rowsChanged)
 										if rowsChanged then
-											print('Inventory updated for: '..owner..' with type: '..invType)
+											logText(xPlayer, ' took '..count..' '..data.item.name..' from inventory '..owner..' with type '..invType)
 										end
 									end)
 								else
@@ -609,7 +631,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 										['@data'] = json.encode(inventory)
 									}, function(rowsChanged)
 										if rowsChanged then
-											print('Inventory updated for: '..owner..' with type: '..invType)
+											logText(xPlayer, ' took '..data.item.name..' from inventory '..owner..' with type '..invType..' and '..data.item.count..' ammo')
 										end
 									end)
 									break
@@ -647,7 +669,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 							['@data'] = json.encode(inventory)
 						}, function(rowsChanged)
 							if rowsChanged then
-								print('Inventory updated for: '..owner..' with type: '..invType)
+								logText(xPlayer, ' took '..count..' '..data.item.name..' from inventory '..owner..' with type '..invType)
 							end
 						end)
 					else
@@ -657,7 +679,8 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 			end)
 		end
 	else
-		print('no xPlayer table')
+		local infoTab = {identifier = 'Not Valid', name = 'Not Valid', source = 'Not Valid'}
+		logText(infoTab, 'Player source not valid, possible cheat')
 	end
 end)
 
@@ -912,11 +935,11 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					end
 					if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 						xPlayer.addAccountMoney(shop.Account, totalPrice)
-						xPlayer.removeWeapon(v.name, 0)
+						xPlayer.removeWeapon(v.name)
 						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 					else
-						xPlayer.removeMoney(totalPrice)
-						xPlayer.removeWeapon(v.name, 0)
+						xPlayer.addMoney(totalPrice)
+						xPlayer.removeWeapon(v.name)
 						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 					end
 				end
