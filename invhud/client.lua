@@ -1009,7 +1009,7 @@ setPlayerInventoryData = function()
 		money = data.money
 		weapons = data.weapons
 		if Inclusions.Cash and money ~= nil and money > 0 then
-			if notConfig.ESX1Point1  then
+			if not Config.ESX1Point1  then
 				moneyData = {
 					label = _U('cash'),
 					name = 'money',
