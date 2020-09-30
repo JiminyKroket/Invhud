@@ -944,7 +944,16 @@ RegisterCommand('invhud:openInventory', function(raw)
 							Notify('This trunk is locked')
 						end
 					else
-						openInventory('normal')
+						if Config.Use.ForceSearch then
+							local cP, cD = ESX.Game.GetClosestPlayer()
+							if cD > 0 and cD < 3.0 then
+								TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+							else
+								openInventory('normal')
+							end
+						else
+							openInventory('normal')
+						end
 					end
 				else
 					if Config.Use.ForceSearch then
