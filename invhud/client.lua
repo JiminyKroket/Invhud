@@ -99,9 +99,9 @@ Citizen.CreateThread(function()
 		end
 		if isInInventory then
 			DisableAllControlActions(0)
-			if not NetworkIsPlayerConnected(PlayerId()) then
-				TriggerEvent('invhud:closeInventory')
-			end
+			-- if not NetworkIsPlayerConnected(PlayerId()) then
+				-- TriggerEvent('invhud:closeInventory')
+			-- end
 		end
 	end
 end)
@@ -386,18 +386,17 @@ loadPlayerInventory = function(inv)
 
 			if Inclusions.Weapons and weapons ~= nil then
 				for key, value in pairs(weapons) do
-					local weaponHash = GetHashKey(weapons[key].name)
+					local weaponHash = GetHashKey(value.name)
 					local playerPed = PlayerPedId()
-					if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
-						local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
+					if HasPedGotWeapon(playerPed, weaponHash, false) and value.name ~= 'WEAPON_UNARMED' then
 						table.insert(
 							items,
 							{
-								label = weapons[key].label,
-								count = ammo,
+								label = value.label,
+								count = value.ammo,
 								limit = -1,
 								type = 'item_weapon',
-								name = weapons[key].name,
+								name = value.name,
 								usable = false,
 								rare = false,
 								canRemove = true
@@ -446,6 +445,20 @@ CreateBlip = function(coords, text, scale, color, sprite, display)
 	BeginTextCommandSetBlipName('STRING')
 	AddTextComponentString(text)
 	EndTextCommandSetBlipName(blip)
+end
+
+GetVehicleInFront = function()
+	local playerPed    = PlayerPedId()
+	local playerCoords = GetEntityCoords(playerPed)
+	local inDirection  = GetOffsetFromEntityInWorldCoords(playerPed, 0.0, 5.0, 0.0)
+	local rayHandle    = StartShapeTestRay(playerCoords, inDirection, 10, playerPed, 0)
+	local numRayHandle, hit, endCoords, surfaceNormal, entityHit = GetShapeTestResult(rayHandle)
+
+	if hit == 1 and GetEntityType(entityHit) == 2 then
+		return entityHit
+	end
+
+	return nil
 end
 
 RegisterNUICallback('PutIntoGBox', function(data, cb)
@@ -905,12 +918,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 					end, 'stash', stashAt)
 				end
 			else
-				local veh
-				if Config.ESX1Point1 then
-					veh = ESX.Game.GetClosestVehicle()
-				else
-					veh = ESX.Game.GetVehicleInDirection()
-				end
+				local veh = GetVehicleInFront()
 				if DoesEntityExist(veh) then
 					local plate = ESX.Game.GetVehicleProperties(veh).plate
 					local model, class = ESX.Game.GetVehicleProperties(veh).model
