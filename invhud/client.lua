@@ -99,9 +99,6 @@ Citizen.CreateThread(function()
 		end
 		if isInInventory then
 			DisableAllControlActions(0)
-			-- if not NetworkIsPlayerConnected(PlayerId()) then
-				-- TriggerEvent('invhud:closeInventory')
-			-- end
 		end
 	end
 end)
@@ -991,7 +988,6 @@ AddEventHandler('invhud:openPlayerInventory', function(target, playerName)
 	targetPlayer = target
 	targetPlayerName = playerName
 	setPlayerInventoryData()
-	openInventory('player')
 end)
 
 refreshPlayerInventory = function()
@@ -1103,6 +1099,7 @@ setPlayerInventoryData = function()
 				itemList = items
 			}
 		)
+		openInventory('player')
 	end, targetPlayer)
 end
 
