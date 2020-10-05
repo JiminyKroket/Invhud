@@ -997,6 +997,7 @@ AddEventHandler('invhud:openPlayerInventory', function(target, playerName)
 	targetPlayer = target
 	targetPlayerName = playerName
 	setPlayerInventoryData()
+	openPlayerInventory()
 end)
 
 refreshPlayerInventory = function()
@@ -1155,3 +1156,17 @@ RegisterNUICallback('TakeFromPlayer', function(data, cb)
 
 	cb('ok')
 end)
+
+function openPlayerInventory()
+    loadPlayerInventory()
+    isInInventory = true
+
+    SendNUIMessage(
+        {
+            action = "display",
+            type = "player"
+        }
+    )
+
+    SetNuiFocus(true, true)
+end
