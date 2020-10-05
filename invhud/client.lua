@@ -14,8 +14,8 @@ Citizen.CreateThread(function()
 	PlayerData = ESX.GetPlayerData()
 	if Config.Weight.AddWeaponsToPlayerWeight then
 		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-			items = {}
-			weapons = data.weapons
+			local items = {}
+			local weapons = data.weapons
 			local playerPed = PlayerPedId()
 			for key, value in pairs(weapons) do
 				local weaponHash = GetHashKey(weapons[key].name)
@@ -313,11 +313,11 @@ end
 loadPlayerInventory = function(inv)
 	if not inv then
 		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-			items = {}
-			inventory = data.inventory
-			accounts = data.accounts
-			money = data.money
-			weapons = data.weapons
+			local items = {}
+			local inventory = data.inventory
+			local accounts = data.accounts
+			local money = data.money
+			local weapons = data.weapons
 
 			if Inclusions.Cash and money ~= nil and money > 0 then
 				if not Config.ESX1Point1  then
@@ -1012,11 +1012,11 @@ setPlayerInventoryData = function()
 			}
 		)
 
-		items = {}
-		inventory = data.inventory
-		accounts = data.accounts
-		money = data.money
-		weapons = data.weapons
+		local items = {}
+		local inventory = data.inventory
+		local accounts = data.accounts
+		local money = data.money
+		local weapons = data.weapons
 		if Inclusions.Cash and money ~= nil and money > 0 then
 			if not Config.ESX1Point1  then
 				moneyData = {
@@ -1082,7 +1082,7 @@ setPlayerInventoryData = function()
 		if Inclusions.Weapons and weapons ~= nil then
 			for key, value in pairs(weapons) do
 				local weaponHash = GetHashKey(weapons[key].name)
-				local playerPed = PlayerPedId()
+				local playerPed = GetPlayerPed(GetPlayerFromServerId(targetPlayer))
 				if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
 					local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
 					table.insert(
