@@ -342,7 +342,6 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 				end
 			end
 			xPlayer.removeWeapon(itemName)
-			xPlayer.removeWeaponAmmo(itemName, itemCount)
 			tPlayer.addWeapon(itemName, itemCount)
 			if Config.Weight.AddWeaponsToPlayerWeight then
 				local newWeight = xPlayer.maxWeight + weight
@@ -427,7 +426,6 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						if IsInInv(inventory, data.item.name) then
 							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 								xPlayer.removeWeapon(data.item.name)
-								xPlayer.removeWeaponAmmo(data.item.name, count)
 								if Config.Weight.AddWeaponsToPlayerWeight then
 									local newWeight = xPlayer.maxWeight + weight
 									xPlayer.setMaxWeight(doRound(newWeight, 2))
@@ -448,7 +446,6 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						else
 							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 								xPlayer.removeWeapon(data.item.name)
-								xPlayer.removeWeaponAmmo(data.item.name, count)
 								if Config.Weight.AddWeaponsToPlayerWeight then
 									local newWeight = xPlayer.maxWeight + weight
 									xPlayer.setMaxWeight(doRound(newWeight, 2))
