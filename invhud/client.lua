@@ -858,6 +858,15 @@ AddEventHandler('invhud:usedAmmo', function(key)
 	end
 end)
 
+RegisterNetEvent('invhud:refreshLicenses')
+AddEventHandler('invhud:refreshLicenses', function()
+	ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
+		for i = 1, #licenses, 1 do
+			Licenses[licenses[i]] = true
+		end
+	end)
+end)
+
 RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function()
 	PlayerData = ESX.GetPlayerData()
