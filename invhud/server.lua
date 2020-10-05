@@ -962,3 +962,30 @@ AddEventHandler('invhud:usedAmmo', function(item)
 	local xPlayer = ESX.GetPlayerFromId(src)
 	xPlayer.removeInventoryItem(item, 1)
 end)
+
+if Config.Use.AdminSearch then
+	RegisterCommand('adminSearch', function(source, args, raw)
+		if args[1] then
+			if args[2] then
+				if args[1] == 'player' then
+					local tPlayer = ESX.GetPlayerFromId(tonumber(args[2]))
+					if tPlayer ~= nil and type(tPlayer) == 'table' then
+						TriggerClientEvent('invhud:openPlayerInventory', source, tPlayer.source, tPlayer.name)
+					else
+						print('No player found with Server ID: '..args[2])
+					end
+				else
+					TriggerClientEvent('invhud:adminSearch', source, args[1], args[2])
+				end
+			else
+				print('No ID given for admin search')
+			end
+		else
+			print('No iventory type given for admin search')
+		end
+	end, true)
+	TriggerEvent('chat:addSuggestion', '/adminSearch', 'Use to search an inventory:ADMINS ONLY',{
+		{name = 'Type', help = 'Input inventory type:"player","gbox","trunk","property","stash","safe"'},
+		{name = 'Identifier', help = 'Input inventory id:Server ID, Property Name(ID), Vehicle Plate(gbox, trunk), Stash Name(ID), Safe ID MUST MATCH EXACTLY'}
+	})
+end
