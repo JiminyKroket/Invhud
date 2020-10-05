@@ -6,12 +6,6 @@ ESX_InventoryHUD rework
 Major rework on inventoryhud. Will no longer support individual inventorytype.lua files (i.e. trunk.lua, property.lua, player.lua).
 Code condensed specifically for my development.
 
-If wishing to use licenses you Need to add
-```
-TriggerEvent('invhud:refreshLicenses')
-```
-To the client file that gives the player the license
-
 If wishing to have weapons count towards player weight you Need to add 
 ```
 TriggerEvent('invhud:removeWeight', xPlayer.source, pickup.name, pickup.count)
