@@ -6,14 +6,17 @@ ESX_InventoryHUD rework
 Major rework on inventoryhud. Will no longer support individual inventorytype.lua files (i.e. trunk.lua, property.lua, player.lua).
 Code condensed specifically for my development.
 
-Copy your cash.png and rename it to money.png to have picture for cash in inventory
+If wishing to use licenses you Need to add
+```
+TriggerEvent('invhud:refreshLicenses')
+```
+To the client file that gives the player the license
 
-Need to add 
+If wishing to have weapons count towards player weight you Need to add 
 ```
 TriggerEvent('invhud:removeWeight', xPlayer.source, pickup.name, pickup.count)
 ```
-To your es_extended server main.lua 'esx:onPickup' event if wishing to have weapons count towards player weight
-
+To your es_extended server main.lua 'esx:onPickup' event 
 
 To open another player inventory you will need to call from client side 
 ```
