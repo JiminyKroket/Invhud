@@ -74,7 +74,7 @@ Citizen.CreateThread(function()
 							end
 							if dis <= 1.5 then
 								if IsControlJustReleased(0, 51) then
-									TriggerEvent('esx_society:openBossMenu', string.format('society_%s', v.Society.Name), function(data, menu)
+									TriggerEvent('esx_society:openBossMenu', v.Society.Name, function(data, menu)
 										menu.close()
 									end, v.Society.Options)
 								end
