@@ -19,7 +19,7 @@ Citizen.CreateThread(function()
 			local playerPed = PlayerPedId()
 			for key, value in pairs(weapons) do
 				local weaponHash = GetHashKey(weapons[key].name)
-				if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
+				if  weapons[key].name ~= 'WEAPON_UNARMED' then
 					local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
 					table.insert(
 						items,
@@ -385,7 +385,7 @@ loadPlayerInventory = function(inv)
 				for key, value in pairs(weapons) do
 					local weaponHash = GetHashKey(value.name)
 					local playerPed = PlayerPedId()
-					if HasPedGotWeapon(playerPed, weaponHash, false) and value.name ~= 'WEAPON_UNARMED' then
+					if  value.name ~= 'WEAPON_UNARMED' then
 						table.insert(
 							items,
 							{
@@ -1104,7 +1104,7 @@ setPlayerInventoryData = function()
 			for key, value in pairs(weapons) do
 				local weaponHash = GetHashKey(weapons[key].name)
 				local playerPed = GetPlayerPed(GetPlayerFromServerId(targetPlayer))
-				if HasPedGotWeapon(playerPed, weaponHash, false) and weapons[key].name ~= 'WEAPON_UNARMED' then
+				if  weapons[key].name ~= 'WEAPON_UNARMED' then
 					local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
 					table.insert(
 						items,
