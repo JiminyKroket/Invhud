@@ -858,15 +858,6 @@ AddEventHandler('invhud:usedAmmo', function(key)
 	end
 end)
 
-RegisterNetEvent('invhud:refreshLicenses')
-AddEventHandler('invhud:refreshLicenses', function()
-	ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
-		for i = 1, #licenses, 1 do
-			Licenses[licenses[i]] = true
-		end
-	end)
-end)
-
 RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function()
 	PlayerData = ESX.GetPlayerData()
@@ -899,7 +890,20 @@ RegisterCommand('invhud:openInventory', function(raw)
 						end, zoneIn)
 						Citizen.Wait(250)
 					else
-						Notify('You do not have a fire-arm license, we can not sell you guns')
+						ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
+							for i = 1, #licenses, 1 do
+								Licenses[licenses[i]] = true
+							end
+							if Licenses[shopData.NeedsLicense] ~= nil then
+								ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+									setShopInventory(data)
+									openInventory('shop')
+								end, zoneIn)
+								Citizen.Wait(250)
+							else
+								Notify('You do not have a fire-arm license, we can not sell you guns')
+							end
+						end)
 					end
 				else
 					ESX.TriggerServerCallback('invhud:getShopItems', function(data)
