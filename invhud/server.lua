@@ -962,3 +962,21 @@ AddEventHandler('invhud:usedAmmo', function(item)
 	local xPlayer = ESX.GetPlayerFromId(src)
 	xPlayer.removeInventoryItem(item, 1)
 end)
+
+RegisterCommand(
+	"openinventory",
+	function(source, args, rawCommand)
+		if IsPlayerAceAllowed(source, "inventory.openinventory") then
+			local target = tonumber(args[1])
+			local targetXPlayer = ESX.GetPlayerFromId(target)
+
+			if targetXPlayer ~= nil then
+				TriggerClientEvent("invhud:openPlayerInventory", source, target, targetXPlayer.name)
+			else
+				TriggerClientEvent("chatMessage", source, "^1" .. _U("no_player"))
+			end
+		else
+			TriggerClientEvent("chatMessage", source, "^1" .. _U("no_permissions"))
+		end
+	end
+)
