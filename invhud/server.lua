@@ -788,7 +788,7 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 				Notify(src, 'Max weight error, relog')
 			end
 		else
-			if tItem.count + count <= tItem.limit then
+			if tItem.limit == -1 or (tItem.count + count <= tItem.limit) then
 				local list = itemShopList.items
 				for k,v in pairs(list) do
 					if v.name == item then
