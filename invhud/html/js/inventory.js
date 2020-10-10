@@ -7,25 +7,7 @@ window.addEventListener("message", function (event) {
     if (event.data.action == "display") {
         type = event.data.type
         disabled = false;
-
-        if (type === "normal") {
-            $(".info-div").hide();
-        } else if (type === "trunk") {
-            $(".info-div").show();
-		} else if (type === "gbox") {
-            $(".info-div").show();
-        } else if (type === "property") {
-            $(".info-div").show();
-		} else if (type === "safe") {
-            $(".info-div").show();
-		} else if (type === "stash") {
-            $(".info-div").show();
-        } else if (type === "player") {
-            $(".info-div").show();
-        } else if (type === "shop") {
-            $(".info-div").show();
-        }
-
+		$(".info-div").show();
         $(".ui").fadeIn();
     } else if (event.data.action == "hide") {
         $("#dialog").dialog("close");

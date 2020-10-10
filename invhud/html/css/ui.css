@@ -129,18 +129,19 @@ input[type=number] {
 
 .info-div {
     text-align: center;
+	word-wrap: break-word;
     padding: 5px;
     background-color: rgba(17, 5, 17, 0.6);
-    width: 300%;
+    width: 90%;
     position: absolute;
-    left: 50%;
-    top: -5%;
+    left: 47%;
+    top: 27%;
     transform: translate(-50%, -50%);
 }
 
 .controls-div {
     position: absolute;
-    left: 50%;
+    left: 47%;
     top: 50%;
     transform: translate(-50%, -50%);
 }

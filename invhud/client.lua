@@ -326,12 +326,22 @@ loadPlayerInventory = function(inv)
 			local accounts = data.accounts
 			local money = data.money
 			local weapons = data.weapons
-			SendNUIMessage(
-				{
-					action = 'setInfoText',
-					text = invText:format('Your', 'Inventory', tostring(0), tostring(0))
-				}
-			)
+			if data.maxWeight == nil then
+				invText = '%s %s<br>Weight: %s'
+				SendNUIMessage(
+					{
+						action = 'setInfoText',
+						text = invText:format('Your', 'Inventory', tostring(data.totalWeight))
+					}
+				)
+			else
+				SendNUIMessage(
+					{
+						action = 'setInfoText',
+						text = invText:format('Your', 'Inventory', tostring(data.totalWeight), tostring(data.maxWeight))
+					}
+				)
+			end
 			if Inclusions.Cash and money ~= nil and money > 0 then
 				if not Config.ESX1Point1  then
 					moneyData = {
