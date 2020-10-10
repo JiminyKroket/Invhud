@@ -134,8 +134,8 @@ Notify = function(text, timer)
 	ESX.ShowNotification(text)
 end
 
-setInventory = function(data, invType)
-	local invText = '%s %s Weight: %s / %s'
+setInventory = function(data)
+	local invText = '%s %s<br>Weight: %s / %s'
 	ESX.TriggerServerCallback('invhud:doMath', function(total)
 		SendNUIMessage(
 			{
@@ -274,8 +274,15 @@ InStashZone = function(pos)
 	return atStash, stashAt
 end
 
-openInventory = function(invType)
+openInventory = function(invType, data)
     loadPlayerInventory()
+	if data ~= nil then
+		if invType ~= 'shop' then
+			setInventory(data)
+		else
+			setShopInventory(data)
+		end
+	end
     isInInventory = true
     SendNUIMessage(
         {
@@ -311,6 +318,7 @@ shouldCloseInventory = function(itemName)
 end
 
 loadPlayerInventory = function(inv)
+	local invText = '%s %s<br>Weight: %s / %s'
 	if not inv then
 		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
 			local items = {}
@@ -318,7 +326,12 @@ loadPlayerInventory = function(inv)
 			local accounts = data.accounts
 			local money = data.money
 			local weapons = data.weapons
-
+			SendNUIMessage(
+				{
+					action = 'setInfoText',
+					text = invText:format('Your', 'Inventory', tostring(0), tostring(0))
+				}
+			)
 			if Inclusions.Cash and money ~= nil and money > 0 then
 				if not Config.ESX1Point1  then
 					moneyData = {
@@ -477,8 +490,7 @@ RegisterNUICallback('PutIntoGBox', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'gbox')
-		openInventory('gbox')
+		openInventory('gbox', data)
 	end, 'gbox', gBoxData.plate)
 
 	cb('ok')
@@ -496,8 +508,8 @@ RegisterNUICallback('TakeFromGBox', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'gbox')
-		openInventory('gbox')
+		
+		openInventory('gbox',data)
 	end, 'gbox', gBoxData.plate)
 
 	cb('ok')
@@ -522,8 +534,8 @@ RegisterNUICallback('PutIntoTrunk', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'trunk')
-		openInventory('trunk')
+		
+		openInventory('trunk',data)
 	end, 'trunk', trunkData.plate)
 
 	cb('ok')
@@ -541,8 +553,7 @@ RegisterNUICallback('TakeFromTrunk', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'trunk')
-		openInventory('trunk')
+		openInventory('trunk',data)
 	end, 'trunk', trunkData.plate)
 
 	cb('ok')
@@ -567,8 +578,7 @@ RegisterNUICallback('PutIntoProperty', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'property')
-		openInventory('property')
+		openInventory('property',data)
 	end, 'property', propertyData.id, propertyData.interior)
 
 	cb('ok')
@@ -586,8 +596,7 @@ RegisterNUICallback('TakeFromProperty', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'property')
-		openInventory('property')
+		openInventory('property',data)
 	end, 'property', propertyData.id, propertyData.interior)
 
 	cb('ok')
@@ -612,8 +621,7 @@ RegisterNUICallback('PutIntoSafe', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'safe')
-		openInventory('safe')
+		openInventory('safe',data)
 	end, 'safe', safeData.id)
 
 	cb('ok')
@@ -631,8 +639,7 @@ RegisterNUICallback('TakeFromSafe', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'safe')
-		openInventory('safe')
+		openInventory('safe',data)
 	end, 'safe', safeData.id)
 
 	cb('ok')
@@ -696,8 +703,7 @@ RegisterNUICallback('PutIntoStash', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'stash')
-		openInventory('stash')
+		openInventory('stash',data)
 	end, 'stash', stashData.stash)
 
 	cb('ok')
@@ -714,8 +720,7 @@ RegisterNUICallback('TakeFromStash', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'stash')
-		openInventory('stash')
+		openInventory('stash',data)
 	end, 'stash', stashData.stash)
 
 	cb('ok')
@@ -727,6 +732,11 @@ end)
 
 RegisterNUICallback('GetNearPlayers', function(data, cb)
 	local playerPed = PlayerPedId()
+	local playerPed = PlayerPedId()
+	if IsPedDeadOrDying(playerPed) then
+		Notify('You dead')
+		return
+	end
 	local players, nearbyPlayer = ESX.Game.GetPlayersInArea(GetEntityCoords(playerPed), 3.0)
 	local foundPlayers = false
 	local elements = {}
@@ -761,6 +771,11 @@ RegisterNUICallback('GetNearPlayers', function(data, cb)
 end)
 
 RegisterNUICallback('UseItem', function(data, cb)
+	local playerPed = PlayerPedId()
+	if IsPedDeadOrDying(playerPed) then
+		Notify('You dead')
+		return
+	end
 	TriggerServerEvent('esx:useItem', data.item.name)
 
 	if shouldCloseInventory(data.item.name) then
@@ -774,6 +789,11 @@ RegisterNUICallback('UseItem', function(data, cb)
 end)
 
 RegisterNUICallback('DropItem', function(data, cb)
+	local playerPed = PlayerPedId()
+	if IsPedDeadOrDying(playerPed) then
+		Notify('You dead')
+		return
+	end
 	if IsPedSittingInAnyVehicle(playerPed) then
 		return
 	end
@@ -790,6 +810,10 @@ end)
 
 RegisterNUICallback('GiveItem', function(data, cb)
 	local playerPed = PlayerPedId()
+	if IsPedDeadOrDying(playerPed) then
+		Notify('You dead')
+		return
+	end
 	local players, nearbyPlayer = ESX.Game.GetPlayersInArea(GetEntityCoords(playerPed), 3.0)
 	local foundPlayer = false
 	for i = 1, #players, 1 do
@@ -822,8 +846,7 @@ AddEventHandler('invhud:openPropertyInv', function(name, int)
 	propertyData.id = name
 	propertyData.interior = int
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'property')
-		openInventory('property')
+		openInventory('property',data)
 	end, 'property', propertyData.id, propertyData.interior)
 end)
 
@@ -832,16 +855,14 @@ AddEventHandler('invhud:openSafeInv', function(name)
 	local ped = PlayerPedId()
 	safeData.id = name
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, 'safe')
-		openInventory('safe')
+		openInventory('safe',data)
 	end, 'safe', safeData.id)
 end)
 
 RegisterNetEvent('invhud:adminSearch')
 AddEventHandler('invhud:adminSearch', function(invType, id)
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		setInventory(data, invType)
-		openInventory(invType)
+		openInventory(invType, data)
 	end, invType, id)
 end)
 
@@ -886,7 +907,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 					if Licenses[shopData.NeedsLicense] ~= nil then
 						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 							setShopInventory(data)
-							openInventory('shop')
+							openInventory('shop',data)
 						end, zoneIn)
 						Citizen.Wait(250)
 					else
@@ -897,7 +918,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 							if Licenses[shopData.NeedsLicense] ~= nil then
 								ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 									setShopInventory(data)
-									openInventory('shop')
+									openInventory('shop',data)
 								end, zoneIn)
 								Citizen.Wait(250)
 							else
@@ -908,14 +929,14 @@ RegisterCommand('invhud:openInventory', function(raw)
 				else
 					ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 						setShopInventory(data)
-						openInventory('shop')
+						openInventory('shop',data)
 					end, zoneIn)
 					Citizen.Wait(250)
 				end
 			else
 				ESX.TriggerServerCallback('invhud:getShopItems', function(data)
 					setShopInventory(data)
-					openInventory('shop')
+					openInventory('shop',data)
 				end, zoneIn)
 				Citizen.Wait(250)
 			end
@@ -924,14 +945,14 @@ RegisterCommand('invhud:openInventory', function(raw)
 			if atStash then
 				if tonumber(stashAt) ~= nil then
 					ESX.TriggerServerCallback('invhud:getInv', function(data)
-						setInventory(data, 'stash')
-						openInventory('stash')
+						
+						openInventory('stash',data)
 						stashData.stash = PlayerData.identifier..stashAt
 					end, 'stash', PlayerData.identifier..stashAt)
 				else
 					ESX.TriggerServerCallback('invhud:getInv', function(data)
-						setInventory(data, 'stash')
-						openInventory('stash')
+						
+						openInventory('stash',data)
 						stashData.stash = stashAt
 					end, 'stash', stashAt)
 				end
@@ -956,10 +977,10 @@ RegisterCommand('invhud:openInventory', function(raw)
 						local lok = GetVehicleDoorLockStatus(veh)
 						if lok == 1 then
 							ESX.TriggerServerCallback('invhud:getInv', function(data)
-								setInventory(data, 'trunk')
+								
 								SetVehicleDoorOpen(veh, 5)
 								openedTrunk = veh
-								openInventory('trunk')
+								openInventory('trunk',data)
 							end, 'trunk', plate, class)
 						else
 							Notify('This trunk is locked')
@@ -1002,8 +1023,8 @@ RegisterCommand('invhud:openInventory', function(raw)
 			end
 			gBoxData.plate = plate
 			ESX.TriggerServerCallback('invhud:getInv', function(data)
-				setInventory(data, 'gbox')
-				openInventory('gbox')
+				
+				openInventory('gbox',data)
 			end, 'gbox', plate, class)
 		end
 	end

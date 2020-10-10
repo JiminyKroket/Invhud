@@ -986,3 +986,17 @@ if Config.Use.AdminSearch then
 		{name = 'Identifier', help = 'Input inventory id:Server ID, Property Name(ID), Vehicle Plate(gbox, trunk), Stash Name(ID), Safe ID MUST MATCH EXACTLY'}
 	})
 end
+
+-- RegisterCommand('countInv', function(source, args, raw)
+	-- local total = 0
+	-- MySQL.Async.fetchAll('SELECT * FROM inventories', {}, function(result)
+		-- for i = 1,#result do
+			-- local items = json.decode(result[i]).data)
+			-- if items.items[args[1]] then
+				-- total = total + items.items[args[1]].count
+			-- end
+		-- end
+		-- cb(total)
+	-- end)
+-- end, true)
+				
