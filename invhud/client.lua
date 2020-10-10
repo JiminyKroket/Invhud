@@ -1165,6 +1165,11 @@ setPlayerInventoryData = function()
 end
 
 RegisterNUICallback('PutIntoPlayer', function(data, cb)
+	local playerPed = PlayerPedId()
+	if IsPedDeadOrDying(playerPed) then
+		Notify('You dead')
+		return
+	end
 	if IsPedSittingInAnyVehicle(playerPed) then
 		return
 	end
@@ -1187,6 +1192,11 @@ RegisterNUICallback('PutIntoPlayer', function(data, cb)
 end)
 
 RegisterNUICallback('TakeFromPlayer', function(data, cb)
+	local playerPed = PlayerPedId()
+	if IsPedDeadOrDying(playerPed) then
+		Notify('You dead')
+		return
+	end
 	if IsPedSittingInAnyVehicle(playerPed) then
 		return
 	end
