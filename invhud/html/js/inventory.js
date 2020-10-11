@@ -17,113 +17,13 @@ window.addEventListener("message", function (event) {
         $("#noSecondInventoryMessage").html(invLocale.secondInventoryNotAvailable);
     } else if (event.data.action == "setItems") {
         inventorySetup(event.data.itemList);
-
-        $('.item').draggable({
-            helper: 'clone',
-            appendTo: 'body',
-            zIndex: 99999,
-            revert: 'invalid',
-            start: function (event, ui) {
-                if (disabled) {
-                    return false;
-                }
-
-                $(this).css('background-image', 'none');
-                itemData = $(this).data("item");
-                itemInventory = $(this).data("inventory");
-
-                if (itemInventory == "second" || !itemData.canRemove) {
-                    $("#drop").addClass("disabled");
-                    $("#give").addClass("disabled");
-                }
-
-                if (itemInventory == "second" || !itemData.usable) {
-                    $("#use").addClass("disabled");
-                }
-            },
-            stop: function () {
-                itemData = $(this).data("item");
-
-                if (itemData !== undefined && itemData.name !== undefined) {
-                    $(this).css('background-image', 'url(\'img/items/' + itemData.name + '.png\'');
-                    $("#drop").removeClass("disabled");
-                    $("#use").removeClass("disabled");
-                    $("#give").removeClass("disabled");
-                }
-            }
-        });
+		createItems();
     } else if (event.data.action == "setSecondInventoryItems") {
         secondInventorySetup(event.data.itemList);
-		$('.item').draggable({
-            helper: 'clone',
-            appendTo: 'body',
-            zIndex: 99999,
-            revert: 'invalid',
-            start: function (event, ui) {
-                if (disabled) {
-                    return false;
-                }
-
-                $(this).css('background-image', 'none');
-                itemData = $(this).data("item");
-                itemInventory = $(this).data("inventory");
-
-                if (itemInventory == "second" || !itemData.canRemove) {
-                    $("#drop").addClass("disabled");
-                    $("#give").addClass("disabled");
-                }
-
-                if (itemInventory == "second" || !itemData.usable) {
-                    $("#use").addClass("disabled");
-                }
-            },
-            stop: function () {
-                itemData = $(this).data("item");
-
-                if (itemData !== undefined && itemData.name !== undefined) {
-                    $(this).css('background-image', 'url(\'img/items/' + itemData.name + '.png\'');
-                    $("#drop").removeClass("disabled");
-                    $("#use").removeClass("disabled");
-                    $("#give").removeClass("disabled");
-                }
-            }
-        });
+		createItems();
     } else if (event.data.action == "setShopInventoryItems") {
         shopInventorySetup(event.data.itemList)
-		$('.item').draggable({
-            helper: 'clone',
-            appendTo: 'body',
-            zIndex: 99999,
-            revert: 'invalid',
-            start: function (event, ui) {
-                if (disabled) {
-                    return false;
-                }
-
-                $(this).css('background-image', 'none');
-                itemData = $(this).data("item");
-                itemInventory = $(this).data("inventory");
-
-                if (itemInventory == "second" || !itemData.canRemove) {
-                    $("#drop").addClass("disabled");
-                    $("#give").addClass("disabled");
-                }
-
-                if (itemInventory == "second" || !itemData.usable) {
-                    $("#use").addClass("disabled");
-                }
-            },
-            stop: function () {
-                itemData = $(this).data("item");
-
-                if (itemData !== undefined && itemData.name !== undefined) {
-                    $(this).css('background-image', 'url(\'img/items/' + itemData.name + '.png\'');
-                    $("#drop").removeClass("disabled");
-                    $("#use").removeClass("disabled");
-                    $("#give").removeClass("disabled");
-                }
-            }
-        });
+		createItems();
     } else if (event.data.action == "setInfoText") {
         $(".info-div").html(event.data.text);
     } else if (event.data.action == "nearPlayers") {
@@ -149,6 +49,43 @@ window.addEventListener("message", function (event) {
 
 function closeInventory() {
     $.post("http://invhud/NUIFocusOff", JSON.stringify({}));
+}
+
+function createItems() {
+	$('.item').draggable({
+		helper: 'clone',
+		appendTo: 'body',
+		zIndex: 99999,
+		revert: 'invalid',
+		start: function (event, ui) {
+			if (disabled) {
+				return false;
+			}
+
+			$(this).css('background-image', 'none');
+			itemData = $(this).data("item");
+			itemInventory = $(this).data("inventory");
+
+			if (itemInventory == "second" || !itemData.canRemove) {
+				$("#drop").addClass("disabled");
+				$("#give").addClass("disabled");
+			}
+
+			if (itemInventory == "second" || !itemData.usable) {
+				$("#use").addClass("disabled");
+			}
+		},
+		stop: function () {
+			itemData = $(this).data("item");
+
+			if (itemData !== undefined && itemData.name !== undefined) {
+				$(this).css('background-image', 'url(\'img/items/' + itemData.name + '.png\'');
+				$("#drop").removeClass("disabled");
+				$("#use").removeClass("disabled");
+				$("#give").removeClass("disabled");
+			}
+		}
+	});
 }
 
 function inventorySetup(items) {
