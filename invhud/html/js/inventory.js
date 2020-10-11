@@ -54,8 +54,76 @@ window.addEventListener("message", function (event) {
         });
     } else if (event.data.action == "setSecondInventoryItems") {
         secondInventorySetup(event.data.itemList);
+		$('.item').draggable({
+            helper: 'clone',
+            appendTo: 'body',
+            zIndex: 99999,
+            revert: 'invalid',
+            start: function (event, ui) {
+                if (disabled) {
+                    return false;
+                }
+
+                $(this).css('background-image', 'none');
+                itemData = $(this).data("item");
+                itemInventory = $(this).data("inventory");
+
+                if (itemInventory == "second" || !itemData.canRemove) {
+                    $("#drop").addClass("disabled");
+                    $("#give").addClass("disabled");
+                }
+
+                if (itemInventory == "second" || !itemData.usable) {
+                    $("#use").addClass("disabled");
+                }
+            },
+            stop: function () {
+                itemData = $(this).data("item");
+
+                if (itemData !== undefined && itemData.name !== undefined) {
+                    $(this).css('background-image', 'url(\'img/items/' + itemData.name + '.png\'');
+                    $("#drop").removeClass("disabled");
+                    $("#use").removeClass("disabled");
+                    $("#give").removeClass("disabled");
+                }
+            }
+        });
     } else if (event.data.action == "setShopInventoryItems") {
         shopInventorySetup(event.data.itemList)
+		$('.item').draggable({
+            helper: 'clone',
+            appendTo: 'body',
+            zIndex: 99999,
+            revert: 'invalid',
+            start: function (event, ui) {
+                if (disabled) {
+                    return false;
+                }
+
+                $(this).css('background-image', 'none');
+                itemData = $(this).data("item");
+                itemInventory = $(this).data("inventory");
+
+                if (itemInventory == "second" || !itemData.canRemove) {
+                    $("#drop").addClass("disabled");
+                    $("#give").addClass("disabled");
+                }
+
+                if (itemInventory == "second" || !itemData.usable) {
+                    $("#use").addClass("disabled");
+                }
+            },
+            stop: function () {
+                itemData = $(this).data("item");
+
+                if (itemData !== undefined && itemData.name !== undefined) {
+                    $(this).css('background-image', 'url(\'img/items/' + itemData.name + '.png\'');
+                    $("#drop").removeClass("disabled");
+                    $("#use").removeClass("disabled");
+                    $("#give").removeClass("disabled");
+                }
+            }
+        });
     } else if (event.data.action == "setInfoText") {
         $(".info-div").html(event.data.text);
     } else if (event.data.action == "nearPlayers") {
