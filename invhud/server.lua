@@ -146,7 +146,7 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
 					if itemLimit == -1 then
 						itemLimit = 100000
 					end
-					total = total + 100/(itemLimit*0.1) * value..count
+					total = total + 100/(itemLimit*0.1) * value.count
 				end
 			else
 				total = total + 0.01
@@ -1024,9 +1024,9 @@ end
 	-- local total = 0
 	-- MySQL.Async.fetchAll('SELECT * FROM inventories', {}, function(result)
 		-- for i = 1,#result do
-			-- local items = json.decode(result[i]).data)
+			-- local items = json.decode(result[i].data)
 			-- if items.items[args[1]] then
-				-- total = total + items.items[args[1]].count
+				-- total = total + items.items[args[1]][1].count
 			-- end
 		-- end
 		-- cb(total)
