@@ -209,8 +209,8 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 	if class ~= nil then
 		if Config.Weight.VehicleLimits.Classes[class] then
 			weightLimit = Config.Weight.VehicleLimits.Classes[class][invType]
-		elseif Config.Weight.VehicleLimits.CustomModels[class] then
-			weightLimit = Config.Weight.VehicleLimits.CustomModels[class][invType]
+		elseif Config.Weight.VehicleLimits.CustomWeight[class] then
+			weightLimit = Config.Weight.VehicleLimits.CustomWeight[class][invType]
 		elseif Config.Weight.Houses.Shells[class] then
 			weightLimit = Config.Weight.Houses.Shells[class]
 		end
@@ -792,7 +792,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 									Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 									if shop.Society.Name then
 										TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
-											account.addMoney(totalPrice)
+											if account ~= nil then
+												account.addMoney(totalPrice)
+											else
+												print('No account found for society: '..shop.Society.Name)
+											end
 										end)
 									end
 								else

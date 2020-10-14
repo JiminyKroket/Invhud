@@ -971,7 +971,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 				if DoesEntityExist(veh) then
 					local plate = ESX.Game.GetVehicleProperties(veh).plate
 					local model, class = ESX.Game.GetVehicleProperties(veh).model
-					if not Config.Weight.VehicleLimits.CustomModels[model] then
+					if not Config.Weight.VehicleLimits.CustomWeight[model] then
 						class = GetVehicleClass(veh)
 					else
 						class = model
@@ -1026,7 +1026,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 		if DoesEntityExist(veh) then
 			local plate = ESX.Game.GetVehicleProperties(veh).plate
 			local model, class = ESX.Game.GetVehicleProperties(veh).model
-			if not Config.Weight.VehicleLimits.CustomModels[model] then
+			if not Config.Weight.VehicleLimits.CustomWeight[model] then
 				class = GetVehicleClass(veh)
 			else
 				class = model
