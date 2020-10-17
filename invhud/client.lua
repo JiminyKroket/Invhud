@@ -343,7 +343,7 @@ loadPlayerInventory = function(inv)
 				)
 			end
 			if Inclusions.Cash and money ~= nil and money > 0 then
-				if not Config.ESX1Point1  then
+				if PlayerData.maxWeight ~= nil  then
 					moneyData = {
 						label = _U('cash'),
 						name = 'money',
@@ -1070,7 +1070,7 @@ setPlayerInventoryData = function()
 		local money = data.money
 		local weapons = data.weapons
 		if Inclusions.Cash and money ~= nil and money > 0 then
-			if not Config.ESX1Point1  then
+			if PlayerData.maxWeight ~= nil  then
 				moneyData = {
 					label = _U('cash'),
 					name = 'money',

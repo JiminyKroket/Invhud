@@ -1,8 +1,6 @@
 Config = {}
 Config.Locale = 'en'
 
-Config.ESX1Point1 = false -- SET TRUE IF USING ESX1.1 OR LOWER
-
 Config.TextLog = {
 	Use = true,
 	Webhook = 'https://discordapp.com/api/webhooks/758066011240136794/dGdIXhOM3whW3ISxAnqNDrfLDpMawQajIjJ3Cq6-8uo7HISFoIXvKmOGkSQsTlbxO5_Z'
