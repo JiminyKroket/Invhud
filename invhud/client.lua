@@ -134,6 +134,10 @@ Notify = function(text, timer)
 	ESX.ShowNotification(text)
 end
 
+doTrim = function(value)
+	return (string.gsub(value, '^%s*(.-)%s*$', '%1'))
+end
+
 setInventory = function(data)
 	local invText = '%s %s<br>Weight: %s / %s'
 	ESX.TriggerServerCallback('invhud:doMath', function(total)
@@ -970,6 +974,14 @@ RegisterCommand('invhud:openInventory', function(raw)
 				local veh = GetVehicleInFront()
 				if DoesEntityExist(veh) then
 					local plate = ESX.Game.GetVehicleProperties(veh).plate
+					if not Config.Use.NonNPCVehicles then
+						local isChecked = nil
+						ESX.TriggerServerCallback('invhud:doesSomeoneOwn', function(owns)
+							isChecked = owns
+						end, doTrim(plate))
+						while isChecked == nil do Citizen.Wait(10) end
+						if not isChecked then Notify('This vehicle is un-storeable'); return; end
+					end
 					local model, class = ESX.Game.GetVehicleProperties(veh).model
 					if not Config.Weight.VehicleLimits.CustomWeight[model] then
 						class = GetVehicleClass(veh)
@@ -1025,6 +1037,14 @@ RegisterCommand('invhud:openInventory', function(raw)
 		local veh = GetVehiclePedIsIn(ped, true)
 		if DoesEntityExist(veh) then
 			local plate = ESX.Game.GetVehicleProperties(veh).plate
+			if not Config.Use.NonNPCVehicles then
+				local isChecked = nil
+				ESX.TriggerServerCallback('invhud:doesSomeoneOwn', function(owns)
+					isChecked = owns
+				end, doTrim(plate))
+				while isChecked == nil do Citizen.Wait(10) end
+				if not isChecked then Notify('This vehicle is un-storeable'); return; end
+			end
 			local model, class = ESX.Game.GetVehicleProperties(veh).model
 			if not Config.Weight.VehicleLimits.CustomWeight[model] then
 				class = GetVehicleClass(veh)

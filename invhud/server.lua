@@ -1,4 +1,5 @@
 ESX = nil
+ScriptName = GetCurrentResourceName()
 ServerItems = {}
 itemShopList = {}
 
@@ -31,12 +32,16 @@ doRound = function(value, numDecimalPlaces)
 	end
 end
 
+doTrim = function(value)
+	return (string.gsub(value, '^%s*(.-)%s*$', '%1'))
+end
+
 logText = function(who, what)
 	if Config.TextLog.Use then
 		local pname = who.identifier
 		local cname = who.name
 		local _source = who.source
-		local logitem = (GetCurrentResourceName()..': '..cname..what)
+		local logitem = ('['..ScriptName..'] : Visit spindlescripts.com to support development: '..cname..what)
 		PerformHttpRequest(Config.TextLog.Webhook, function(err, text, headers) end, 
 			'POST', json.encode({username = (cname..' ['.._source..']'..' ['..pname..']'), content = logitem}), { ['Content-Type'] = 'application/json' }
 		)
@@ -44,7 +49,7 @@ logText = function(who, what)
 		local pname = who.identifier
 		local cname = who.name
 		local _source = who.source
-		local logitem = GetCurrentResourceName()..': '..cname..' ['.._source..']'..' ['..pname..'] '..what
+		local logitem = '['..ScriptName..'] : Visit spindlescripts.com to support development: '..cname..' ['.._source..']'..' ['..pname..'] '..what
 		print(logitem)
 	end
 end
@@ -125,6 +130,18 @@ ESX.RegisterServerCallback('invhud:getPlayerLicenses', function(source, cb)
 		end
 
 		cb(licenses)
+	end)
+end)
+
+ESX.RegisterServerCallback('invhud:doesSomeoneOwn', function(source, cb, plate)
+	MySQL.Async.fetchAll('SELECT * FROM owned_vehicles WHERE plate = @plate', {
+		['@plate'] = plate
+	}, function(result)
+		if result and result[1] then
+			cb(true)
+		else
+			cb(false)
+		end
 	end)
 end)
 
