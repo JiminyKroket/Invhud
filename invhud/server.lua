@@ -390,6 +390,9 @@ end)
 
 RegisterServerEvent('invhud:putItem')
 AddEventHandler('invhud:putItem', function(invType, owner, data, count)
+	for k,v in pairs(Config.Use.MoneyIn) do
+		if (not v and invType == k) and (data.item.type == 'item_money' or data.item.type == 'item_account') then Notify(source, 'That is not able to be stored here'); return end
+	end
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
 	if xPlayer ~= nil and type(xPlayer) == 'table' then
