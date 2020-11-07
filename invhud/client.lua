@@ -347,7 +347,7 @@ loadPlayerInventory = function(inv)
 				)
 			end
 			if Inclusions.Cash and money ~= nil and money > 0 then
-				if PlayerData.maxWeight ~= nil  then
+				if PlayerData.maxWeight ~= nil and not Config.JustGoToFucking1Point2 then
 					moneyData = {
 						label = _U('cash'),
 						name = 'money',
@@ -560,7 +560,6 @@ RegisterNUICallback('TakeFromTrunk', function(data, cb)
 		Notify('You are in a car somehow')
 		return
 	end
-
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
 		TriggerServerEvent('invhud:getItem', 'trunk', trunkData.plate, data, tonumber(data.number))
 	end
@@ -603,7 +602,6 @@ RegisterNUICallback('TakeFromProperty', function(data, cb)
 		Notify('You are in a car somehow')
 		return
 	end
-
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
 		TriggerServerEvent('invhud:getItem', 'property', propertyData.id, data, tonumber(data.number))
 	end
@@ -988,6 +986,7 @@ RegisterCommand('invhud:openInventory', function(raw)
 					else
 						class = model
 					end
+          print(class)
 					trunkData.plate = plate
 					local trunk = GetEntityBoneIndexByName(veh, 'platelight')
 					if trunk == -1 then
@@ -1090,7 +1089,7 @@ setPlayerInventoryData = function()
 		local money = data.money
 		local weapons = data.weapons
 		if Inclusions.Cash and money ~= nil and money > 0 then
-			if PlayerData.maxWeight ~= nil  then
+			if PlayerData.maxWeight ~= nil and not Config.JustGoToFucking1Point2 then
 				moneyData = {
 					label = _U('cash'),
 					name = 'money',
