@@ -41,7 +41,7 @@ logText = function(who, what)
 		local pname = who.identifier
 		local cname = who.name
 		local _source = who.source
-		local logitem = ('['..ScriptName..'] : Visit spindlescripts.com to support development: '..cname..what)
+		local logitem = ('['..ScriptName..'] : Visit spindlescripts.com to support development: Get the best race maps at https://discord.gg/u8MqM3X: '..cname..what)
 		PerformHttpRequest(Config.TextLog.Webhook, function(err, text, headers) end, 
 			'POST', json.encode({username = (cname..' ['.._source..']'..' ['..pname..']'), content = logitem}), { ['Content-Type'] = 'application/json' }
 		)
@@ -49,7 +49,7 @@ logText = function(who, what)
 		local pname = who.identifier
 		local cname = who.name
 		local _source = who.source
-		local logitem = '['..ScriptName..'] : Visit spindlescripts.com to support development: '..cname..' ['.._source..']'..' ['..pname..'] '..what
+		local logitem = '['..ScriptName..'] : Visit spindlescripts.com to support development: Get the best race maps at https://discord.gg/u8MqM3X: '..cname..' ['.._source..']'..' ['..pname..'] '..what
 		print(logitem)
 	end
 end
@@ -407,8 +407,11 @@ end)
 
 RegisterServerEvent('invhud:putItem')
 AddEventHandler('invhud:putItem', function(invType, owner, data, count)
-	for k,v in pairs(Config.Use.MoneyIn) do
-		if (not v and invType == k) and (data.item.type == 'item_money' or data.item.type == 'item_account') then Notify(source, 'That is not able to be stored here'); return end
+	for k,v in pairs(Config.Use.CashIn) do
+		if (not v and invType == k) and (data.item.type == 'item_money') then Notify(source, 'That is not able to be stored here'); return end
+	end
+  for k,v in pairs(Config.Use.AccountsIn) do
+		if (not v and invType == k) and (data.item.type == 'item_account') then Notify(source, 'That is not able to be stored here'); return end
 	end
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
@@ -607,7 +610,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 							end
 						end)
 					else
-						Notify(src, 'You do not have that much of '..data.item.name)
+						Notify(src, 'You can not carry any more '..data.item.name)
 					end
 				else
 					Notify(src, 'Max weight error, relog')
@@ -643,7 +646,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 						end
 					end)
 				else
-					Notify(src, 'You do not have that much of '..data.item.name)
+					Notify(src, 'You can not carry any more '..data.item.name)
 				end
 			end
 		elseif data.item.type == 'item_weapon' then
@@ -659,7 +662,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				if Config.Weight.AddWeaponsToPlayerWeight then
 					local newWeight = xPlayer.maxWeight - weight
 					if newWeight <= doRound(0, 2) then
-						Notify(source, 'Can not hold weapon')
+						Notify(src, 'Can not hold weapon')
 						return
 					end
 				end
