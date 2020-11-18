@@ -222,7 +222,7 @@ end)
 
 ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, class)
 	local xPlayer = ESX.GetPlayerFromId(source)
-	local weightLimit = 500
+	local weightLimit = Config.Weight.DefaultWeight
 	if class ~= nil then
 		if Config.Weight.VehicleLimits.Classes[class] then
 			weightLimit = Config.Weight.VehicleLimits.Classes[class][invType]

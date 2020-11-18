@@ -279,7 +279,8 @@ InStashZone = function(pos)
 end
 
 openInventory = function(invType, data)
-    loadPlayerInventory()
+  ESX.UI.Menu.CloseAll()
+  loadPlayerInventory()
 	if data ~= nil then
 		if invType ~= 'shop' then
 			setInventory(data)
@@ -321,6 +322,13 @@ shouldCloseInventory = function(itemName)
     return false
 end
 
+hasCashAccount = function()
+  for i = 1,#PlayerData.accounts do
+    if PlayerData.accounts[i].name == 'money' then return true end
+  end
+  return false
+end
+
 loadPlayerInventory = function(inv)
 	local invText = '%s %s<br>Weight: %s / %s'
 	if not inv then
@@ -346,8 +354,9 @@ loadPlayerInventory = function(inv)
 					}
 				)
 			end
+      print(hasCashAccount())
 			if Inclusions.Cash and money ~= nil and money > 0 then
-				if PlayerData.maxWeight ~= nil and not Config.JustGoToFucking1Point2 then
+				if hasCashAccount() then
 					moneyData = {
 						label = _U('cash'),
 						name = 'money',
