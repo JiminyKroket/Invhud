@@ -354,7 +354,6 @@ loadPlayerInventory = function(inv)
 					}
 				)
 			end
-      print(hasCashAccount())
 			if Inclusions.Cash and money ~= nil and money > 0 then
 				if hasCashAccount() then
 					moneyData = {
@@ -1098,7 +1097,7 @@ setPlayerInventoryData = function()
 		local money = data.money
 		local weapons = data.weapons
 		if Inclusions.Cash and money ~= nil and money > 0 then
-			if PlayerData.maxWeight ~= nil and not Config.JustGoToFucking1Point2 then
+			if hasCashAccount() then
 				moneyData = {
 					label = _U('cash'),
 					name = 'money',
