@@ -1086,6 +1086,7 @@ end
 setPlayerInventoryData = function()
     ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
     if data ~= nil then
+      currentInventoryId = data.owner
       SendNUIMessage(
         {
           action = 'setInfoText',

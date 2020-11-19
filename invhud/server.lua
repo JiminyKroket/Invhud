@@ -185,7 +185,7 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
       end
     end
     if tPlayer ~= nil then
-      cb({inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
+      cb({owner = tPlayer.identifier, inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
     else
       cb(nil)
     end
