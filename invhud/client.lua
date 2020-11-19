@@ -748,7 +748,6 @@ RegisterNUICallback('TakeFromStash', function(data, cb)
 end)
 
 RegisterNUICallback('NUIFocusOff', function()
-  TriggerServerEvent('invhud:closedInventory', currentInventoryId)
 	TriggerEvent('invhud:closeInventory')
 end)
 
@@ -913,6 +912,7 @@ AddEventHandler('onResourceStop', function(resource)
 end)
 
 AddEventHandler('invhud:closeInventory', function()
+  TriggerServerEvent('invhud:closedInventory', currentInventoryId)
 	closeInventory()
 end)
 
@@ -1085,110 +1085,112 @@ end
 
 setPlayerInventoryData = function()
     ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-		SendNUIMessage(
-			{
-				action = 'setInfoText',
-				text = '<strong>' .. _U('player_inventory') .. '</strong><br>' .. targetPlayerName .. ' (' .. targetPlayer .. ')'
-			}
-		)
+    if data ~= nil then
+      SendNUIMessage(
+        {
+          action = 'setInfoText',
+          text = '<strong>' .. _U('player_inventory') .. '</strong><br>' .. targetPlayerName .. ' (' .. targetPlayer .. ')'
+        }
+      )
 
-		local items = {}
-		local inventory = data.inventory
-		local accounts = data.accounts
-		local money = data.money
-		local weapons = data.weapons
-		if Inclusions.Cash and money ~= nil and money > 0 then
-			if hasCashAccount() then
-				moneyData = {
-					label = _U('cash'),
-					name = 'money',
-					type = 'item_account',
-					count = money,
-					usable = false,
-					rare = false,
-					limit = -1,
-					canRemove = true
-				}
+      local items = {}
+      local inventory = data.inventory
+      local accounts = data.accounts
+      local money = data.money
+      local weapons = data.weapons
+      if Inclusions.Cash and money ~= nil and money > 0 then
+        if hasCashAccount() then
+          moneyData = {
+            label = _U('cash'),
+            name = 'money',
+            type = 'item_account',
+            count = money,
+            usable = false,
+            rare = false,
+            limit = -1,
+            canRemove = true
+          }
 
-				table.insert(items, moneyData)
-			else
-				moneyData = {
-					label = _U("cash"),
-					name = "cash",
-					type = "item_money",
-					count = money,
-					usable = false,
-					rare = false,
-					limit = -1,
-					canRemove = true
-				}
+          table.insert(items, moneyData)
+        else
+          moneyData = {
+            label = _U("cash"),
+            name = "cash",
+            type = "item_money",
+            count = money,
+            usable = false,
+            rare = false,
+            limit = -1,
+            canRemove = true
+          }
 
-				table.insert(items, moneyData)
-			end
-		end
+          table.insert(items, moneyData)
+        end
+      end
 
-		if Inclusions.Dirty and accounts ~= nil then
-			for key, value in pairs(accounts) do
-				if accounts[key].name == 'black_money' then
-					if accounts[key].money > 0 then
-						accountData = {
-							label = accounts[key].label,
-							count = accounts[key].money,
-							type = 'item_account',
-							name = accounts[key].name,
-							usable = false,
-							rare = false,
-							limit = -1,
-							canRemove = true
-						}
-						table.insert(items, accountData)
-					end
-				end
-			end
-		end
+      if Inclusions.Dirty and accounts ~= nil then
+        for key, value in pairs(accounts) do
+          if accounts[key].name == 'black_money' then
+            if accounts[key].money > 0 then
+              accountData = {
+                label = accounts[key].label,
+                count = accounts[key].money,
+                type = 'item_account',
+                name = accounts[key].name,
+                usable = false,
+                rare = false,
+                limit = -1,
+                canRemove = true
+              }
+              table.insert(items, accountData)
+            end
+          end
+        end
+      end
 
-		if inventory ~= nil then
-			for key, value in pairs(inventory) do
-				if inventory[key].count <= 0 then
-					inventory[key] = nil
-				else
-					inventory[key].type = 'item_standard'
-					inventory[key].id = id
-					table.insert(items, inventory[key])
-				end
-			end
-		end
+      if inventory ~= nil then
+        for key, value in pairs(inventory) do
+          if inventory[key].count <= 0 then
+            inventory[key] = nil
+          else
+            inventory[key].type = 'item_standard'
+            inventory[key].id = id
+            table.insert(items, inventory[key])
+          end
+        end
+      end
 
-		if Inclusions.Weapons and weapons ~= nil then
-			for key, value in pairs(weapons) do
-				local weaponHash = GetHashKey(weapons[key].name)
-				local playerPed = GetPlayerPed(GetPlayerFromServerId(targetPlayer))
-				if  weapons[key].name ~= 'WEAPON_UNARMED' then
-					local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
-					table.insert(
-						items,
-						{
-							label = weapons[key].label,
-							count = ammo,
-							limit = -1,
-							type = 'item_weapon',
-							name = weapons[key].name,
-							usable = false,
-							rare = false,
-							canRemove = true
-						}
-					)
-				end
-			end
-		end
+      if Inclusions.Weapons and weapons ~= nil then
+        for key, value in pairs(weapons) do
+          local weaponHash = GetHashKey(weapons[key].name)
+          local playerPed = GetPlayerPed(GetPlayerFromServerId(targetPlayer))
+          if  weapons[key].name ~= 'WEAPON_UNARMED' then
+            local ammo = GetAmmoInPedWeapon(playerPed, weaponHash)
+            table.insert(
+              items,
+              {
+                label = weapons[key].label,
+                count = ammo,
+                limit = -1,
+                type = 'item_weapon',
+                name = weapons[key].name,
+                usable = false,
+                rare = false,
+                canRemove = true
+              }
+            )
+          end
+        end
+      end
 
-		SendNUIMessage(
-			{
-				action = 'setSecondInventoryItems',
-				itemList = items
-			}
-		)
-		openInventory('player')
+      SendNUIMessage(
+        {
+          action = 'setSecondInventoryItems',
+          itemList = items
+        }
+      )
+      openInventory('player')
+    end
 	end, targetPlayer)
 end
 
