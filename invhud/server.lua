@@ -147,12 +147,13 @@ ESX.RegisterServerCallback('invhud:doesSomeoneOwn', function(source, cb, plate)
 end)
 
 ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target)
+  local xPlayer = ESX.GetPlayerFromId(source)
 	local tPlayer = ESX.GetPlayerFromId(target)
 	local total = 0
 	local inventory = tPlayer.inventory
 	local weapons = tPlayer.loadout
-  if (source ~= tPlayer.source and not OpenedInventories[tPlayer.identifier]) or source == tPlayer.source then
-    OpenedInventories[tPlayer.identifier] = source
+  if (xPlayer.identifier ~= tPlayer.identifier and not OpenedInventories[tPlayer.identifier]) or xPlayer.identifier == tPlayer.identifier then
+    OpenedInventories[tPlayer.identifier] = xPlayer.identifier
     for key, value in pairs(inventory) do
       if inventory[key].count <= 0 then
         inventory[key] = nil
