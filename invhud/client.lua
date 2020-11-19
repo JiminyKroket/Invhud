@@ -2,6 +2,7 @@ local isInInventory = false
 local targetPlayer, targetPlayerName, openedTrunk
 local trunkData, gBoxData, stashData, propertyData, safeData, shopData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local Inclusions = Config.IncludeOptions
+local currentInventoryId = 0
 ESX = nil
 
 Citizen.CreateThread(function()
@@ -283,33 +284,34 @@ openInventory = function(invType, data)
   loadPlayerInventory()
 	if data ~= nil then
 		if invType ~= 'shop' then
+      currentInventoryId = data.owner
 			setInventory(data)
 		else
 			setShopInventory(data)
 		end
 	end
-    isInInventory = true
-    SendNUIMessage(
-        {
-            action = 'display',
-            type = invType
-        }
-    )
-    SetNuiFocus(true, true)
+  isInInventory = true
+  SendNUIMessage(
+      {
+          action = 'display',
+          type = invType
+      }
+  )
+  SetNuiFocus(true, true)
 end
 
 closeInventory = function()
-    isInInventory = false
+  isInInventory = false
 	if openedTrunk then
 		SetVehicleDoorShut(openedTrunk, 5, false, false)
 		openedTrunk = nil
 	end
-    SendNUIMessage(
-        {
-            action = 'hide'
-        }
-    )
-    SetNuiFocus(false, false)
+  SendNUIMessage(
+      {
+          action = 'hide'
+      }
+  )
+  SetNuiFocus(false, false)
 end
 
 shouldCloseInventory = function(itemName)
@@ -331,6 +333,7 @@ end
 
 loadPlayerInventory = function(inv)
 	local invText = '%s %s<br>Weight: %s / %s'
+  currentInventoryId = PlayerData.identifier
 	if not inv then
 		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
 			local items = {}
@@ -530,7 +533,6 @@ RegisterNUICallback('TakeFromGBox', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		
 		openInventory('gbox',data)
 	end, 'gbox', gBoxData.plate)
 
@@ -556,7 +558,6 @@ RegisterNUICallback('PutIntoTrunk', function(data, cb)
 	Wait(250)
 	loadPlayerInventory()
 	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		
 		openInventory('trunk',data)
 	end, 'trunk', trunkData.plate)
 
@@ -747,6 +748,7 @@ RegisterNUICallback('TakeFromStash', function(data, cb)
 end)
 
 RegisterNUICallback('NUIFocusOff', function()
+  TriggerServerEvent('invhud:closedInventory', currentInventoryId)
 	TriggerEvent('invhud:closeInventory')
 end)
 
@@ -994,7 +996,6 @@ RegisterCommand('invhud:openInventory', function(raw)
 					else
 						class = model
 					end
-          print(class)
 					trunkData.plate = plate
 					local trunk = GetEntityBoneIndexByName(veh, 'platelight')
 					if trunk == -1 then

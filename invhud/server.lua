@@ -2,6 +2,7 @@ ESX = nil
 ScriptName = GetCurrentResourceName()
 ServerItems = {}
 itemShopList = {}
+OpenedInventories = {}
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
@@ -150,42 +151,48 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
 	local total = 0
 	local inventory = tPlayer.inventory
 	local weapons = tPlayer.loadout
-	for key, value in pairs(inventory) do
-		if inventory[key].count <= 0 then
-			inventory[key] = nil
-		else
-			local xItem = tPlayer.getInventoryItem(value.name)
-			if xItem ~= nil then
-				if xItem.weight ~= nil then
-					total = total + xItem.weight * value.count
-				else
-					local itemLimit = xItem.limit
-					if itemLimit == -1 then
-						itemLimit = 100000
-					end
-					total = total + 100/(itemLimit*0.1) * value.count
-				end
-			else
-				total = total + 0.01
-			end
-		end
-	end
-	for key, value in pairs(weapons) do
-		local weaponHash = GetHashKey(value.name)
-		if  value.name ~= 'WEAPON_UNARMED' then
-			if Config.Weight.WeaponWeights[value.name] then
-				total = total + (Config.Weight.WeaponWeights[value.name] + (value.ammo*0.01))
-			else
-				total = total + (5 + (value.ammo*0.01))
-				print('Weapon weight not set, defaulted to 5')
-			end
-		end
-	end
-	if tPlayer ~= nil then
-		cb({inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
-	else
-		cb(nil)
-	end
+  if (source ~= tPlayer.source and not OpenedInventories[tPlayer.identifier]) or source == tPlayer.source then
+    OpenedInventories[tPlayer.identifier] = source
+    for key, value in pairs(inventory) do
+      if inventory[key].count <= 0 then
+        inventory[key] = nil
+      else
+        local xItem = tPlayer.getInventoryItem(value.name)
+        if xItem ~= nil then
+          if xItem.weight ~= nil then
+            total = total + xItem.weight * value.count
+          else
+            local itemLimit = xItem.limit
+            if itemLimit == -1 then
+              itemLimit = 100000
+            end
+            total = total + 100/(itemLimit*0.1) * value.count
+          end
+        else
+          total = total + 0.01
+        end
+      end
+    end
+    for key, value in pairs(weapons) do
+      local weaponHash = GetHashKey(value.name)
+      if  value.name ~= 'WEAPON_UNARMED' then
+        if Config.Weight.WeaponWeights[value.name] then
+          total = total + (Config.Weight.WeaponWeights[value.name] + (value.ammo*0.01))
+        else
+          total = total + (5 + (value.ammo*0.01))
+          print('Weapon weight not set, defaulted to 5')
+        end
+      end
+    end
+    if tPlayer ~= nil then
+      cb({inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
+    else
+      cb(nil)
+    end
+  else
+    Notify(source, 'This inventory is already opened')
+    cb(nil)
+  end
 end)
 
 ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
@@ -235,23 +242,34 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 	if invType == 'stash' then
 		weightLimit = Config.Weight.StashWeight
 	end
-	MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = invType}, function(result)
-		if result[1] then
-			cb(result[1])
-		else
-			MySQL.Async.execute('INSERT INTO `inventories` (owner, type, data, `limit`) VALUES (@id, @type, @data, @limit)', {
-				['@id'] = id,
-				['@type'] = invType,
-				['@data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}),
-				['@limit'] = weightLimit
-			}, function(rowsChanged)
-				if rowsChanged then
-					logText(xPlayer, ' created inventory for '..id..' with type '..invType)
-				end
-			end)
-			cb({['owner'] = id, ['type'] = invType, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
-		end
-	end)
+  if (not OpenedInventories[id]) or OpenedInventories[id] == xPlayer.source then
+    OpenedInventories[id] = xPlayer.source
+    MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = id, ['@type'] = invType}, function(result)
+      if result[1] then
+        cb(result[1])
+      else
+        MySQL.Async.execute('INSERT INTO `inventories` (owner, type, data, `limit`) VALUES (@id, @type, @data, @limit)', {
+          ['@id'] = id,
+          ['@type'] = invType,
+          ['@data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}),
+          ['@limit'] = weightLimit
+        }, function(rowsChanged)
+          if rowsChanged then
+            logText(xPlayer, ' created inventory for '..id..' with type '..invType)
+          end
+        end)
+        cb({['owner'] = id, ['type'] = invType, ['data'] = json.encode({items = {}, weapons = {}, blackMoney = 0, cash = 0}), ['limit'] = weightLimit})
+      end
+    end)
+  else
+    Notify(xPlayer.source, 'This inventory is already opened')
+    cb(nil)
+  end
+end)
+
+RegisterServerEvent('invhud:closedInventory')
+AddEventHandler('invhud:closedInventory', function(id)
+  OpenedInventories[id] = nil
 end)
 
 RegisterServerEvent('invhud:removeWeight')
