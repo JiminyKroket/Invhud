@@ -70,6 +70,7 @@ IsInInv = function(inv, item)
 end
 
 InvCanCarry = function(xPlayer, inv, name, count, totWeight)
+  if totWeight == -1 then return true end
 	local total = 0
 	local xItem = xPlayer.getInventoryItem(name)
 	local itemWeight
