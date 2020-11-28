@@ -852,7 +852,11 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 									Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 									if shop.Society.Name then
 										TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
-											account.addMoney(totalPrice)
+											if account ~= nil then
+												account.addMoney(totalPrice)
+											else
+												print('No account found for society: '..shop.Society.Name)
+											end
 										end)
 									end
 								else
@@ -880,8 +884,12 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 								if shop.Society.Name then
 									TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
-										account.addMoney(totalPrice)
-									end)
+                    if account ~= nil then
+                      account.addMoney(totalPrice)
+                    else
+                      print('No account found for society: '..shop.Society.Name)
+                    end
+                  end)
 								end
 							else
 								Notify(source, 'You do not have enough money!')
@@ -893,8 +901,12 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 								Notify(source, 'You purchased '..count..' '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 								if shop.Society.Name then
 									TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
-										account.addMoney(totalPrice)
-									end)
+                    if account ~= nil then
+                      account.addMoney(totalPrice)
+                    else
+                      print('No account found for society: '..shop.Society.Name)
+                    end
+                  end)
 								end
 							else
 								Notify(source, 'You do not have enough money!')
@@ -910,8 +922,8 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 	
 	if invType == 'item_weapon' then
 		local targetWeapon = xPlayer.hasWeapon(tostring(item))
-        if not targetWeapon then
-            local list = itemShopList.weapons
+    if not targetWeapon then
+      local list = itemShopList.weapons
 			for k,v in pairs(list) do
 				if v.name == item then
 					local totalPrice = 1 * v.price
@@ -922,8 +934,12 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 							if shop.Society.Name then
 								TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
-									account.addMoney(totalPrice)
-								end)
+                  if account ~= nil then
+                    account.addMoney(totalPrice)
+                  else
+                    print('No account found for society: '..shop.Society.Name)
+                  end
+                end)
 							end
 						else
 							Notify(source, 'You do not have enough money!')
@@ -935,18 +951,22 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 							Notify(source, 'You purchased a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
 							if shop.Society.Name then
 								TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
-									account.addMoney(totalPrice)
-								end)
+                  if account ~= nil then
+                    account.addMoney(totalPrice)
+                  else
+                    print('No account found for society: '..shop.Society.Name)
+                  end
+                end)
 							end
 						else
 							Notify(source, 'You do not have enough money!')
 						end
 					end
 				end
-            end
-        else
-            Notify(source, 'You already own this weapon!' )
-        end
+      end
+    else
+        Notify(source, 'You already own this weapon!' )
+    end
 	end
 end)
 
@@ -966,6 +986,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 					end
 					if shop.Society.Name then
 						TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
+              if account == nil then print('No account found for society: '..shop.Society.Name); return; end
 							if account.money >= totalPrice then
 								if shop.Account ~= 'money' and shop.Account ~= 'cash' then
 									xPlayer.addAccountMoney(shop.Account, totalPrice)
@@ -1002,28 +1023,49 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 	
 	if invType == 'item_weapon' then
 		local targetWeapon = xPlayer.hasWeapon(tostring(item))
-        if targetWeapon then
-            local list = itemShopList.weapons
+    if targetWeapon then
+      local list = itemShopList.weapons
 			for k,v in pairs(list) do
 				if v.name == item then
 					local totalPrice = 1 * v.price * shop.BuyBack
 					if totalPrice < 1 then
 						totalPrice = 0
 					end
-					if shop.Account ~= 'money' and shop.Account ~= 'cash' then
-						xPlayer.addAccountMoney(shop.Account, totalPrice)
-						xPlayer.removeWeapon(v.name)
-						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
-					else
-						xPlayer.addMoney(totalPrice)
-						xPlayer.removeWeapon(v.name)
-						Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
-					end
-				end
+          if shop.Society.Name then
+						TriggerEvent('esx_addonaccount:getSharedAccount', string.format('society_%s', shop.Society.Name), function(account)
+              if account == nil then print('No account found for society: '..shop.Society.Name); return; end
+							if account.money >= totalPrice then
+								if shop.Account ~= 'money' and shop.Account ~= 'cash' then
+									xPlayer.addAccountMoney(shop.Account, totalPrice)
+                  xPlayer.removeWeapon(v.name)
+                  Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+									account.removeMoney(totalPrice)
+								else
+									xPlayer.addMoney(totalPrice)
+                  xPlayer.removeWeapon(v.name)
+                  Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+									account.removeMoney(totalPrice)
+								end
+							else
+								Notify(source, 'The shop does not have enough money')
+							end
+						end)
+          else
+            if shop.Account ~= 'money' and shop.Account ~= 'cash' then
+              xPlayer.addAccountMoney(shop.Account, totalPrice)
+              xPlayer.removeWeapon(v.name)
+              Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
+            else
+              xPlayer.addMoney(totalPrice)
+              xPlayer.removeWeapon(v.name)
+              Notify(source, 'You sold a '..v.label..' for '..Config.CurrencyIcon..totalPrice)
             end
-        else
-            Notify(source, 'You do not own this weapon!' )
-        end
+          end
+				end
+      end
+    else
+        Notify(source, 'You do not own this weapon!' )
+    end
 	end
 end)
 
