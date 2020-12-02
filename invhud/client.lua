@@ -462,8 +462,8 @@ end
 
 IsPedHoldingWeapon = function(selWep, tabWep)
 	local hasWeap
-	for i = 1,#Config.Bullets[tabWep] do
-		if selWep == Config.Bullets[tabWep][i] then
+	for i = 1,#Config.Bullets.Items[tabWep] do
+		if selWep == Config.Bullets.Items[tabWep][i] then
 			hasWeap = true
 		end
 	end
@@ -893,8 +893,8 @@ AddEventHandler('invhud:usedAmmo', function(key)
 	local wep = GetSelectedPedWeapon(ped)
 	if IsPedHoldingWeapon(wep, key) then
 		MakePedReload(ped)
-		AddAmmoToPed(GetPlayerPed(-1), wep, 20)
-		TriggerServerEvent('invhud:usedAmmo', key)
+		AddAmmoToPed(PlayerPedId(), wep, Config.Bullets.AmmoGain)
+		TriggerServerEvent('invhud:usedAmmo', wep, key)
 	else
 		Notify('You do not have a weapon for that ammo clip equipped')
 	end

@@ -1069,17 +1069,28 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 	end
 end)
 
-for k,v in pairs(Config.Bullets) do
+for k,v in pairs(Config.Bullets.Items) do
 	ESX.RegisterUsableItem(k, function(source)
 		TriggerClientEvent('invhud:usedAmmo', source, k)
 	end)
 end
 
 RegisterServerEvent('invhud:usedAmmo')
-AddEventHandler('invhud:usedAmmo', function(item)
+AddEventHandler('invhud:usedAmmo', function(weapon, item)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-	xPlayer.removeInventoryItem(item, 1)
+  for i = 1,#xPlayer.loadout do
+    if GetHashKey(xPlayer.loadout[i].name) == weapon then
+      local start = xPlayer.loadout[i].ammo
+      if xPlayer.getAccount('money') == nil then
+        xPlayer.removeWeapon(xPlayer.loadout[i].name)
+        xPlayer.addWeapon(xPlayer.loadout[i].name, start+Config.Bullets.AmmoGain)
+      else
+        xPlayer.addWeaponAmmo(xPlayer.loadout[i].name, Config.Bullets.AmmoGain)
+      end
+      xPlayer.removeInventoryItem(item, 1)
+    end
+  end
 end)
 
 if Config.Use.AdminSearch then
