@@ -1082,7 +1082,7 @@ AddEventHandler('invhud:usedAmmo', function(weapon, item)
   for i = 1,#xPlayer.loadout do
     if GetHashKey(xPlayer.loadout[i].name) == weapon then
       local start = xPlayer.loadout[i].ammo
-      if xPlayer.getAccount('money') == nil then
+      if xPlayer.addWeaponAmmo == nil then
         xPlayer.removeWeapon(xPlayer.loadout[i].name)
         xPlayer.addWeapon(xPlayer.loadout[i].name, start+Config.Bullets.AmmoGain)
       else
