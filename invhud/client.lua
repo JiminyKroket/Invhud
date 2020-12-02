@@ -200,6 +200,7 @@ setInventory = function(data)
 						{
 							label = data.weapons[key][i].label,
 							count = data.weapons[key][i].count,
+              components = data.weapons[key][i].components,
 							limit = -1,
 							type = 'item_weapon',
 							name = key,
@@ -429,6 +430,7 @@ loadPlayerInventory = function(inv)
 							{
 								label = value.label,
 								count = value.ammo,
+                components = value.components,
 								limit = -1,
 								type = 'item_weapon',
 								name = value.name,
@@ -1172,6 +1174,7 @@ setPlayerInventoryData = function()
               {
                 label = weapons[key].label,
                 count = ammo,
+                components = weapons[key].components,
                 limit = -1,
                 type = 'item_weapon',
                 name = weapons[key].name,

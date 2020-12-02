@@ -502,11 +502,16 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						if IsInInv(inventory, data.item.name) then
 							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 								xPlayer.removeWeapon(data.item.name)
+                if xPlayer.removeWeaponComponent ~= nil then
+                  for i = 1,#data.item.components do
+                    xPlayer.removeWeaponComponent(data.item.name, data.item.components[i])
+                  end
+                end
 								if Config.Weight.AddWeaponsToPlayerWeight then
 									local newWeight = xPlayer.maxWeight + weight
 									xPlayer.setMaxWeight(doRound(newWeight, 2))
 								end
-								table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
+								table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label, components = data.item.components})
 								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 									['@owner'] = owner,
 									['@type'] = invType,
@@ -522,12 +527,17 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 						else
 							if InvCanCarry(xPlayer, inventory, data.item.name, count, result[1].limit) then
 								xPlayer.removeWeapon(data.item.name)
+                if xPlayer.removeWeaponComponent ~= nil then
+                  for i = 1,#data.item.components do
+                    xPlayer.removeWeaponComponent(data.item.name, data.item.components[i])
+                  end
+                end
 								if Config.Weight.AddWeaponsToPlayerWeight then
 									local newWeight = xPlayer.maxWeight + weight
 									xPlayer.setMaxWeight(doRound(newWeight, 2))
 								end
 								inventory.weapons[data.item.name] = {}
-								table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label})
+								table.insert(inventory.weapons[data.item.name], {count = count, label = data.item.label, components = data.item.components})
 								MySQL.Async.execute('UPDATE inventories SET data = @data WHERE owner = @owner AND type = @type', {
 									['@owner'] = owner,
 									['@type'] = invType,
@@ -693,6 +703,11 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 							for i = 1,#inventory.weapons[data.item.name] do
 								if inventory.weapons[data.item.name][i].count == data.item.count then
 									xPlayer.addWeapon(data.item.name, inventory.weapons[data.item.name][i].count)
+                  if xPlayer.addWeaponComponent ~= nil then
+                    for j = 1,#inventory.weapons[data.item.name][i].components do
+                      xPlayer.addWeaponComponent(data.item.name, inventory.weapons[data.item.name][i].components[j])
+                    end
+                  end
 									if Config.Weight.AddWeaponsToPlayerWeight then
 										local newWeight = xPlayer.maxWeight - weight
 										xPlayer.setMaxWeight(doRound(newWeight, 2))
