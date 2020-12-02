@@ -1081,12 +1081,19 @@ AddEventHandler('invhud:usedAmmo', function(weapon, item)
 	local xPlayer = ESX.GetPlayerFromId(src)
   for i = 1,#xPlayer.loadout do
     if GetHashKey(xPlayer.loadout[i].name) == weapon then
+      local weapName = xPlayer.loadout[i].name
       local start = xPlayer.loadout[i].ammo
       if xPlayer.addWeaponAmmo == nil then
-        xPlayer.removeWeapon(xPlayer.loadout[i].name)
-        xPlayer.addWeapon(xPlayer.loadout[i].name, start+Config.Bullets.AmmoGain)
+        local weapComps = xPlayer.loadout[i].components
+        xPlayer.removeWeapon(weapName)
+        xPlayer.addWeapon(weapName, start+Config.Bullets.AmmoGain)
+        if xPlayer.addWeaponComponent ~= nil then
+          for i = 1,#weapComps do
+            xPlayer.addWeaponComponent(weapName, weapComps[i])
+          end
+        end
       else
-        xPlayer.addWeaponAmmo(xPlayer.loadout[i].name, Config.Bullets.AmmoGain)
+        xPlayer.addWeaponAmmo(weapName, Config.Bullets.AmmoGain)
       end
       xPlayer.removeInventoryItem(item, 1)
     end
