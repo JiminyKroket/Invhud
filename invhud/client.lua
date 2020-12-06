@@ -934,161 +934,177 @@ AddEventHandler('invhud:lockInv', function(state)
   canOpen = state
 end)
 
-RegisterCommand('invhud:openInventory', function(raw)
-	if not HasCollisionLoadedAroundEntity(PlayerPedId()) then return end
+if Config.PowerHungry then
+  Citizen.CreateThread(function()
+    while true do
+      Citizen.Wait(0)
+      if IsControlJustReleased(0, 51) then
+        InventoryThing()
+      end
+    end
+  end)
+else
+  RegisterCommand('invhud:openInventory', function(raw)
+    InventoryThing()
+  end)
+
+  RegisterKeyMapping('invhud:openInventory', 'Open the inventory menu', 'keyboard', Config.OpenKeyName)
+end
+
+
+InventoryThing = function()
+  if not HasCollisionLoadedAroundEntity(PlayerPedId()) then return end
   if isCuffed == true then Notify('You are handcuffed'); return; end
   if canOpen == false then Notify('You can not do that'); return; end
-	local ped = PlayerPedId()
-	local pos = GetEntityCoords(ped)
-	if not IsPedSittingInAnyVehicle(ped) then
-		local inZone, zoneIn = InShopZone(pos)
-		if inZone then
-			shopData = Config.Shops[zoneIn]
-			if Config.Use.Licenses then
-				if shopData.NeedsLicense ~= nil then
-					if Licenses[shopData.NeedsLicense] ~= nil then
-						ESX.TriggerServerCallback('invhud:getShopItems', function(data)
-							setShopInventory(data)
-							openInventory('shop',data)
-						end, zoneIn)
-						Citizen.Wait(250)
-					else
-						ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
-							for i = 1, #licenses, 1 do
-								Licenses[licenses[i]] = true
-							end
-							if Licenses[shopData.NeedsLicense] ~= nil then
-								ESX.TriggerServerCallback('invhud:getShopItems', function(data)
-									setShopInventory(data)
-									openInventory('shop',data)
-								end, zoneIn)
-								Citizen.Wait(250)
-							else
-								Notify('You do not have a fire-arm license, we can not sell you guns')
-							end
-						end)
-					end
-				else
-					ESX.TriggerServerCallback('invhud:getShopItems', function(data)
-						setShopInventory(data)
-						openInventory('shop',data)
-					end, zoneIn)
-					Citizen.Wait(250)
-				end
-			else
-				ESX.TriggerServerCallback('invhud:getShopItems', function(data)
-					setShopInventory(data)
-					openInventory('shop',data)
-				end, zoneIn)
-				Citizen.Wait(250)
-			end
-		else
-			local atStash, stashAt = InStashZone(pos)
-			if atStash then
-				if tonumber(stashAt) ~= nil then
-					ESX.TriggerServerCallback('invhud:getInv', function(data)
-						
-						openInventory('stash',data)
-						stashData.stash = PlayerData.identifier..stashAt
-					end, 'stash', PlayerData.identifier..stashAt)
-				else
-					ESX.TriggerServerCallback('invhud:getInv', function(data)
-						
-						openInventory('stash',data)
-						stashData.stash = stashAt
-					end, 'stash', stashAt)
-				end
-			else
-				local veh = GetVehicleInFront()
-				if DoesEntityExist(veh) then
-					local plate = ESX.Game.GetVehicleProperties(veh).plate
-					if not Config.Use.NonNPCVehicles then
-						local isChecked = nil
-						ESX.TriggerServerCallback('invhud:doesSomeoneOwn', function(owns)
-							isChecked = owns
-						end, doTrim(plate))
-						while isChecked == nil do Citizen.Wait(10) end
-						if not isChecked then Notify('This vehicle is un-storeable'); return; end
-					end
-					local model, class = ESX.Game.GetVehicleProperties(veh).model
-					if not Config.Weight.VehicleLimits.CustomWeight[model] then
-						class = GetVehicleClass(veh)
-					else
-						class = model
-					end
-					trunkData.plate = plate
-					local trunk = GetEntityBoneIndexByName(veh, 'platelight')
-					if trunk == -1 then
-						trunk = GetEntityBoneIndexByName(veh, 'taillight_l')
-					end
-					local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
-					local dis = #(pos - trunkPos)
-					if dis < 2.5 then
-						local lok = GetVehicleDoorLockStatus(veh)
-						if lok == 1 then
-							ESX.TriggerServerCallback('invhud:getInv', function(data)
-								
-								SetVehicleDoorOpen(veh, 5)
-								openedTrunk = veh
-								openInventory('trunk',data)
-							end, 'trunk', plate, class)
-						else
-							Notify('This trunk is locked')
-						end
-					else
-						if Config.Use.ForceSearch then
-							local cP, cD = ESX.Game.GetClosestPlayer()
-							if cD > 0 and cD < 3.0 then
-								TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
-							else
-								openInventory('normal')
-							end
-						else
-							openInventory('normal')
-						end
-					end
-				else
-					if Config.Use.ForceSearch then
-						local cP, cD = ESX.Game.GetClosestPlayer()
-						if cD > 0 and cD < 3.0 then
-							TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
-						else
-							openInventory('normal')
-						end
-					else
-						openInventory('normal')
-					end
-				end
-			end
-		end
-	else
-		local veh = GetVehiclePedIsIn(ped, true)
-		if DoesEntityExist(veh) then
-			local plate = ESX.Game.GetVehicleProperties(veh).plate
-			if not Config.Use.NonNPCVehicles then
-				local isChecked = nil
-				ESX.TriggerServerCallback('invhud:doesSomeoneOwn', function(owns)
-					isChecked = owns
-				end, doTrim(plate))
-				while isChecked == nil do Citizen.Wait(10) end
-				if not isChecked then Notify('This vehicle is un-storeable'); return; end
-			end
-			local model, class = ESX.Game.GetVehicleProperties(veh).model
-			if not Config.Weight.VehicleLimits.CustomWeight[model] then
-				class = GetVehicleClass(veh)
-			else
-				class = model
-			end
-			gBoxData.plate = plate
-			ESX.TriggerServerCallback('invhud:getInv', function(data)
-				
-				openInventory('gbox',data)
-			end, 'gbox', plate, class)
-		end
-	end
-end)
-
-RegisterKeyMapping('invhud:openInventory', 'Open the inventory menu', 'keyboard', Config.OpenKeyName)
+  local ped = PlayerPedId()
+  local pos = GetEntityCoords(ped)
+  if not IsPedSittingInAnyVehicle(ped) then
+    local inZone, zoneIn = InShopZone(pos)
+    if inZone then
+      shopData = Config.Shops[zoneIn]
+      if Config.Use.Licenses then
+        if shopData.NeedsLicense ~= nil then
+          if Licenses[shopData.NeedsLicense] ~= nil then
+            ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+              setShopInventory(data)
+              openInventory('shop',data)
+            end, zoneIn)
+            Citizen.Wait(250)
+          else
+            ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
+              for i = 1, #licenses, 1 do
+                Licenses[licenses[i]] = true
+              end
+              if Licenses[shopData.NeedsLicense] ~= nil then
+                ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+                  setShopInventory(data)
+                  openInventory('shop',data)
+                end, zoneIn)
+                Citizen.Wait(250)
+              else
+                Notify('You do not have a fire-arm license, we can not sell you guns')
+              end
+            end)
+          end
+        else
+          ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+            setShopInventory(data)
+            openInventory('shop',data)
+          end, zoneIn)
+          Citizen.Wait(250)
+        end
+      else
+        ESX.TriggerServerCallback('invhud:getShopItems', function(data)
+          setShopInventory(data)
+          openInventory('shop',data)
+        end, zoneIn)
+        Citizen.Wait(250)
+      end
+    else
+      local atStash, stashAt = InStashZone(pos)
+      if atStash then
+        if tonumber(stashAt) ~= nil then
+          ESX.TriggerServerCallback('invhud:getInv', function(data)
+            
+            openInventory('stash',data)
+            stashData.stash = PlayerData.identifier..stashAt
+          end, 'stash', PlayerData.identifier..stashAt)
+        else
+          ESX.TriggerServerCallback('invhud:getInv', function(data)
+            
+            openInventory('stash',data)
+            stashData.stash = stashAt
+          end, 'stash', stashAt)
+        end
+      else
+        local veh = GetVehicleInFront()
+        if DoesEntityExist(veh) then
+          local plate = ESX.Game.GetVehicleProperties(veh).plate
+          if not Config.Use.NonNPCVehicles then
+            local isChecked = nil
+            ESX.TriggerServerCallback('invhud:doesSomeoneOwn', function(owns)
+              isChecked = owns
+            end, doTrim(plate))
+            while isChecked == nil do Citizen.Wait(10) end
+            if not isChecked then Notify('This vehicle is un-storeable'); return; end
+          end
+          local model, class = ESX.Game.GetVehicleProperties(veh).model
+          if not Config.Weight.VehicleLimits.CustomWeight[model] then
+            class = GetVehicleClass(veh)
+          else
+            class = model
+          end
+          trunkData.plate = plate
+          local trunk = GetEntityBoneIndexByName(veh, 'platelight')
+          if trunk == -1 then
+            trunk = GetEntityBoneIndexByName(veh, 'taillight_l')
+          end
+          local trunkPos =  GetWorldPositionOfEntityBone(veh, trunk)
+          local dis = #(pos - trunkPos)
+          if dis < 2.5 then
+            local lok = GetVehicleDoorLockStatus(veh)
+            if lok == 1 then
+              ESX.TriggerServerCallback('invhud:getInv', function(data)
+                
+                SetVehicleDoorOpen(veh, 5)
+                openedTrunk = veh
+                openInventory('trunk',data)
+              end, 'trunk', plate, class)
+            else
+              Notify('This trunk is locked')
+            end
+          else
+            if Config.Use.ForceSearch then
+              local cP, cD = ESX.Game.GetClosestPlayer()
+              if cD > 0 and cD < 3.0 then
+                TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+              else
+                openInventory('normal')
+              end
+            else
+              openInventory('normal')
+            end
+          end
+        else
+          if Config.Use.ForceSearch then
+            local cP, cD = ESX.Game.GetClosestPlayer()
+            if cD > 0 and cD < 3.0 then
+              TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+            else
+              openInventory('normal')
+            end
+          else
+            openInventory('normal')
+          end
+        end
+      end
+    end
+  else
+    local veh = GetVehiclePedIsIn(ped, true)
+    if DoesEntityExist(veh) then
+      local plate = ESX.Game.GetVehicleProperties(veh).plate
+      if not Config.Use.NonNPCVehicles then
+        local isChecked = nil
+        ESX.TriggerServerCallback('invhud:doesSomeoneOwn', function(owns)
+          isChecked = owns
+        end, doTrim(plate))
+        while isChecked == nil do Citizen.Wait(10) end
+        if not isChecked then Notify('This vehicle is un-storeable'); return; end
+      end
+      local model, class = ESX.Game.GetVehicleProperties(veh).model
+      if not Config.Weight.VehicleLimits.CustomWeight[model] then
+        class = GetVehicleClass(veh)
+      else
+        class = model
+      end
+      gBoxData.plate = plate
+      ESX.TriggerServerCallback('invhud:getInv', function(data)
+        
+        openInventory('gbox',data)
+      end, 'gbox', plate, class)
+    end
+  end
+end
 
 -------------PLAYER----------------
 
