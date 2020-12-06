@@ -1,4 +1,4 @@
-local isInInventory = false
+local isInInventory, isCuffed, canOpen = false, false, true
 local targetPlayer, targetPlayerName, openedTrunk
 local trunkData, gBoxData, stashData, propertyData, safeData, shopData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local Inclusions = Config.IncludeOptions
@@ -925,8 +925,19 @@ AddEventHandler('invhud:closeInventory', function()
 	closeInventory()
 end)
 
+AddEventHandler(Config.HandcuffEvent, function()
+  isCuffed = not isCuffed
+end)
+
+RegisterNetEvent('invhud:lockInv')
+AddEventHandler('invhud:lockInv', function(state)
+  canOpen = state
+end)
+
 RegisterCommand('invhud:openInventory', function(raw)
 	if not HasCollisionLoadedAroundEntity(PlayerPedId()) then return end
+  if isCuffed == true then Notify('You are handcuffed'); return; end
+  if canOpen == false then Notify('You can not do that'); return; end
 	local ped = PlayerPedId()
 	local pos = GetEntityCoords(ped)
 	if not IsPedSittingInAnyVehicle(ped) then
