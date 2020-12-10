@@ -90,7 +90,7 @@ Citizen.CreateThread(function()
       end
     end
 		for k,v in pairs(Config.Stash) do
-			if PlayerData.job.name == v.job or v.job == 'identifier' then
+			if (PlayerData.job.name == v.job and PlayerData.job.grade >= v.mingrade) or v.job == 'identifier' then
 				if v.markerType ~= -1 then
 					local dis = #(pos - v.coords)
 					if dis <= v.draw then
