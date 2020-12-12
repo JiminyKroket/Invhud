@@ -43,7 +43,13 @@ If wishing to have weapons count towards player weight you Need to add
 ```
 TriggerEvent('invhud:removeWeight', xPlayer.source, pickup.name, pickup.count)
 ```
-To your es_extended server main.lua 'esx:onPickup' event 
+To your es_extended server main.lua 'esx:onPickup' event inside the
+```
+if success then
+	
+end
+```
+section
 
 
 Don't attempt to call from server.
