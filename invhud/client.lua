@@ -829,6 +829,7 @@ RegisterNUICallback('DropItem', function(data, cb)
 	end
 
 	if type(data.number) == 'number' and math.floor(data.number) == data.number then
+    if data.item.type == 'item_weapon' then data.number = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name)) end
 		TriggerServerEvent('esx:removeInventoryItem', data.item.type, data.item.name, data.number)
 	end
 

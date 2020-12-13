@@ -3,6 +3,7 @@ ScriptName = GetCurrentResourceName()
 ServerItems = {}
 itemShopList = {}
 OpenedInventories = {}
+StartingWeights = {}
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
@@ -35,6 +36,16 @@ end
 
 doTrim = function(value)
 	return (string.gsub(value, '^%s*(.-)%s*$', '%1'))
+end
+
+plyHasWep = function(wepName, player)
+  for k,v in ipairs(player.loadout) do
+    if v.name == wepName then
+      return true
+    end
+  end
+
+  return false
 end
 
 logText = function(who, what)
@@ -175,17 +186,17 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
         end
       end
     end
-    for key, value in pairs(weapons) do
-      local weaponHash = GetHashKey(value.name)
-      if  value.name ~= 'WEAPON_UNARMED' then
-        if Config.Weight.WeaponWeights[value.name] then
-          total = total + (Config.Weight.WeaponWeights[value.name] + (value.ammo*0.01))
-        else
-          total = total + (5 + (value.ammo*0.01))
-          print('Weapon weight not set, defaulted to 5')
-        end
-      end
-    end
+    -- for key, value in pairs(weapons) do
+      -- local weaponHash = GetHashKey(value.name)
+      -- if  value.name ~= 'WEAPON_UNARMED' then
+        -- if Config.Weight.WeaponWeights[value.name] then
+          -- total = total + (Config.Weight.WeaponWeights[value.name] + (value.ammo*0.01))
+        -- else
+          -- total = total + (5 + (value.ammo*0.01))
+          -- print('Weapon weight not set, defaulted to 5')
+        -- end
+      -- end
+    -- end
     if tPlayer ~= nil then
       cb({owner = tPlayer.identifier, inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
     else
@@ -285,8 +296,27 @@ AddEventHandler('invhud:removeWeight', function(source, gun, ammo)
 			weight = 5 + (ammo*0.01)
 			print(string.format('Weapon weight not set for %s, defaulted to 5',gun))
 		end
-		local newWeight = xPlayer.maxWeight - weight
-		xPlayer.setMaxWeight(doRound(newWeight, 2))
+    if xPlayer.weight+weight > xPlayer.maxWeight then 
+      if xPlayer.hasWeapon(gun) then
+        local _, weapon = xPlayer.getWeapon(gun)
+        local _, weaponObject = ESX.GetWeapon(gun)
+        local pickupLabel
+
+        xPlayer.removeWeapon(gun)
+
+        if weaponObject.ammo and weapon.ammo > 0 then
+          local ammoLabel = weaponObject.ammo.label
+          pickupLabel = ('~y~%s~s~ [~g~%s~s~ %s]'):format(weapon.label, weapon.ammo, ammoLabel)
+        else
+          pickupLabel = ('~y~%s~s~'):format(weapon.label)
+        end
+        Notify(xPlayer.source, 'You can not hold that weapon')
+        ESX.CreatePickup('item_weapon', gun, weapon.ammo, pickupLabel, source, weapon.components, weapon.tintIndex)
+      end
+    else
+      local newWeight = xPlayer.maxWeight - weight
+      xPlayer.setMaxWeight(doRound(newWeight, 2))
+    end
 	end
 end)
 
@@ -325,6 +355,8 @@ AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
 		end
 	end
 	if xPlayer.maxWeight then
+    StartingWeights[xPlayer.identifier] = xPlayer.maxWeight
+    print(StartingWeights[xPlayer.identifier])
 		local total = 0
 		for key,value in pairs(weapons) do
 			if Config.Weight.WeaponWeights[value.name] then
@@ -396,7 +428,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 			Notify(xPlayer.source, 'You do not have enough money')
 		end
 	elseif invType == 'item_weapon' then
-		if not tPlayer.hasWeapon(itemName) then
+		if not plyHasWep(itemName,tPlayer) then
 			local weight
 			if Config.Weight.WeaponWeights[itemName] then
 				weight = Config.Weight.WeaponWeights[itemName] + (itemCount*0.01)
@@ -487,7 +519,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 				Notify(src, 'You do not have that much of '..data.item.name)
 			end
 		elseif data.item.type == 'item_weapon' then
-			if xPlayer.hasWeapon(data.item.name) then
+			if plyHasWep(data.item.name,xPlayer) then
 				local inventory = {}
 				local weight
 				if Config.Weight.WeaponWeights[data.item.name] then
@@ -680,7 +712,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				end
 			end
 		elseif data.item.type == 'item_weapon' then
-			if not xPlayer.hasWeapon(data.item.name) then
+			if not plyHasWep(data.item.name,xPlayer) then
 				local inventory = {}
 				local weight
 				if Config.Weight.WeaponWeights[data.item.name] then
@@ -691,7 +723,7 @@ AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 				end
 				if Config.Weight.AddWeaponsToPlayerWeight then
 					local newWeight = xPlayer.maxWeight - weight
-					if newWeight <= doRound(0, 2) then
+          if (newWeight < xPlayer.weight) or (newWeight <= doRound(0, 2)) then
 						Notify(src, 'Can not hold weapon')
 						return
 					end
@@ -832,9 +864,9 @@ end)
 
 RegisterServerEvent('invhud:SellItemToPlayer')
 AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
-    local src = source
-    local xPlayer = ESX.GetPlayerFromId(src)
-    if invType == 'item_standard' then
+  local src = source
+  local xPlayer = ESX.GetPlayerFromId(src)
+  if invType == 'item_standard' then
 		local tItem = xPlayer.getInventoryItem(item)
 		if xPlayer.canCarryItem ~= nil then
 			if xPlayer.maxWeight ~= nil then
@@ -934,9 +966,8 @@ AddEventHandler('invhud:SellItemToPlayer',function(invType, item, count, shop)
 			end
 		end
 	end
-	
 	if invType == 'item_weapon' then
-		local targetWeapon = xPlayer.hasWeapon(tostring(item))
+		local targetWeapon = plyHasWep(tostring(item),xPlayer)
     if not targetWeapon then
       local list = itemShopList.weapons
 			for k,v in pairs(list) do
@@ -1037,7 +1068,7 @@ AddEventHandler('invhud:SellItemToShop',function(invType, item, count, shop)
 	end
 	
 	if invType == 'item_weapon' then
-		local targetWeapon = xPlayer.hasWeapon(tostring(item))
+		local targetWeapon = plyHasWep(tostring(item),xPlayer)
     if targetWeapon then
       local list = itemShopList.weapons
 			for k,v in pairs(list) do
@@ -1154,4 +1185,12 @@ end
 		-- cb(total)
 	-- end)
 -- end, true)
-				
+
+AddEventHandler('onResourceStop', function(mod)
+  if mod == GetCurrentResourceName() then
+    for k,v in pairs(StartingWeights) do
+      local xPlayer = ESX.GetPlayerFromIdentifier(k)
+      xPlayer.setMaxWeight(doRound(v,2))
+    end
+  end
+end)
