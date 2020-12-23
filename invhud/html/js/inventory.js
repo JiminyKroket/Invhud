@@ -86,17 +86,38 @@ function createItems() {
 			}
 		}
 	});
+  
+  $('.item').dblclick(function (event, ui) {
+    itemData = $(this).data("item");
+
+    if (itemData == undefined || itemData.usable == undefined) {
+        return;
+    }
+
+    itemInventory = $(this).data("inventory");
+
+    if (itemInventory == undefined || itemInventory == "second") {
+        return;
+    }
+
+    if (itemData.usable) {
+        disableInventory(300);
+        $.post("http://invhud/UseItem", JSON.stringify({
+            item: itemData
+        }));
+    }
+  });
 }
 
 function inventorySetup(items) {
-    $("#playerInventory").html("");
-	$.each(items, function (index, item) {
-        count = setCount(item);
-        $("#playerInventory").append('<div class="slot"><div id="item-' + index + '" class="item" style = "background-image: url(\'img/items/' + item.name + '.png\')">' +
-            '<div class="item-count">' + count + '</div> <div class="item-name">' + item.label + '</div> </div ><div class="item-name-bg"></div></div>');
-        $('#item-' + index).data('item', item);
-        $('#item-' + index).data('inventory', "main");
-    });
+  $("#playerInventory").html("");
+  $.each(items, function (index, item) {
+    count = setCount(item);
+    $("#playerInventory").append('<div class="slot"><div id="item-' + index + '" class="item" style = "background-image: url(\'img/items/' + item.name + '.png\')">' +
+        '<div class="item-count">' + count + '</div> <div class="item-name">' + item.label + '</div> </div ><div class="item-name-bg"></div></div>');
+    $('#item-' + index).data('item', item);
+    $('#item-' + index).data('inventory', "main");
+  });
 }
 
 function secondInventorySetup(items) {
@@ -203,6 +224,10 @@ function formatMoney(n, c, d, t) {
 
     return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t);
 };
+
+function logIt(value, index, arrawy) {
+  console.log(value);
+}
 
 $(document).ready(function () {
     $("#count").focus(function () {
