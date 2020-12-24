@@ -616,20 +616,27 @@ RegisterNUICallback('PutIntoProperty', function(data, cb)
 end)
 
 RegisterNUICallback('TakeFromProperty', function(data, cb)
-	if IsPedSittingInAnyVehicle(PlayerPedId()) then
-		Notify('You are in a car somehow')
-		return
-	end
-	if type(data.number) == 'number' and math.floor(data.number) == data.number then
-		TriggerServerEvent('invhud:getItem', 'property', propertyData.id, data, tonumber(data.number))
-	end
-	Wait(250)
-	loadPlayerInventory()
-	ESX.TriggerServerCallback('invhud:getInv', function(data)
-		openInventory('property',data)
-	end, 'property', propertyData.id, propertyData.interior)
+  TriggerEvent('SSCompleteHousing:getCurrentHouse', function(house)
+    if (propertyData.interior == 'mailbox' and not Config.MailboxOptions.AllowTheft and house.owner ~= PlayerData.identifier) then
+      ESX.ShowNotification('It is illegal to steal from mailboxes')
+      cb('ok')
+    else
+      if IsPedSittingInAnyVehicle(PlayerPedId()) then
+        Notify('You are in a car somehow')
+        return
+      end
+      if type(data.number) == 'number' and math.floor(data.number) == data.number then
+        TriggerServerEvent('invhud:getItem', 'property', propertyData.id, data, tonumber(data.number))
+      end
+      Wait(250)
+      loadPlayerInventory()
+      ESX.TriggerServerCallback('invhud:getInv', function(data)
+        openInventory('property',data)
+      end, 'property', propertyData.id, propertyData.interior)
 
-	cb('ok')
+      cb('ok')
+    end
+  end)
 end)
 
 RegisterNUICallback('PutIntoSafe', function(data, cb)
@@ -827,11 +834,21 @@ RegisterNUICallback('DropItem', function(data, cb)
 	if IsPedSittingInAnyVehicle(playerPed) then
 		return
 	end
-
-	if type(data.number) == 'number' and math.floor(data.number) == data.number then
-    if data.item.type == 'item_weapon' then data.number = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name)) end
-		TriggerServerEvent('esx:removeInventoryItem', data.item.type, data.item.name, data.number)
-	end
+  
+  local cP, cD = ESX.Game.GetClosestPlayer()
+  print(cP,cD)
+  if cP == -1 or cD > 5.0 then
+    if type(data.number) == 'number' and math.floor(data.number) == data.number then
+      if data.item.type == 'item_weapon' then data.number = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name)) end
+      TriggerServerEvent('esx:removeInventoryItem', data.item.type, data.item.name, data.number)
+    else
+      Notify('Issue with data number, somehow was not a number')
+      return
+    end
+  else
+    Notify('Someone is too close to you to perform this action, have them step back to reduce possible issues')
+    return
+  end
 
 	Wait(250)
 	loadPlayerInventory()
