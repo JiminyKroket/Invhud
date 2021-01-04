@@ -5,10 +5,10 @@ var curIcon = "$";
 
 window.addEventListener("message", function (event) {
     if (event.data.action == "display") {
-        type = event.data.type
-        disabled = false;
-		$(".info-div").show();
-        $(".ui").fadeIn();
+      type = event.data.type
+      disabled = false;
+      $(".info-div").show();
+      $(".ui").fadeIn();
     } else if (event.data.action == "hide") {
         $("#dialog").dialog("close");
         $(".ui").fadeOut();
@@ -61,7 +61,11 @@ function createItems() {
 			if (disabled) {
 				return false;
 			}
-
+      if (type !== 'normal') {
+				$("#drop").addClass("disabled");
+				$("#give").addClass("disabled");
+				$("#use").addClass("disabled");
+      }
 			$(this).css('background-image', 'none');
 			itemData = $(this).data("item");
 			itemInventory = $(this).data("inventory");
@@ -86,6 +90,15 @@ function createItems() {
 			}
 		}
 	});
+  
+  $('.item').mousedown(function (event, ui) {
+    if (event.which == 3) {
+      console.log('add to hotbar?');
+    }
+    if (event.which == 1) {
+      console.log('you left clicked');
+    }
+  });
   
   $('.item').dblclick(function (event, ui) {
     itemData = $(this).data("item");
@@ -321,6 +334,14 @@ $(document).ready(function () {
         drop: function (event, ui) {
             itemData = ui.draggable.data("item");
             itemInventory = ui.draggable.data("inventory");
+            
+            if (type === "normal" && itemInventory === "hotbar") {
+                disableInventory(500);
+                $.post("http://invhud/TakeFromHotbar", JSON.stringify({
+                    item: itemData,
+                    number: parseInt($("#count").val())
+                }));
+            }
 
             if (type === "trunk" && itemInventory === "second") {
                 disableInventory(500);
@@ -364,6 +385,22 @@ $(document).ready(function () {
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
+            }
+        }
+    });
+    
+    $('#playerHotbar').droppable({
+        drop: function (event, ui) {
+            itemData = ui.draggable.data("item");
+            itemInventory = ui.draggable.data("inventory");
+
+            if (type === "normal" && itemInventory === "main") {
+                disableInventory(500);
+                console.log('my brain');
+                // $.post("http://invhud/PutIntoHotbar", JSON.stringify({
+                    // item: itemData,
+                    // number: parseInt($("#count").val())
+                // }));
             }
         }
     });
