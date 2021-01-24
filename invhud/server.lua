@@ -7,6 +7,20 @@ StartingWeights = {}
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
+Citizen.CreateThread(function()
+  while true do
+    Citizen.Wait(1000)
+    local xPlayers = ESX.GetPlayers()
+    for i = 1,#xPlayers do
+      if GetPlayerPing(xPlayers[i]) == -1 then
+        local xPlayer = ESX.GetPlayerFromId(xPlayers[i])
+        print('player : '..xPlayer.identifier..' has -1 ping, lost interent or is cheating')
+        DropPlayer(xPlayer.source, 'No internet')
+      end
+    end
+  end
+end)
+
 if Config.Use.Societies then
 	for k,v in pairs(Config.Shops) do
 		if v.Society.Name then
@@ -44,7 +58,6 @@ plyHasWep = function(wepName, player)
       return true
     end
   end
-
   return false
 end
 
@@ -158,52 +171,51 @@ ESX.RegisterServerCallback('invhud:doesSomeoneOwn', function(source, cb, plate)
 	end)
 end)
 
-ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target)
+ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, target, notOpen)
   local xPlayer = ESX.GetPlayerFromId(source)
 	local tPlayer = ESX.GetPlayerFromId(target)
 	local total = 0
 	local inventory = tPlayer.inventory
 	local weapons = tPlayer.loadout
-  if (xPlayer.identifier ~= tPlayer.identifier and not OpenedInventories[tPlayer.identifier]) or xPlayer.identifier == tPlayer.identifier then
-    OpenedInventories[tPlayer.identifier] = xPlayer.identifier
-    for key, value in pairs(inventory) do
-      if inventory[key].count <= 0 then
-        inventory[key] = nil
-      else
-        local xItem = tPlayer.getInventoryItem(value.name)
-        if xItem ~= nil then
-          if xItem.weight ~= nil then
-            total = total + xItem.weight * value.count
-          else
-            local itemLimit = xItem.limit
-            if itemLimit == -1 then
-              itemLimit = 100000
-            end
-            total = total + 100/(itemLimit*0.1) * value.count
-          end
-        else
-          total = total + 0.01
+  if xPlayer ~= nil and type(xPlayer) == 'table' then
+    if tPlayer ~= nil and type(tPlayer) == 'table' then
+      if (xPlayer.identifier ~= tPlayer.identifier and not OpenedInventories[tPlayer.identifier]) or xPlayer.identifier == tPlayer.identifier then
+        if not notOpen then
+          OpenedInventories[tPlayer.identifier] = xPlayer.identifier
         end
+        for key, value in pairs(inventory) do
+          if inventory[key].count <= 0 then
+            inventory[key] = nil
+          else
+            local xItem = tPlayer.getInventoryItem(value.name)
+            if xItem ~= nil then
+              if xItem.weight ~= nil then
+                total = total + xItem.weight * value.count
+              else
+                local itemLimit = xItem.limit
+                if itemLimit == -1 then
+                  itemLimit = 100000
+                end
+                total = total + 100/(itemLimit*0.1) * value.count
+              end
+            else
+              total = total + 0.01
+            end
+          end
+        end
+        cb({owner = tPlayer.identifier, inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
+      else
+        Notify(source, 'This inventory is already opened')
+        cb(nil)
       end
-    end
-    -- for key, value in pairs(weapons) do
-      -- local weaponHash = GetHashKey(value.name)
-      -- if  value.name ~= 'WEAPON_UNARMED' then
-        -- if Config.Weight.WeaponWeights[value.name] then
-          -- total = total + (Config.Weight.WeaponWeights[value.name] + (value.ammo*0.01))
-        -- else
-          -- total = total + (5 + (value.ammo*0.01))
-          -- print('Weapon weight not set, defaulted to 5')
-        -- end
-      -- end
-    -- end
-    if tPlayer ~= nil then
-      cb({owner = tPlayer.identifier, inventory = tPlayer.inventory, money = tPlayer.getMoney(), accounts = tPlayer.accounts, weapons = tPlayer.loadout, maxWeight = tPlayer.maxWeight, totalWeight = total})
     else
+      print('no target player for', target)
+      Notify(xPlayer.source, 'No target player for '..target)
       cb(nil)
     end
   else
-    Notify(source, 'This inventory is already opened')
+    print('no source player, idk they do not exist server side apparently')
+    Notify(xPlayer.source, 'No source player, idk you do not exist server side apparently')
     cb(nil)
   end
 end)
@@ -244,7 +256,9 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
 	local xPlayer = ESX.GetPlayerFromId(source)
 	local weightLimit = Config.Weight.DefaultWeight
 	if class ~= nil then
-		if Config.Weight.VehicleLimits.Classes[class] then
+    if class == 'mailbox' then
+      weightLimit = Config.Weight.MailboxWeight
+		elseif Config.Weight.VehicleLimits.Classes[class] then
 			weightLimit = Config.Weight.VehicleLimits.Classes[class][invType]
 		elseif Config.Weight.VehicleLimits.CustomWeight[class] then
 			weightLimit = Config.Weight.VehicleLimits.CustomWeight[class][invType]
@@ -356,7 +370,6 @@ AddEventHandler('invhud:setPlayerWeaponWeight', function(weapons)
 	end
 	if xPlayer.maxWeight then
     StartingWeights[xPlayer.identifier] = xPlayer.maxWeight
-    print(StartingWeights[xPlayer.identifier])
 		local total = 0
 		for key,value in pairs(weapons) do
 			if Config.Weight.WeaponWeights[value.name] then
@@ -474,6 +487,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 		end
 		if data.item.type == 'item_standard' then
 			local xItem = xPlayer.getInventoryItem(data.item.name)
+      if count == nil or count == 0 then count = xItem.count end
 			if xItem.count >= count then
 				local inventory = {}
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
@@ -597,6 +611,7 @@ AddEventHandler('invhud:putItem', function(invType, owner, data, count)
 				accountName = 'blackMoney'
 				money = xPlayer.getAccount(data.item.name).money
 			end
+      if count == nil or count == 0 then count = money end
 			if money >= count then
 				local inventory = {}
 				MySQL.Async.fetchAll('SELECT * FROM inventories WHERE owner = @owner AND type = @type', {['@owner'] = owner, ['@type'] = invType}, function(result)
@@ -633,6 +648,7 @@ RegisterServerEvent('invhud:getItem')
 AddEventHandler('invhud:getItem', function(invType, owner, data, count)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
+  if count == nil or count == 0 then count = data.item.count end
 	if xPlayer ~= nil and type(xPlayer) == 'table' then
 		if data.item.type == 'item_money' then
 			data.item.type = 'item_account'

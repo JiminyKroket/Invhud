@@ -1,5 +1,5 @@
 local isInInventory, isCuffed, canOpen = false, false, true
-local targetPlayer, targetPlayerName, openedTrunk
+local targetPlayer, targetPlayerName, openedTrunk, playerWeapon
 local trunkData, gBoxData, stashData, propertyData, safeData, shopData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local Inclusions = Config.IncludeOptions
 local currentInventoryId = 0
@@ -33,7 +33,7 @@ Citizen.CreateThread(function()
 				end
 			end
 			TriggerServerEvent('invhud:setPlayerWeaponWeight', items)
-		end, GetPlayerServerId(PlayerId()))
+		end, GetPlayerServerId(PlayerId()), true)
 	end
 	if Config.Use.Licenses then
 		ESX.TriggerServerCallback('invhud:getPlayerLicenses', function(licenses)
@@ -51,11 +51,24 @@ Citizen.CreateThread(function()
       end
     end
 	end
+  loadPlayerInventory(true)
 	while true do
 		Citizen.Wait(5)
 		local ped = PlayerPedId()
 		local pos = GetEntityCoords(ped)
 		local dis
+		local weapon = GetSelectedPedWeapon(ped)
+    if weapon ~= playerWeapon then
+      loadPlayerInventory(true)
+      playerWeapon = weapon
+      for i = 1,#playerInv do
+        if weapon == GetHashKey(playerInv[i].name) then
+          if ammo ~= playerInv[i].count then
+            SetPedAmmo(ped, weapon, playerInv[i].count)
+          end
+        end
+      end
+    end
 		for k,v in pairs(Config.Shops) do
       if (not v.Society.OnlySociety) or PlayerData.job.name == v.Society.Name then
         if v.Markers.Use then
@@ -341,131 +354,120 @@ end
 loadPlayerInventory = function(inv)
 	local invText = '%s %s<br>Weight: %s / %s'
   currentInventoryId = PlayerData.identifier
-	if not inv then
-		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-			local items = {}
-			local inventory = data.inventory
-			local accounts = data.accounts
-			local money = data.money
-			local weapons = data.weapons
-			if data.maxWeight == nil then
-				invText = '%s %s<br>Weight: %s'
-				SendNUIMessage(
-					{
-						action = 'setInfoText',
-						text = invText:format('Your', 'Inventory', tostring(data.totalWeight))
-					}
-				)
-			else
-				SendNUIMessage(
-					{
-						action = 'setInfoText',
-						text = invText:format('Your', 'Inventory', tostring(data.totalWeight), tostring(data.maxWeight))
-					}
-				)
-			end
-			if Inclusions.Cash and money ~= nil and money > 0 then
-				if hasCashAccount() then
-					moneyData = {
-						label = _U('cash'),
-						name = 'money',
-						type = 'item_account',
-						count = money,
-						usable = false,
-						rare = false,
-						limit = -1,
-						canRemove = true
-					}
+  ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
+    local items = {}
+    local inventory = data.inventory
+    local accounts = data.accounts
+    local money = data.money
+    local weapons = data.weapons
+    if data.maxWeight == nil then
+      invText = '%s %s<br>Weight: %s'
+      SendNUIMessage(
+        {
+          action = 'setInfoText',
+          text = invText:format('Your', 'Inventory', tostring(data.totalWeight))
+        }
+      )
+    else
+      SendNUIMessage(
+        {
+          action = 'setInfoText',
+          text = invText:format('Your', 'Inventory', tostring(data.totalWeight), tostring(data.maxWeight))
+        }
+      )
+    end
+    if Inclusions.Cash and money ~= nil and money > 0 then
+      if hasCashAccount() then
+        moneyData = {
+          label = _U('cash'),
+          name = 'money',
+          type = 'item_account',
+          count = money,
+          usable = false,
+          rare = false,
+          limit = -1,
+          canRemove = true
+        }
 
-					table.insert(items, moneyData)
-				else
-					moneyData = {
-						label = _U("cash"),
-						name = "cash",
-						type = "item_money",
-						count = money,
-						usable = false,
-						rare = false,
-						limit = -1,
-						canRemove = true
-					}
+        table.insert(items, moneyData)
+      else
+        moneyData = {
+          label = _U("cash"),
+          name = "cash",
+          type = "item_money",
+          count = money,
+          usable = false,
+          rare = false,
+          limit = -1,
+          canRemove = true
+        }
 
-					table.insert(items, moneyData)
-				end
-			end
+        table.insert(items, moneyData)
+      end
+    end
 
-			if Inclusions.Dirty and accounts ~= nil then
-				for key, value in pairs(accounts) do
-					if accounts[key].name == 'black_money' then
-						if accounts[key].money > 0 then
-							accountData = {
-								label = accounts[key].label,
-								count = accounts[key].money,
-								type = 'item_account',
-								name = accounts[key].name,
-								usable = false,
-								rare = false,
-								limit = -1,
-								canRemove = true
-							}
-							table.insert(items, accountData)
-						end
-					end
-				end
-			end
+    if Inclusions.Dirty and accounts ~= nil then
+      for key, value in pairs(accounts) do
+        if accounts[key].name == 'black_money' then
+          if accounts[key].money > 0 then
+            accountData = {
+              label = accounts[key].label,
+              count = accounts[key].money,
+              type = 'item_account',
+              name = accounts[key].name,
+              usable = false,
+              rare = false,
+              limit = -1,
+              canRemove = true
+            }
+            table.insert(items, accountData)
+          end
+        end
+      end
+    end
 
-			if inventory ~= nil then
-				for key, value in pairs(inventory) do
-					if inventory[key].count <= 0 then
-						inventory[key] = nil
-					else
-						inventory[key].type = 'item_standard'
-						inventory[key].id = id
-						table.insert(items, inventory[key])
-					end
-				end
-			end
+    if inventory ~= nil then
+      for key, value in pairs(inventory) do
+        if inventory[key].count <= 0 then
+          inventory[key] = nil
+        else
+          inventory[key].type = 'item_standard'
+          inventory[key].id = id
+          table.insert(items, inventory[key])
+        end
+      end
+    end
 
-			if Inclusions.Weapons and weapons ~= nil then
-				for key, value in pairs(weapons) do
-					local weaponHash = GetHashKey(value.name)
-					local playerPed = PlayerPedId()
-					if  value.name ~= 'WEAPON_UNARMED' then
-						table.insert(
-							items,
-							{
-								label = value.label,
-								count = value.ammo,
-                components = value.components,
-								limit = -1,
-								type = 'item_weapon',
-								name = value.name,
-								usable = false,
-								rare = false,
-								canRemove = true
-							}
-						)
-					end
-				end
-			end
-			playerInv = items
-			SendNUIMessage(
-				{
-					action = 'setItems',
-					itemList = items
-				}
-			)
-		end, GetPlayerServerId(PlayerId()))
-	else
-		items = inv
-		playerInv = items
-		SendNUIMessage(
-			{
-				action = 'setItems',
-				itemList = items
-			}
-		)
-	end
+    if Inclusions.Weapons and weapons ~= nil then
+      for key, value in pairs(weapons) do
+        local weaponHash = GetHashKey(value.name)
+        local playerPed = PlayerPedId()
+        if  value.name ~= 'WEAPON_UNARMED' then
+          table.insert(
+            items,
+            {
+              label = value.label,
+              count = value.ammo,
+              components = value.components,
+              limit = -1,
+              type = 'item_weapon',
+              name = value.name,
+              usable = false,
+              rare = false,
+              canRemove = true
+            }
+          )
+        end
+      end
+    end
+    playerInv = items
+    SendNUIMessage(
+      {
+        action = 'setItems',
+        itemList = items
+      }
+    )
+  end, GetPlayerServerId(PlayerId()), inv)
 end
 
 IsPedHoldingWeapon = function(selWep, tabWep)
@@ -516,9 +518,7 @@ RegisterNUICallback('PutIntoGBox', function(data, cb)
 		if data.item.type == 'item_weapon' then
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
-		if count == 0 then
-			count = 1
-		end
+		
 		TriggerServerEvent('invhud:putItem', 'gbox', gBoxData.plate, data, count)
 	end
 	Wait(250)
@@ -528,6 +528,24 @@ RegisterNUICallback('PutIntoGBox', function(data, cb)
 	end, 'gbox', gBoxData.plate)
 
 	cb('ok')
+end)
+
+RegisterNUICallback('TakeFromHotbar', function(data, cb)
+	print('called back')
+  cb('ok')
+end)
+
+RegisterNUICallback('PutIntoHotbar', function(data, cb)
+  if type(data.number) == 'number' and math.floor(data.number) == data.number then
+		local count = tonumber(data.number)
+		
+		if data.item.type == 'item_weapon' then
+			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
+		end
+		TriggerServerEvent('invhud:putItem', 'gbox', gBoxData.plate, data, count)
+	end
+	print('called back')
+  cb('ok')
 end)
 
 RegisterNUICallback('TakeFromGBox', function(data, cb)
@@ -559,9 +577,7 @@ RegisterNUICallback('PutIntoTrunk', function(data, cb)
 		if data.item.type == 'item_weapon' then
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
-		if count == 0 then
-			count = 1
-		end
+		
 		TriggerServerEvent('invhud:putItem', 'trunk', trunkData.plate, data, count)
 	end
 	Wait(250)
@@ -601,9 +617,7 @@ RegisterNUICallback('PutIntoProperty', function(data, cb)
 		if data.item.type == 'item_weapon' then
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
-		if count == 0 then
-			count = 1
-		end
+		
 		TriggerServerEvent('invhud:putItem', 'property', propertyData.id, data, count)
 	end
 	Wait(250)
@@ -650,9 +664,7 @@ RegisterNUICallback('PutIntoSafe', function(data, cb)
 		if data.item.type == 'item_weapon' then
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
-		if count == 0 then
-			count = 1
-		end
+		
 		TriggerServerEvent('invhud:putItem', 'safe', safeData.id, data, count)
 	end
 	Wait(250)
@@ -732,9 +744,7 @@ RegisterNUICallback('PutIntoStash', function(data, cb)
 		if data.item.type == 'item_weapon' then
 			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
 		end
-		if count == 0 then
-			count = 1
-		end
+		
 		TriggerServerEvent('invhud:putItem', 'stash', stashData.stash, data, count)
 	end
 	Wait(250)
@@ -768,7 +778,6 @@ RegisterNUICallback('NUIFocusOff', function()
 end)
 
 RegisterNUICallback('GetNearPlayers', function(data, cb)
-	local playerPed = PlayerPedId()
 	local playerPed = PlayerPedId()
 	if IsPedDeadOrDying(playerPed) then
 		Notify('You dead')
@@ -836,7 +845,6 @@ RegisterNUICallback('DropItem', function(data, cb)
 	end
   
   local cP, cD = ESX.Game.GetClosestPlayer()
-  print(cP,cD)
   if cP == -1 or cD > 5.0 then
     if type(data.number) == 'number' and math.floor(data.number) == data.number then
       if data.item.type == 'item_weapon' then data.number = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name)) end
@@ -1075,7 +1083,14 @@ InventoryThing = function()
             if Config.Use.ForceSearch then
               local cP, cD = ESX.Game.GetClosestPlayer()
               if cD > 0 and cD < 3.0 then
-                TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+                local closestPed = GetPlayerPed(cP)
+                local inTask = IsEntityPlayingAnim(closestPed, 'random@mugging3', 'handsup_standing_base', 3)
+                local isDead = GetEntityHealth(closestPed) < 100
+                if inTask or isDead then
+                  TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+                else
+                  Notify('This person must have their hands up')
+                end
               else
                 openInventory('normal')
               end
@@ -1087,7 +1102,14 @@ InventoryThing = function()
           if Config.Use.ForceSearch then
             local cP, cD = ESX.Game.GetClosestPlayer()
             if cD > 0 and cD < 3.0 then
-              TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+              local closestPed = GetPlayerPed(cP)
+              local inTask = IsEntityPlayingAnim(closestPed, 'random@mugging3', 'handsup_standing_base', 3)
+              local isDead = GetEntityHealth(closestPed) < 100
+              if inTask or isDead then
+                TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
+              else
+                Notify('This person must have their hands up')
+              end
             else
               openInventory('normal')
             end
@@ -1117,7 +1139,6 @@ InventoryThing = function()
       end
       gBoxData.plate = plate
       ESX.TriggerServerCallback('invhud:getInv', function(data)
-        
         openInventory('gbox',data)
       end, 'gbox', plate, class)
     end
