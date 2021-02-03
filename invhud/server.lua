@@ -403,6 +403,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 					if tPlayer.canCarryItem(itemName, itemCount) then
 						xPlayer.removeInventoryItem(itemName, itemCount)
 						tPlayer.addInventoryItem(itemName, itemCount)
+            logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
 					else
 						Notify(xPlayer.source, 'This player can not carry that much')
 						Notify(tPlayer.source, 'You can not carry that much')
@@ -418,6 +419,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 				if tItem.limit == -1 or (tItem.count + itemCount) <= tItem.limit then
 					xPlayer.removeInventoryItem(itemName, itemCount)
 					tPlayer.addInventoryItem(itemName, itemCount)
+          logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
 				else
 					Notify(xPlayer.source, 'This player can not carry that much')
 					Notify(tPlayer.source, 'You can not carry that much')
@@ -430,6 +432,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
 			xPlayer.removeAccountMoney(itemName, itemCount)
 			tPlayer.addAccountMoney(itemName, itemCount)
+      logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
 		else
 			Notify(xPlayer.source, 'You do not have enough in that account to give')
 		end
@@ -437,6 +440,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 		if xPlayer.getMoney() >= itemCount then
 			xPlayer.removeMoney(itemCount)
 			tPlayer.addMoney(itemCount)
+      logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
 		else
 			Notify(xPlayer.source, 'You do not have enough money')
 		end
@@ -458,6 +462,7 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 			end
 			xPlayer.removeWeapon(itemName)
 			tPlayer.addWeapon(itemName, itemCount)
+      logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
 			if Config.Weight.AddWeaponsToPlayerWeight then
 				local newWeight = xPlayer.maxWeight + weight
 				xPlayer.setMaxWeight(doRound(newWeight, 2))
@@ -1207,6 +1212,17 @@ AddEventHandler('onResourceStop', function(mod)
     for k,v in pairs(StartingWeights) do
       local xPlayer = ESX.GetPlayerFromIdentifier(k)
       xPlayer.setMaxWeight(doRound(v,2))
+    end
+  end
+end)
+
+AddEventHandler('playerDropped', function(reason)
+	local playerId = source
+	local xPlayer = ESX.GetPlayerFromId(playerId)
+
+	if xPlayer ~= nil and type(xPlayer) == 'table' then
+    for k,v in pairs(OpenedInventories) do
+      if v == xPlayer.identifier then OpenedInventories[k] = nil end
     end
   end
 end)
