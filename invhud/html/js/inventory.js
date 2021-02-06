@@ -16,14 +16,14 @@ window.addEventListener("message", function (event) {
         $("#otherInventory").html("<div id=\"noSecondInventoryMessage\"></div>");
         $("#noSecondInventoryMessage").html(invLocale.secondInventoryNotAvailable);
     } else if (event.data.action == "setItems") {
-        inventorySetup(event.data.itemList);
-		createItems();
+      inventorySetup(event.data.itemList);
+      createItems();
     } else if (event.data.action == "setSecondInventoryItems") {
-        secondInventorySetup(event.data.itemList);
-		createItems();
+      secondInventorySetup(event.data.itemList);
+      createItems();
     } else if (event.data.action == "setShopInventoryItems") {
-        shopInventorySetup(event.data.itemList)
-		createItems();
+      shopInventorySetup(event.data.itemList)
+      createItems();
     } else if (event.data.action == "setInfoText") {
         $(".info-div").html(event.data.text);
     } else if (event.data.action == "nearPlayers") {
