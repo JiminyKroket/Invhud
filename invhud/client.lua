@@ -630,27 +630,40 @@ RegisterNUICallback('PutIntoProperty', function(data, cb)
 end)
 
 RegisterNUICallback('TakeFromProperty', function(data, cb)
-  TriggerEvent('SSCompleteHousing:getCurrentHouse', function(house)
-    if (propertyData.interior == 'mailbox' and not Config.MailboxOptions.AllowTheft and house.owner ~= PlayerData.identifier) then
-      ESX.ShowNotification('It is illegal to steal from mailboxes')
-      cb('ok')
-    else
-      if IsPedSittingInAnyVehicle(PlayerPedId()) then
-        Notify('You are in a car somehow')
-        return
-      end
-      if type(data.number) == 'number' and math.floor(data.number) == data.number then
-        TriggerServerEvent('invhud:getItem', 'property', propertyData.id, data, tonumber(data.number))
-      end
-      Wait(250)
-      loadPlayerInventory()
-      ESX.TriggerServerCallback('invhud:getInv', function(data)
-        openInventory('property',data)
-      end, 'property', propertyData.id, propertyData.interior)
+  if IsPedSittingInAnyVehicle(PlayerPedId()) then
+    Notify('You are in a car somehow')
+    return
+  end
+  if (propertyData.interior == 'mailbox' and not Config.MailboxOptions.AllowTheft) then
+    TriggerEvent('SSCompleteHousing:getCurrentHouse', function(house)
+      if house.owner ~= PlayerData.identifier then
+        ESX.ShowNotification('It is illegal to steal from mailboxes')
+        cb('ok')
+      else
+        if type(data.number) == 'number' and math.floor(data.number) == data.number then
+          TriggerServerEvent('invhud:getItem', 'property', propertyData.id, data, tonumber(data.number))
+        end
+        Wait(250)
+        loadPlayerInventory()
+        ESX.TriggerServerCallback('invhud:getInv', function(data)
+          openInventory('property',data)
+        end, 'property', propertyData.id, propertyData.interior)
 
-      cb('ok')
+        cb('ok')
+      end
+    end)
+  else
+    if type(data.number) == 'number' and math.floor(data.number) == data.number then
+      TriggerServerEvent('invhud:getItem', 'property', propertyData.id, data, tonumber(data.number))
     end
-  end)
+    Wait(250)
+    loadPlayerInventory()
+    ESX.TriggerServerCallback('invhud:getInv', function(data)
+      openInventory('property',data)
+    end, 'property', propertyData.id, propertyData.interior)
+
+    cb('ok')
+  end
 end)
 
 RegisterNUICallback('PutIntoSafe', function(data, cb)
