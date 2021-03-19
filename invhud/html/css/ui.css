@@ -2,65 +2,82 @@
     padding: 0;
     margin: 0;
     font-family: 'Signika', sans-serif;
-    text-transform: uppercase;
+    /*text-transform: uppercase;*/
     color: white;
     text-shadow:
         -0.5px -0.5px 0 #000,
         0.5px -0.5px 0 #000,
         -0.5px 0.5px 0 #000,
         0.5px 0.5px 0 #000;
+
 }
 
 .ui {
     position: relative;
     left: 0;
     top: 0;
-    width: 100vw;
+    width: 100vw;    
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.35);
+    margin: 0 auto;
+    background-color: rgba(0, 0, 0, 0);
     display: none;
     z-index: 0;
 }
 
 .inventory {
     position: absolute;
-    left: 50%;
+    left: 25%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 1550px;
+    width: 620px;
     height: 600px;
-    box-shadow: 1px 1px 10px rgba(0, 0, 0, .4);
-    background-color: rgba(17, 5, 17, 0.2);
+    box-shadow: 1px 1px 10px rgba(58, 58, 58, 0.3);
+    background-color: rgba(235, 235, 235, 0.01);
 }
 
 #playerInventory {
-    width: 625px;
+    width: 620px;
     height: 600px;
     float: left;
-    overflow-y: scroll
+    overflow-y: scroll;
+
+}
+
+#playerHotBar {
+    width: 650px;
+    height: 50px;
+    position : absolute;
+    bottom : 90.4%;
+    left: 0%;
+    z-index: 100;
+    float:left;
 }
 
 #controls {
-    width: 300px;
-    height: 600px;
-    float: left;
-    position: relative;
-    background-color: rgba(17, 5, 17, 0.2);
-    left: 0;
-    top: 0;
+    width: 100px;
+    height: 100px;
+    float: center;
+    position: absolute;
+    left: 110%;
+    top: 30%;
 }
 
 #otherInventory {
-    width: 625px;
+    width: 630px;
     height: 600px;
     float: left;
-    overflow-y: scroll
+    overflow-y: scroll;
+    position: absolute;
+    top: 0%;
+    left: 138%;
+    box-shadow: 1px 1px 10px rgba(58, 58, 58, 0.3);
+    background-color: rgba(235, 235, 235, 0.01);
 }
 
 #count {
     border: none;
     outline: none;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 input::-webkit-outer-spin-button,
@@ -68,6 +85,7 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
 
 input[type=number] {
     -moz-appearance: textfield;
@@ -77,12 +95,36 @@ input[type=number] {
     float: left;
     width: 117px;
     height: 117px;
-    background-color: rgba(17, 5, 17, 0.6);
+    bottom : -21.4%;
+    background-color: rgba(0, 0, 0, 0.6);
+    margin: 2px;
+    position: relative;
+}
+
+.slotfix {
+    float: left;
+    width: 117px;
+    height: 117px;
+    background-color: rgba(0, 0, 0, 0.6);
     margin: 2px;
     position: relative;
 }
 
 .slot:hover {
+    opacity: 0.8;
+    background-color: rgba(110, 110, 110, 0.5);
+}
+
+.hotBarSlot {
+    float: left;
+    width: 117px;
+    height: 117px;
+    background-color: rgba(0, 0, 0, 0.6);
+    margin: 2px;
+    position: relative;
+}
+
+.hotBarSlot:hover {
     opacity: 0.8;
 }
 
@@ -105,7 +147,8 @@ input[type=number] {
     min-height: 20px;
     z-index: 500;
     font-size: 12px;
-    background-color: rgba(17, 5, 17, 0.8);
+    background-color: rgba(110, 110, 110, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .ui-draggable-dragging .item-name,
@@ -122,46 +165,115 @@ input[type=number] {
     z-index: 500;
 }
 
+.keybind {
+    position: absolute;
+    top: 0;
+    text-align: left;
+    width: 20px;
+    height: 20px;
+    z-index: 500;
+    background-color: rgba(0, 0, 0, 0.01);
+    text-align: center;
+}
+
 .ammoIcon {
     width: 10px;
     height: 10px;
 }
 
 .info-div {
-    text-align: center;
-	word-wrap: break-word;
+    text-align: left;
     padding: 5px;
-    background-color: rgba(17, 5, 17, 0.6);
-    width: 90%;
+    background-color: rgba(110, 110, 110, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 50%;
     position: absolute;
-    left: 47%;
-    top: 27%;
+    left: 270%;
+    top: -215%;
+    width: 174px;
+    transform: translate(-50%, -50%);
+}
+
+.info-div2 {
+    text-align: left;
+    padding: 5px;
+    background-color: rgba(110, 110, 110, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 174px;
+    position: absolute;
+    left: 15.5%;
+    top: -6%;
     transform: translate(-50%, -50%);
 }
 
 .controls-div {
-    position: absolute;
-    left: 47%;
+    position: relative;
+    left: 49%;
     top: 50%;
     transform: translate(-50%, -50%);
+    float: left;
 }
 
 .control {
     width: 150px;
-    height: 40px;
-    background-color: rgba(17, 5, 17, 0.6);
-    margin: 10px;
+    height: 47px;
+    background-color: rgba(110, 110, 110, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    margin: 5px;
     text-align: center;
     vertical-align: middle;
-    line-height: 40px;
+    line-height: 41.5px;
+    float: left;
 }
 
 .control.disabled {
-    background-color: rgba(17, 5, 17, 0.1);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .hoverControl {
-    background-color: rgb(10, 2, 10);
+    background-color: rgba(235, 235, 235, 0.1);
+}
+
+.used-item-slot {
+    position: absolute;
+    right: 50px;
+    bottom: 50%;
+    height: 125px;
+    width: 110px;
+    background-color: rgba(124, 124, 124, 0.356);
+    border-style: solid;
+    border-color: rgba(255,255,255,0.2);
+    border-width: 1px 1px 1px 1px;
+}
+
+#used-item-image {
+    height: 125px;
+    width: 110px;
+    background-image: url(img/used-item.png);
+    background-repeat: no-repeat;
+    background-size: 80%;
+    background-position-x: 0;
+}
+
+.added-item-slot {
+    position: absolute;
+    right: 50px;
+    bottom: 50%;
+    height: 125px;
+    width: 110px;
+    background-color: rgba(124, 124, 124, 0.356);
+    border-style: solid;
+    border-color: rgba(255,255,255,0.2);
+    border-width: 1px 1px 1px 1px;
+}
+
+#added-item-image {
+    height: 125px;
+    width: 110px;
+    background-image: url(img/added-item.png);
+    background-repeat: no-repeat;
+    background-size: 80%;
+    background-position-x: 0;
 }
 
 .item-name-bg {
@@ -174,20 +286,21 @@ input[type=number] {
 
 #playerInventory::-webkit-scrollbar-track,
 #otherInventory::-webkit-scrollbar-track {
-    background-color: none;
+    background-color: rgba(191, 0, 0, 0.4);
     border: none;
 }
 
 #playerInventory::-webkit-scrollbar,
 #otherInventory::-webkit-scrollbar {
     width: 10px;
-    background-color: rgba(17, 5, 17, 0.2);
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 #playerInventory::-webkit-scrollbar-thumb,
 #otherInventory::-webkit-scrollbar-thumb {
-    background-color: rgba(17, 5, 17, 1);
-    border: 2px solid rgba(17, 5, 17, 1);
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .nearbyPlayerButton {
@@ -196,8 +309,8 @@ input[type=number] {
     display: block;
     text-decoration: none;
     padding: 2px;
-    color: rgba(255, 255, 255, 0.85);
-    background-color: rgba(63, 57, 83, 0.226);
+    background-color: rgba(110, 110, 110, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     text-shadow: none;
     font-size: 14px !important;
     outline: none;
@@ -208,7 +321,7 @@ input[type=number] {
 }
 
 .nearbyPlayerButton:hover {
-    background-color: rgba(34, 29, 46, 0.8);
+    background-color: rgba(235, 235, 235, 0.1);
 }
 
 #noSecondInventoryMessage {
@@ -220,44 +333,51 @@ input[type=number] {
 
 @media (max-width: 1500px) {
     .inventory {
-        width: 1300px;
+        width: 525px;
     }
 
     #playerInventory {
-        width: 550px;
+        width: 525px;
     }
 
     #controls {
-        width: 200px;
+        width: 100px;
     }
 
     #otherInventory {
-        width: 550px;
+        width: 525px;
+    }
+
+    .slot {
+        width: 95px;
+        height: 95px;
+    }
+
+    .slotfix {
+        width: 95px;
+        height: 95px;
+    }
+
+    .hotBarSlot {
+        width: 95px;
+        height: 95px;
+    }
+
+    .item,
+    .item-other {
+        width: 95px;
+        height: 95px;
+    }
+
+    .item-name {
+        width: 95px;
+    }
+
+    .item-count {
+        width: 95px;
     }
 
     #noSecondInventoryMessage {
-        width: 540px;
-    }
-}
-
-@media (max-width: 1300px) {
-    .inventory {
-        width: 1000px;
-    }
-
-    #playerInventory {
-        width: 425px;
-    }
-
-    #controls {
-        width: 150px;
-    }
-
-    #otherInventory {
-        width: 425px;
-    }
-
-    #noSecondInventoryMessage {
-        width: 420px;
+        width: 525px;
     }
 }
