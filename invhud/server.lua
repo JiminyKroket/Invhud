@@ -1,9 +1,8 @@
 ESX = nil
 ScriptName = GetCurrentResourceName()
-ServerItems = {}
-itemShopList = {}
-OpenedInventories = {}
-StartingWeights = {}
+ServerItems, itemShopList, OpenedInventories, StartingWeights = {}, {}, {}, {}
+
+HotBarData = {}
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
@@ -18,6 +17,36 @@ Citizen.CreateThread(function()
         DropPlayer(xPlayer.source, 'No internet')
       end
     end
+  end
+end)
+
+IsInOwnedTable = function(plate, list)
+  for i = 1,#list do
+    if plate == list[i] then return true else return false end
+  end
+end
+
+DeleteUnownedCarInventories = function(list)
+  for i = 1,#list do
+    MySQl.Async.execute('DELETE FROM inventories WHERE owner = @owner',{['@owner'] = list[i]})
+  end
+end
+
+MySQL.ready(function()
+  Citizen.Wait(500)
+  if Config.WipeUnownedVehicleInventories then
+    MySQL.Async.fetchAll('SELECT plate FROM owned_vehicles',{},function(res1)
+      local ownedList = res1
+      MySQL.Async.fetchAll('SELECT owner FROM inventories',{},function(res2)
+        local notOwnedTable = {}
+        for i = 1,#res2 do
+          if not IsInOwnedTable then
+            table.insert(notOwnedTable, res2[i])
+          end
+        end
+        DeleteUnownedCarInventories(notOwnedTable)
+      end)
+    end)
   end
 end)
 
@@ -294,9 +323,37 @@ ESX.RegisterServerCallback('invhud:getInv', function(source, cb, invType, id, cl
   end
 end)
 
+ESX.RegisterServerCallback('invhud:getHotBar', function(source, cb) -- 283 - 309 hotbar saving logic per player
+	local xPlayer = ESX.GetPlayerFromId(source)
+	while xPlayer == nil do Wait(100) end
+	MySQL.Async.fetchAll('SELECT `slots` FROM `users` WHERE `identifier` = @identifier',{['@identifier'] = xPlayer.identifier}, function(results)
+		if results[1].slots ~= nil then
+			cb(json.decode(results[1].slots))
+		else
+			cb(false)
+		end
+	end)
+end)
+
+RegisterServerEvent('invhud:slotChange')
+AddEventHandler('invhud:slotChange', function(items)
+	local src = source
+	local xPlayer = ESX.GetPlayerFromId(src)
+	if items then
+		HotBarData[src] = {data = items, identifier = xPlayer.identifier}
+	end
+end)
+
 RegisterServerEvent('invhud:closedInventory')
 AddEventHandler('invhud:closedInventory', function(id)
   OpenedInventories[id] = nil
+end)
+
+RegisterServerEvent('invhud:swapHotItem')
+AddEventHandler('invhud:swapHotItem', function(itemData, count)
+  local src = source
+  local xPlayer = ESX.GetPlayerFromId(src)
+  
 end)
 
 RegisterServerEvent('invhud:removeWeight')
@@ -1213,6 +1270,9 @@ AddEventHandler('onResourceStop', function(mod)
       local xPlayer = ESX.GetPlayerFromIdentifier(k)
       xPlayer.setMaxWeight(doRound(v,2))
     end
+    for i = 1,#HotBarData do
+      MySQL.Sync.execute('UPDATE users SET slots = @slots WHERE identifier= @identifier', {['@slots'] = json.encode(HotBarData[i].data), ['@identifier'] = HotBarData[i].identifier})
+    end
   end
 end)
 
@@ -1220,6 +1280,9 @@ AddEventHandler('playerDropped', function(reason)
 	local playerId = source
 	local xPlayer = ESX.GetPlayerFromId(playerId)
 
+	if HotBarData[playerId] then
+		MySQL.Sync.execute('UPDATE users SET slots = @slots WHERE identifier= @identifier', {['@slots'] = json.encode(HotBarData[playerId].data), ['@identifier'] = HotBarData[playerId].identifier})
+	end
 	if xPlayer ~= nil and type(xPlayer) == 'table' then
     for k,v in pairs(OpenedInventories) do
       if v == xPlayer.identifier then OpenedInventories[k] = nil end

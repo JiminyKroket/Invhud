@@ -10,6 +10,19 @@ Config.HandcuffEvent = 'esx_policejob:handcuff' -- SET HADNCUFF EVENT HERE TO LO
 
 Config.PowerHungry = false -- SET true IF YOU ARE SO POWER HUNGRY YOU DO NOT WANT PLAYERS TO CHOSE THEIR OWN INVENTORY KEYBIND
 
+Config.WipeUnownedVehicleInventories = true -- SHOULD SCRIPT WIPE ALL UNOWNED VEHICLE TRUNKS AND GLOVEBOXES ON MySQL.Async START/RESTART
+
+-- List of items to delay use from hotbar. Use this if you don't kow how to code a delay in the use script. Format: ['itemName'] = 1000 (delay amount in MS).
+Config.DelayItem ={ --RedAcid
+	['lockpick'] = 10000,
+	['speccalrounds'] = 10000,
+	['shotcalrounds'] = 10000,
+	['highcalrounds'] = 10000,
+	['midcalrounds'] = 10000,
+	['lowcalrounds'] = 10000,
+	['fixkit'] = 10000,
+}
+
 Config.Use = { -- SET ALL USE INFORMATION HERE:LICENSES(SHOULD THE SCRIPT USE THE LICENSE SYSTEM FOR ANY SHOPS), SOCIETIES(SHOULD THE SCRIPT USE THE SOCIETY SYSTEM FOR ANY SHOPS),
 	-- FORCESEARCH(SHOULD THE SCRIPT ALLOW ANY PLAYER TO SEARCH ANY OTHER PLAYER THEY ARE IMMEDIATELY NEXT TO),
 	-- ADMINSEARCH(POWERFUL ADMIN TOOL:SHOULD SCRIPT ALLOW PLAYERS WITH COMMAND ABILITIES TO SEARCH ANY INVENTORY USING ITS DATABASE ID OR IN THE CASE OF PLAYERS THEIR SERVER ID),

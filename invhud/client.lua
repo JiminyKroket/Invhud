@@ -1,9 +1,11 @@
-local isInInventory, isCuffed, canOpen = false, false, true
+local isInInventory, isCuffed, isAnimated, canOpen = false, false, false, true
 local targetPlayer, targetPlayerName, openedTrunk, playerWeapon
 local trunkData, gBoxData, stashData, propertyData, safeData, shopData, playerInv, Licenses, PlayerData = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local Inclusions = Config.IncludeOptions
 local currentInventoryId = 0
 ESX = nil
+
+local HotBar, DelayInput = {}, {}
 
 Citizen.CreateThread(function()
 	while ESX == nil do
@@ -13,6 +15,13 @@ Citizen.CreateThread(function()
 	while not ESX.IsPlayerLoaded() do Citizen.Wait(10) end
 	while not HasCollisionLoadedAroundEntity(PlayerPedId()) do Citizen.Wait(10) end
 	PlayerData = ESX.GetPlayerData()
+	ESX.TriggerServerCallback('invhud:getHotBar', function(items) -- Copy this function to have hotbar be setup on login of saved items
+		if items then
+			for k,v in pairs(items) do
+				HotBar[k] = v
+			end
+		end
+	end, GetPlayerServerId(PlayerId()))
 	if Config.Weight.AddWeaponsToPlayerWeight then
 		ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
 			local items = {}
@@ -51,7 +60,7 @@ Citizen.CreateThread(function()
       end
     end
 	end
-  loadPlayerInventory(true)
+  loadPlayerInventory()
 	while true do
 		Citizen.Wait(5)
 		local ped = PlayerPedId()
@@ -59,7 +68,7 @@ Citizen.CreateThread(function()
 		local dis
 		local weapon = GetSelectedPedWeapon(ped)
     if weapon ~= playerWeapon then
-      loadPlayerInventory(true)
+      loadPlayerInventory()
       playerWeapon = weapon
       for i = 1,#playerInv do
         if weapon == GetHashKey(playerInv[i].name) then
@@ -69,6 +78,11 @@ Citizen.CreateThread(function()
         end
       end
     end
+    -- Hide weapon wheel now that there is a hotbar
+		HideHudComponentThisFrame(19)
+		HideHudComponentThisFrame(20)
+		BlockWeaponWheelThisFrame()
+		DisableControlAction(0, 37,true)
 		for k,v in pairs(Config.Shops) do
       if (not v.Society.OnlySociety) or PlayerData.job.name == v.Society.Name then
         if v.Markers.Use then
@@ -354,120 +368,177 @@ end
 loadPlayerInventory = function(inv)
 	local invText = '%s %s<br>Weight: %s / %s'
   currentInventoryId = PlayerData.identifier
-  ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
-    local items = {}
-    local inventory = data.inventory
-    local accounts = data.accounts
-    local money = data.money
-    local weapons = data.weapons
-    if data.maxWeight == nil then
-      invText = '%s %s<br>Weight: %s'
-      SendNUIMessage(
-        {
-          action = 'setInfoText',
-          text = invText:format('Your', 'Inventory', tostring(data.totalWeight))
-        }
-      )
-    else
-      SendNUIMessage(
-        {
-          action = 'setInfoText',
-          text = invText:format('Your', 'Inventory', tostring(data.totalWeight), tostring(data.maxWeight))
-        }
-      )
-    end
-    if Inclusions.Cash and money ~= nil and money > 0 then
-      if hasCashAccount() then
-        moneyData = {
-          label = _U('cash'),
-          name = 'money',
-          type = 'item_account',
-          count = money,
-          usable = false,
-          rare = false,
-          limit = -1,
-          canRemove = true
-        }
+  if not inv then
+    ESX.TriggerServerCallback('invhud:getPlayerInventory', function(data)
+      local items = {}
+      local hotBar = {} -- creating local hotbar for inventory setup
+      local inventory = data.inventory
+      local accounts = data.accounts
+      local money = data.money
+      local weapons = data.weapons
+      if Inclusions.Cash and money ~= nil and money > 0 then
+        if hasCashAccount() then
+          moneyData = {
+            label = _U('cash'),
+            name = 'money',
+            type = 'item_account',
+            count = money,
+            usable = false,
+            rare = false,
+            limit = -1,
+            canRemove = true
+          }
 
-        table.insert(items, moneyData)
-      else
-        moneyData = {
-          label = _U("cash"),
-          name = "cash",
-          type = "item_money",
-          count = money,
-          usable = false,
-          rare = false,
-          limit = -1,
-          canRemove = true
-        }
+          table.insert(items, moneyData)
+        else
+          moneyData = {
+            label = _U("cash"),
+            name = "cash",
+            type = "item_money",
+            count = money,
+            usable = false,
+            rare = false,
+            limit = -1,
+            canRemove = true
+          }
 
-        table.insert(items, moneyData)
+          table.insert(items, moneyData)
+        end
       end
-    end
 
-    if Inclusions.Dirty and accounts ~= nil then
-      for key, value in pairs(accounts) do
-        if accounts[key].name == 'black_money' then
-          if accounts[key].money > 0 then
-            accountData = {
-              label = accounts[key].label,
-              count = accounts[key].money,
-              type = 'item_account',
-              name = accounts[key].name,
-              usable = false,
-              rare = false,
-              limit = -1,
-              canRemove = true
-            }
-            table.insert(items, accountData)
+      if Inclusions.Dirty and accounts ~= nil then
+        for key, value in pairs(accounts) do
+          if accounts[key].name == 'black_money' then
+            if accounts[key].money > 0 then
+              accountData = {
+                label = accounts[key].label,
+                count = accounts[key].money,
+                type = 'item_account',
+                name = accounts[key].name,
+                usable = false,
+                rare = false,
+                limit = -1,
+                canRemove = true
+              }
+              table.insert(items, accountData)
+            end
           end
         end
       end
-    end
 
-    if inventory ~= nil then
-      for key, value in pairs(inventory) do
-        if inventory[key].count <= 0 then
-          inventory[key] = nil
-        else
-          inventory[key].type = 'item_standard'
-          inventory[key].id = id
-          table.insert(items, inventory[key])
+      if inventory ~= nil then
+        for key, value in pairs(inventory) do
+          if inventory[key].count <= 0 then
+            inventory[key] = nil
+          else
+            local found = false -- 514 - 539 hotbar vs reg logic
+            for slot, item in pairs(HotBar) do
+              if item.name == inventory[key].name then
+                table.insert(
+                  hotBar,
+                  {
+                    label = inventory[key].label,
+                    limit = -1,
+                    type = "item_standard",
+                    name = inventory[key].name,
+                    count = inventory[key].count,
+                    usable = true,
+                    rare = false,
+                    canRemove = true,
+                    slot = tonumber(slot)
+                  }
+                )
+                found = true
+                break
+              end
+            end
+            if found == false then
+              inventory[key].type = 'item_standard'
+              inventory[key].id = id
+              table.insert(items, inventory[key])
+            end
+          end
         end
       end
-    end
 
-    if Inclusions.Weapons and weapons ~= nil then
-      for key, value in pairs(weapons) do
-        local weaponHash = GetHashKey(value.name)
-        local playerPed = PlayerPedId()
-        if  value.name ~= 'WEAPON_UNARMED' then
-          table.insert(
-            items,
-            {
-              label = value.label,
-              count = value.ammo,
-              components = value.components,
-              limit = -1,
-              type = 'item_weapon',
-              name = value.name,
-              usable = false,
-              rare = false,
-              canRemove = true
-            }
-          )
+      if Inclusions.Weapons and weapons ~= nil then
+        for key, value in pairs(weapons) do
+          local weaponHash = GetHashKey(value.name)
+          local playerPed = PlayerPedId()
+          if weapons[key].name ~= "WEAPON_UNARMED" then -- 548 - 587 hotbar vs reg logic
+            local found = false
+            for slot, item in pairs(HotBar) do
+              if item.name == weapons[key].name then
+                table.insert(
+                  hotBar,
+                  {
+                    label = weapons[key].label,
+                    count = weapons[key].ammo,
+                          components = value.components,
+                    limit = -1,
+                    type = "item_weapon",
+                    name = weapons[key].name,
+                    usable = false,
+                    rare = false,
+                    canRemove = true,
+                    slot = tonumber(slot)
+                  }
+                )
+                found = true
+                break
+              end
+            end
+            if found == false then
+              table.insert(
+                items,
+                {
+                  label = weapons[key].label,
+                  count = weapons[key].ammo,
+                        components = value.components,
+                  limit = -1,
+                  type = "item_weapon",
+                  name = weapons[key].name,
+                  usable = false,
+                  rare = false,
+                  canRemove = true
+                }
+              )
+            end
+          end
         end
       end
-    end
-    playerInv = items
-    SendNUIMessage(
-      {
-        action = 'setItems',
-        itemList = items
-      }
-    )
-  end, GetPlayerServerId(PlayerId()), inv)
+      playerInv = items
+      if data.maxWeight == nil then -- 592 - 612 moved from above to condence NUI messages and fix logic with displaying secondary info div. Also adds hotbar data to NUI message
+        invText = '%s %s<br>Weight: %s'
+        SendNUIMessage(
+          {
+          action = 'setItems',
+          itemList = items,
+          text = invText:format('Your', 'Inventory', tostring(data.totalWeight)),
+          hotBar = hotBar
+          }
+        )
+      else
+        SendNUIMessage(
+          {
+          action = 'setItems',
+          itemList = items,
+          text = invText:format('Your', 'Inventory', tostring(data.totalWeight), tostring(data.maxWeight)),
+          hotBar = hotBar
+          }
+        )
+      end
+    end, GetPlayerServerId(PlayerId()))
+	else
+		items = inv
+		playerInv = items
+		SendNUIMessage(
+			{
+				action = 'setItems',
+				itemList = items
+			}
+		)
+	end
 end
 
 IsPedHoldingWeapon = function(selWep, tabWep)
@@ -528,24 +599,6 @@ RegisterNUICallback('PutIntoGBox', function(data, cb)
 	end, 'gbox', gBoxData.plate)
 
 	cb('ok')
-end)
-
-RegisterNUICallback('TakeFromHotbar', function(data, cb)
-	print('called back')
-  cb('ok')
-end)
-
-RegisterNUICallback('PutIntoHotbar', function(data, cb)
-  if type(data.number) == 'number' and math.floor(data.number) == data.number then
-		local count = tonumber(data.number)
-		
-		if data.item.type == 'item_weapon' then
-			count = GetAmmoInPedWeapon(PlayerPedId(), GetHashKey(data.item.name))
-		end
-		TriggerServerEvent('invhud:putItem', 'gbox', gBoxData.plate, data, count)
-	end
-	print('called back')
-  cb('ok')
 end)
 
 RegisterNUICallback('TakeFromGBox', function(data, cb)
@@ -909,6 +962,24 @@ RegisterNUICallback('GiveItem', function(data, cb)
 	cb('ok')
 end)
 
+-- 954 - 970 setup hotbar when placing and taking from it, and save to server data
+RegisterNUICallback("PutIntoHotBar", function(data, cb)
+	if data.item.slot ~= nil then
+		HotBar[data.item.slot] = nil
+	end
+	HotBar[tostring(data.slot)] = {name = data.item.name, type = data.item.type}
+	TriggerServerEvent('invhud:slotChange', HotBar)
+	loadPlayerInventory()
+	cb("ok")
+end)
+
+RegisterNUICallback("TakeFromHotBar", function(data, cb)
+	HotBar[tostring(data.item.slot)] = nil
+	TriggerServerEvent('invhud:slotChange', HotBar)
+	loadPlayerInventory()
+	cb("ok")
+end)
+
 RegisterNetEvent('invhud:openPropertyInv')
 AddEventHandler('invhud:openPropertyInv', function(name, int)
 	local ped = PlayerPedId()
@@ -989,7 +1060,6 @@ else
 
   RegisterKeyMapping('invhud:openInventory', 'Open the inventory menu', 'keyboard', Config.OpenKeyName)
 end
-
 
 InventoryThing = function()
   if not HasCollisionLoadedAroundEntity(PlayerPedId()) then return end
@@ -1336,4 +1406,266 @@ RegisterNUICallback('TakeFromPlayer', function(data, cb)
 	loadPlayerInventory()
 
 	cb('ok')
+end)
+
+
+
+
+
+function playCopWeaponTake(name) -- 1217 - 1473 Hotbar animation for guns (different for cops and players) and hotbar controlls without loops
+Citizen.CreateThread(function()
+    isAnimated = true
+    RequestAnimDict('reaction@intimidation@cop@unarmed') --2h fat_2h superfat_2h
+
+    while not HasAnimDictLoaded('reaction@intimidation@cop@unarmed') do
+        Citizen.Wait(0)
+    end
+    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@cop@unarmed', 'intro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    DisableControlAction(0,25,true) -- disable aim
+    Wait(1500)
+    SetCurrentPedWeapon(GetPlayerPed(-1), name,true)
+    Wait(500)
+    DisableControlAction(0,25,false) -- disable aim
+    ClearPedSecondaryTask(GetPlayerPed(-1))
+    isAnimated = false
+end)
+
+end
+
+function playCopWeaponPut()
+Citizen.CreateThread(function()
+    isAnimated = true
+    RequestAnimDict('reaction@intimidation@cop@unarmed')
+    
+    while not HasAnimDictLoaded('reaction@intimidation@cop@unarmed') do
+        Citizen.Wait(0)
+    end
+    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@cop@unarmed', 'outro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    DisableControlAction(0,25,true) -- disable aim
+    Wait(1500)
+    SetCurrentPedWeapon(GetPlayerPed(-1), "WEAPON_UNARMED",true)
+    Wait(200)
+    DisableControlAction(0,25,false) -- enable aim
+    ClearPedSecondaryTask(GetPlayerPed(-1))
+    isAnimated = false
+end)
+end
+
+function playWeaponTake(name)
+Citizen.CreateThread(function()
+    isAnimated = true
+    RequestAnimDict('reaction@intimidation@1h') --2h fat_2h superfat_2h
+
+    while not HasAnimDictLoaded('reaction@intimidation@1h') do
+        Citizen.Wait(0)
+    end
+    
+    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@1h', 'intro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    DisableControlAction(0,25,true) -- disable aim
+    Wait(1500)
+    SetCurrentPedWeapon(GetPlayerPed(-1), name,true)
+    Wait(1400)
+    DisableControlAction(0,25,false) -- disable aim
+    ClearPedSecondaryTask(GetPlayerPed(-1))
+    isAnimated = false
+end)
+end
+
+function playWeaponPut()
+Citizen.CreateThread(function()
+    isAnimated = true
+    RequestAnimDict('reaction@intimidation@1h')
+    
+    while not HasAnimDictLoaded('reaction@intimidation@1h') do
+        Citizen.Wait(0)
+    end
+    
+    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@1h', 'outro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    DisableControlAction(0,25,true) -- disable aim
+    DisableControlAction(0,24,true) -- disable shooting
+    Wait(1800)
+    SetCurrentPedWeapon(GetPlayerPed(-1), "WEAPON_UNARMED",true)
+    Wait(400)
+    DisableControlAction(0,25,false) -- enable aim
+    DisableControlAction(0,24,false) -- enable shooting
+    ClearPedSecondaryTask(GetPlayerPed(-1))
+    isAnimated = false
+end)
+end
+
+function delayInput(input,name)
+	local delay = Config.DelayItem[name]
+	if delay then
+		Citizen.CreateThread(function()
+			DelayInput[input] = true
+			Citizen.Wait(delay)
+			DelayInput[input] = false
+		end)
+	end
+end
+
+
+RegisterKeyMapping('invhud:hotBar1', 'Open the inventory menu', 'keyboard', 1)
+RegisterCommand('invhud:hotBar1', function(raw)
+  if not DelayInput['1'] then
+    if HotBar['1'] ~= nil and isAnimated == false then
+      if HotBar['1'].type == 'item_weapon' then
+        if PlayerData.job ~= nil and PlayerData.job.name == "police" then
+          if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['1'].name) then
+            playCopWeaponPut()
+          else
+            playCopWeaponTake(HotBar['1'].name)
+          end
+        else -- not cop
+          if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['1'].name) then
+            playWeaponPut()
+          else
+            playWeaponTake(HotBar['1'].name)
+          end
+        end
+      else
+        local playerPed = PlayerPedId()
+        if IsPedDeadOrDying(playerPed) then
+          Notify('You dead')
+          return
+        end
+        TriggerServerEvent('esx:useItem', HotBar['1'].name)
+        delayInput('1', HotBar['1'].name)
+      end
+    end
+  else
+    Notify("Can't do that action yet. Please wait.")
+  end
+end)
+
+RegisterKeyMapping('invhud:hotBar2', 'Open the inventory menu', 'keyboard', 2)
+RegisterCommand('invhud:hotBar2', function(raw)
+if not DelayInput['2'] then
+	if HotBar['2'] ~= nil and isAnimated == false then
+		if HotBar['2'].type == 'item_weapon' then
+			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['2'].name) then
+					playCopWeaponPut()
+				else
+					playCopWeaponTake(HotBar['2'].name)
+				end
+			else -- not cop
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['2'].name) then
+					playWeaponPut()
+				else
+					playWeaponTake(HotBar['2'].name)
+				end
+			end
+		else
+			local playerPed = PlayerPedId()
+			if IsPedDeadOrDying(playerPed) then
+				Notify('You dead')
+				return
+			end
+			TriggerServerEvent('esx:useItem', HotBar['2'].name)
+			delayInput('2', HotBar['2'].name)
+		end
+	end
+else
+	Notify("Can't do that action yet. Please wait.")
+end
+end)
+
+RegisterKeyMapping('invhud:hotBar3', 'Open the inventory menu', 'keyboard', 3)
+RegisterCommand('invhud:hotBar3', function(raw)
+if not DelayInput['3'] then
+	if HotBar['3'] ~= nil and isAnimated == false then
+		if HotBar['3'].type == 'item_weapon' then
+			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['3'].name) then
+					playCopWeaponPut()
+				else
+					playCopWeaponTake(HotBar['3'].name)
+				end
+			else -- not cop
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['3'].name) then
+					playWeaponPut()
+				else
+					playWeaponTake(HotBar['3'].name)
+				end
+			end
+		else
+			local playerPed = PlayerPedId()
+			if IsPedDeadOrDying(playerPed) then
+				Notify('You dead')
+				return
+			end
+			TriggerServerEvent('esx:useItem', HotBar['3'].name)
+			delayInput('3', HotBar['3'].name)
+		end
+	end
+else
+	Notify("Can't do that action yet. Please wait.")
+end
+end)
+
+RegisterKeyMapping('invhud:hotBar4', 'Open the inventory menu', 'keyboard', 4)
+RegisterCommand('invhud:hotBar4', function(raw)
+if not DelayInput['4'] then
+	if HotBar['4'] ~= nil and isAnimated == false then
+		if HotBar['4'].type == 'item_weapon' then
+			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['4'].name) then
+					playCopWeaponPut()
+				else
+					playCopWeaponTake(HotBar['4'].name)
+				end
+			else -- not cop
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['4'].name) then
+					playWeaponPut()
+				else
+					playWeaponTake(HotBar['4'].name)
+				end
+			end
+		else
+			local playerPed = PlayerPedId()
+			if IsPedDeadOrDying(playerPed) then
+				Notify('You dead')
+				return
+			end
+			TriggerServerEvent('esx:useItem', HotBar['4'].name)
+			delayInput('4', HotBar['4'].name)
+		end
+	end
+else
+	Notify("Can't do that action yet. Please wait.")
+end
+end)
+
+RegisterKeyMapping('invhud:hotBar5', 'Open the inventory menu', 'keyboard', 5)
+RegisterCommand('invhud:hotBar5', function(raw)
+if not DelayInput['5'] then
+	if HotBar['5'] ~= nil and isAnimated == false then
+		if HotBar['5'].type == 'item_weapon' then
+			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['5'].name) then
+					playCopWeaponPut()
+				else
+					playCopWeaponTake(HotBar['5'].name)
+				end
+			else -- not cop
+				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['5'].name) then
+					playWeaponPut()
+				else
+					playWeaponTake(HotBar['5'].name)
+				end
+			end
+		else
+			local playerPed = PlayerPedId()
+			if IsPedDeadOrDying(playerPed) then
+				Notify('You dead')
+				return
+			end
+			TriggerServerEvent('esx:useItem', HotBar['5'].name)
+			delayInput('5', HotBar['5'].name)
+		end
+	end
+else
+	Notify("Can't do that action yet. Please wait.")
+end
 end)
