@@ -13,17 +13,23 @@ window.addEventListener("message", function (event) {
         $("#dialog").dialog("close");
         $(".ui").fadeOut();
         $(".item").remove();
+        $(".info-div").hide(); //
+        $(".info-div").empty(); //
         $("#otherInventory").html("<div id=\"noSecondInventoryMessage\"></div>");
+        $("#otherInventory").hide(); //
         $("#noSecondInventoryMessage").html(invLocale.secondInventoryNotAvailable);
     } else if (event.data.action == "setItems") {
-      inventorySetup(event.data.itemList);
-      createItems();
+        $(".info-div2").html(event.data.text);//
+        inventorySetup(event.data.itemList,event.data.hotBar);
+        createItems();
     } else if (event.data.action == "setSecondInventoryItems") {
-      secondInventorySetup(event.data.itemList);
-      createItems();
+        $("#otherInventory").show();//
+        secondInventorySetup(event.data.itemList);
+        createItems();
     } else if (event.data.action == "setShopInventoryItems") {
-      shopInventorySetup(event.data.itemList)
-      createItems();
+        $("#otherInventory").show();//
+        shopInventorySetup(event.data.itemList)
+        createItems();
     } else if (event.data.action == "setInfoText") {
         $(".info-div").html(event.data.text);
     } else if (event.data.action == "nearPlayers") {
@@ -91,14 +97,14 @@ function createItems() {
 		}
 	});
   
-  $('.item').mousedown(function (event, ui) {
-    if (event.which == 3) {
-      console.log('add to hotbar?');
-    }
-    if (event.which == 1) {
-      console.log('you left clicked');
-    }
-  });
+  // $('.item').mousedown(function (event, ui) {
+    // if (event.which == 3) {
+      // console.log('right click');
+    // }
+    // if (event.which == 1) {
+      // console.log('left click');
+    // }
+  // });
   
   $('.item').dblclick(function (event, ui) {
     itemData = $(this).data("item");
@@ -122,7 +128,7 @@ function createItems() {
   });
 }
 
-function inventorySetup(items) {
+function inventorySetup(items,hotBar) {
   $("#playerInventory").html("");
   $.each(items, function (index, item) {
     count = setCount(item);
@@ -130,6 +136,35 @@ function inventorySetup(items) {
         '<div class="item-count">' + count + '</div> <div class="item-name">' + item.label + '</div> </div ><div class="item-name-bg"></div></div>');
     $('#item-' + index).data('item', item);
     $('#item-' + index).data('inventory', "main");
+  });
+  $("#playerHotBar").html("");
+  var i;
+  for (i = 1; i < 6 ; i++) { 
+    $("#playerHotBar").append('<div class="hotBarSlot"><div id="hotItem-' + i + '" class="item droppable" >' +
+          '<div class="keybind">' + i + '</div><div class="item-count"></div> <div class="item-name"></div> </div ><div class="item-name-bg"></div></div>');
+  }
+  $.each(hotBar, function (index, item) {
+      count = setCount(item);
+      $('#hotItem-' + item.slot).css("background-image",'url(\'img/items/' + item.name + '.png\')');
+      $('#hotItem-' + item.slot).html('<div class="keybind">' + item.slot + '</div><div class="item-count">' + count + '</div> <div class="item-name">' + item.label + '</div> <div class="item-name-bg"></div>');
+      $('#hotItem-' + item.slot).data('item', item);
+      $('#hotItem-' + item.slot).data('inventory', "hotbar");
+  });
+  $(".droppable").droppable({
+      drop: function (event, ui) {
+          itemData = ui.draggable.data("item");
+          itemInventory = ui.draggable.data("inventory");
+          var slotId = $(this).attr('id');
+          var slotData = slotId.replace('hotItem-', '');
+
+          if ((itemInventory === "main" || itemInventory === "hotbar")) {
+              disableInventory(500);
+              $.post("http://invhud/PutIntoHotBar", JSON.stringify({
+                  item: itemData,
+                  slot : slotData
+              }));
+          }
+      }
   });
 }
 
@@ -335,21 +370,18 @@ $(document).ready(function () {
             itemData = ui.draggable.data("item");
             itemInventory = ui.draggable.data("inventory");
             
-            if (type === "normal" && itemInventory === "hotbar") {
+            if (itemInventory === "hotbar") { //366 - 371 fixed if logix so that way you can always take items from hotbar even if you are in a car
                 disableInventory(500);
-                $.post("http://invhud/TakeFromHotbar", JSON.stringify({
-                    item: itemData,
-                    number: parseInt($("#count").val())
+                $.post("http://invhud/TakeFromHotBar", JSON.stringify({
+                    item: itemData
                 }));
-            }
-
-            if (type === "trunk" && itemInventory === "second") {
+            } else if (type === "trunk" && itemInventory === "second") {
                 disableInventory(500);
                 $.post("http://invhud/TakeFromTrunk", JSON.stringify({
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
-			} else if (type === "gbox" && itemInventory === "second") {
+            } else if (type === "gbox" && itemInventory === "second") {
                 disableInventory(500);
                 $.post("http://invhud/TakeFromGBox", JSON.stringify({
                     item: itemData,
@@ -361,13 +393,13 @@ $(document).ready(function () {
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
-			} else if (type === "safe" && itemInventory === "second") {
+            } else if (type === "safe" && itemInventory === "second") {
                 disableInventory(500);
                 $.post("http://invhud/TakeFromSafe", JSON.stringify({
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
-			} else if (type === "stash" && itemInventory === "second") {
+            } else if (type === "stash" && itemInventory === "second") {
                 disableInventory(500);
                 $.post("http://invhud/TakeFromStash", JSON.stringify({
                     item: itemData,
@@ -385,22 +417,6 @@ $(document).ready(function () {
                     item: itemData,
                     number: parseInt($("#count").val())
                 }));
-            }
-        }
-    });
-    
-    $('#playerHotbar').droppable({
-        drop: function (event, ui) {
-            itemData = ui.draggable.data("item");
-            itemInventory = ui.draggable.data("inventory");
-
-            if (type === "normal" && itemInventory === "main") {
-                disableInventory(500);
-                console.log('my brain');
-                // $.post("http://invhud/PutIntoHotbar", JSON.stringify({
-                    // item: itemData,
-                    // number: parseInt($("#count").val())
-                // }));
             }
         }
     });
