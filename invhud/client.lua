@@ -1135,7 +1135,7 @@ InventoryThing = function()
               isChecked = owns
             end, doTrim(plate))
             while isChecked == nil do Citizen.Wait(10) end
-            if not isChecked then Notify('This vehicle is un-storeable'); return; end
+            if not isChecked then Notify('This vehicle is un-storeable'); openInventory('normal'); return; end
           end
           local model, class = ESX.Game.GetVehicleProperties(veh).model
           if not Config.Weight.VehicleLimits.CustomWeight[model] then
@@ -1173,6 +1173,7 @@ InventoryThing = function()
                   TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
                 else
                   Notify('This person must have their hands up')
+                  openInventory('normal')
                 end
               else
                 openInventory('normal')
@@ -1192,6 +1193,7 @@ InventoryThing = function()
                 TriggerEvent('invhud:openPlayerInventory', GetPlayerServerId(cP), GetPlayerName(cP))
               else
                 Notify('This person must have their hands up')
+                openInventory('normal')
               end
             else
               openInventory('normal')
@@ -1212,7 +1214,7 @@ InventoryThing = function()
           isChecked = owns
         end, doTrim(plate))
         while isChecked == nil do Citizen.Wait(10) end
-        if not isChecked then Notify('This vehicle is un-storeable'); return; end
+        if not isChecked then Notify('This vehicle is un-storeable'); openInventory('normal'); return; end
       end
       local model, class = ESX.Game.GetVehicleProperties(veh).model
       if not Config.Weight.VehicleLimits.CustomWeight[model] then
@@ -1505,7 +1507,7 @@ function delayInput(input,name)
 end
 
 
-RegisterKeyMapping('invhud:hotBar1', 'Open the inventory menu', 'keyboard', 1)
+RegisterKeyMapping('invhud:hotBar1', 'Use item in first hotbar slot', 'keyboard', 1)
 RegisterCommand('invhud:hotBar1', function(raw)
   if not DelayInput['1'] then
     if HotBar['1'] ~= nil and isAnimated == false then
@@ -1538,7 +1540,7 @@ RegisterCommand('invhud:hotBar1', function(raw)
   end
 end)
 
-RegisterKeyMapping('invhud:hotBar2', 'Open the inventory menu', 'keyboard', 2)
+RegisterKeyMapping('invhud:hotBar2', 'Use item in second hotbar slot', 'keyboard', 2)
 RegisterCommand('invhud:hotBar2', function(raw)
 if not DelayInput['2'] then
 	if HotBar['2'] ~= nil and isAnimated == false then
@@ -1571,7 +1573,7 @@ else
 end
 end)
 
-RegisterKeyMapping('invhud:hotBar3', 'Open the inventory menu', 'keyboard', 3)
+RegisterKeyMapping('invhud:hotBar3', 'Use item in third hotbar slot', 'keyboard', 3)
 RegisterCommand('invhud:hotBar3', function(raw)
 if not DelayInput['3'] then
 	if HotBar['3'] ~= nil and isAnimated == false then
@@ -1604,7 +1606,7 @@ else
 end
 end)
 
-RegisterKeyMapping('invhud:hotBar4', 'Open the inventory menu', 'keyboard', 4)
+RegisterKeyMapping('invhud:hotBar4', 'Use item in fourth hotbar slot', 'keyboard', 4)
 RegisterCommand('invhud:hotBar4', function(raw)
 if not DelayInput['4'] then
 	if HotBar['4'] ~= nil and isAnimated == false then
@@ -1637,7 +1639,7 @@ else
 end
 end)
 
-RegisterKeyMapping('invhud:hotBar5', 'Open the inventory menu', 'keyboard', 5)
+RegisterKeyMapping('invhud:hotBar5', 'Use item in fifth hotbar slot', 'keyboard', 5)
 RegisterCommand('invhud:hotBar5', function(raw)
 if not DelayInput['5'] then
 	if HotBar['5'] ~= nil and isAnimated == false then

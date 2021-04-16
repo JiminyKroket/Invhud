@@ -182,27 +182,28 @@ input[type=number] {
 }
 
 .info-div {
-    text-align: left;
+    text-align: center;
     padding: 5px;
     background-color: rgba(110, 110, 110, 0.5);
     border: 2px solid rgba(255, 255, 255, 0.3);
     width: 50%;
     position: absolute;
-    left: 270%;
+    left: 475%;
     top: -215%;
     width: 174px;
     transform: translate(-50%, -50%);
 }
 
 .info-div2 {
-    text-align: left;
+    text-align: center;
     padding: 5px;
     background-color: rgba(110, 110, 110, 0.5);
     border: 2px solid rgba(255, 255, 255, 0.3);
-    width: 174px;
+    width: 50%;
     position: absolute;
-    left: 15.5%;
-    top: -6%;
+    right: 285%;
+    top: -215%;
+    width: 174px;
     transform: translate(-50%, -50%);
 }
 

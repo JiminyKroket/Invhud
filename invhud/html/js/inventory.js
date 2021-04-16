@@ -7,7 +7,6 @@ window.addEventListener("message", function (event) {
     if (event.data.action == "display") {
       type = event.data.type
       disabled = false;
-      $(".info-div").show();
       $(".ui").fadeIn();
     } else if (event.data.action == "hide") {
         $("#dialog").dialog("close");
@@ -19,6 +18,7 @@ window.addEventListener("message", function (event) {
         $("#otherInventory").hide(); //
         $("#noSecondInventoryMessage").html(invLocale.secondInventoryNotAvailable);
     } else if (event.data.action == "setItems") {
+        $(".info-div").hide();
         $(".info-div2").html(event.data.text);//
         inventorySetup(event.data.itemList,event.data.hotBar);
         createItems();
@@ -32,6 +32,7 @@ window.addEventListener("message", function (event) {
         createItems();
     } else if (event.data.action == "setInfoText") {
         $(".info-div").html(event.data.text);
+        $(".info-div").show();
     } else if (event.data.action == "nearPlayers") {
         $("#nearPlayers").html("");
 
