@@ -252,7 +252,7 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 		Account = 'money',
 		Society = {
 			Name = 'convenience',
-      OnlySociety = true,
+      OnlySociety = false,
 			Options = {
 				withdraw = true,
 				deposit = true,
@@ -329,7 +329,15 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			Color = 2,
 			Scale = 1.0,
 			Display = 4
-		}
+		},
+    Notify = {
+      Use = true,
+      Trigger = function()
+        -- PUT YOUR NOTIFICATION HERE --
+        -- EXAMPLE --
+        ESX.ShowHelpNotification('I think this is right, it is called every frame btw')
+      end
+    }
   },
 	
 	['24/7 Black Market'] = {
@@ -412,7 +420,15 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			Color = 2,
 			Scale = 1.0,
 			Display = 4
-		}
+		},
+    Notify = {
+      Use = true,
+      Trigger = function()
+        -- PUT YOUR NOTIFICATION HERE --
+        -- EXAMPLE --
+        ESX.ShowHelpNotification('I think this is right, it is called every frame btw')
+      end
+    }
   },
 
   ['Robs Liquour'] = {
@@ -471,7 +487,15 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			Color = 2,
 			Scale = 1.0,
 			Display = 4
-		}
+		},
+    Notify = {
+      Use = true,
+      Trigger = function()
+        -- PUT YOUR NOTIFICATION HERE --
+        -- EXAMPLE --
+        ESX.ShowHelpNotification('I think this is right, it is called every frame btw')
+      end
+    }
 	},
 
   ['You Tool'] = {
@@ -527,7 +551,15 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			Color = 2,
 			Scale = 1.0,
 			Display = 4
-		}
+		},
+    Notify = {
+      Use = true,
+      Trigger = function()
+        -- PUT YOUR NOTIFICATION HERE --
+        -- EXAMPLE --
+        ESX.ShowHelpNotification('I think this is right, it is called every frame btw')
+      end
+    }
   },
 
   ['Bolinkbroke Penitentiary'] = {
@@ -574,7 +606,15 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			Color = 2,
 			Scale = 1.0,
 			Display = 4
-		}
+		},
+    Notify = {
+      Use = true,
+      Trigger = function()
+        -- PUT YOUR NOTIFICATION HERE --
+        -- EXAMPLE --
+        ESX.ShowHelpNotification('I think this is right, it is called every frame btw')
+      end
+    }
   },
 
   ['Ammunation'] = {
@@ -645,7 +685,15 @@ Config.Shops = { -- SET ALL SHOP INFORMATION HERE: TABLE NAME IS STORE NAME, TYP
 			Color = 2,
 			Scale = 1.0,
 			Display = 4
-		}
+		},
+    Notify = {
+      Use = true,
+      Trigger = function()
+        -- PUT YOUR NOTIFICATION HERE --
+        -- EXAMPLE --
+        ESX.ShowHelpNotification('I think this is right, it is called every frame btw')
+      end
+    }
   },
 }
 

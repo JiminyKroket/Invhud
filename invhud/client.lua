@@ -85,30 +85,35 @@ Citizen.CreateThread(function()
 		DisableControlAction(0, 37,true)
 		for k,v in pairs(Config.Shops) do
       if (not v.Society.OnlySociety) or PlayerData.job.name == v.Society.Name then
-        if v.Markers.Use then
-          for i = 1,#v.Locations.Store do
-            dis = #(pos - v.Locations.Store[i])
-            if dis <= v.Markers.Draw then
+        for i = 1,#v.Locations.Store do
+          dis = #(pos - v.Locations.Store[i])
+          if dis <= v.Markers.Draw then
+            if v.Markers.Use then
               DrawMarker(v.Markers.Type, v.Locations.Store[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
-              if v.Markers.UseText then
-                DrawShopText(v.Locations.Store[i].x, v.Locations.Store[i].y, v.Locations.Store[i].z+1.0, k, v.Markers.RGB)
-              end
+            end
+            if v.Markers.UseText then
+              DrawShopText(v.Locations.Store[i].x, v.Locations.Store[i].y, v.Locations.Store[i].z+1.0, k, v.Markers.RGB)
             end
           end
-          if v.Society.Name and (PlayerData.job.name == v.Society.Name) and PlayerData.job.grade_name == 'boss' then
-            for i = 1,#v.Locations.Boss do
-              dis = #(pos - v.Locations.Boss[i])
-              if dis <= v.Markers.Draw then
-                DrawMarker(v.Markers.Type, v.Locations.Boss[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
-                if v.Markers.UseText then
-                  DrawShopText(v.Locations.Boss[i].x, v.Locations.Boss[i].y, v.Locations.Boss[i].z+1.0, k..' Boss Zone', v.Markers.RGB)
-                end
-                if dis <= 1.5 then
-                  if IsControlJustReleased(0, 51) then
-                    TriggerEvent('esx_society:openBossMenu', v.Society.Name, function(data, menu)
-                      menu.close()
-                    end, v.Society.Options)
-                  end
+          if dis <= 1.5 then
+            if v.Notify.Use then
+              v.Notify.Trigger()
+            end
+          end
+        end
+        if v.Society.Name and (PlayerData.job.name == v.Society.Name) and PlayerData.job.grade_name == 'boss' then
+          for i = 1,#v.Locations.Boss do
+            dis = #(pos - v.Locations.Boss[i])
+            if dis <= v.Markers.Draw then
+              DrawMarker(v.Markers.Type, v.Locations.Boss[i], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, v.Markers.RGB, 200, false, false, 0, false, 0, 0, 0)
+              if v.Markers.UseText then
+                DrawShopText(v.Locations.Boss[i].x, v.Locations.Boss[i].y, v.Locations.Boss[i].z+1.0, k..' Boss Zone', v.Markers.RGB)
+              end
+              if dis <= 1.5 then
+                if IsControlJustReleased(0, 51) then
+                  TriggerEvent('esx_society:openBossMenu', v.Society.Name, function(data, menu)
+                    menu.close()
+                  end, v.Society.Options)
                 end
               end
             end
