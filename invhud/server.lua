@@ -162,7 +162,7 @@ InvCanCarry = function(xPlayer, inv, name, count, totWeight)
 				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.01))
 			else
 				total = total + 5
-				print('Weapon weight not set, defaulted to 5')
+				print('Weapon weight not set for '..k..', defaulted to 5')
 			end
 		end
 	end
@@ -204,10 +204,10 @@ ESX.RegisterServerCallback('invhud:getPlayerInventory', function(source, cb, tar
   local xPlayer = ESX.GetPlayerFromId(source)
 	local tPlayer = ESX.GetPlayerFromId(target)
 	local total = 0
-	local inventory = tPlayer.inventory
-	local weapons = tPlayer.loadout
   if xPlayer ~= nil and type(xPlayer) == 'table' then
     if tPlayer ~= nil and type(tPlayer) == 'table' then
+      local inventory = tPlayer.inventory
+      local weapons = tPlayer.loadout
       if (xPlayer.identifier ~= tPlayer.identifier and not OpenedInventories[tPlayer.identifier]) or xPlayer.identifier == tPlayer.identifier then
         if not notOpen then
           OpenedInventories[tPlayer.identifier] = xPlayer.identifier
@@ -274,7 +274,7 @@ ESX.RegisterServerCallback('invhud:doMath', function(source, cb, inv)
 				total = total + (Config.Weight.WeaponWeights[k] + (v[i].count*0.01))
 			else
 				total = total + (5 + (v[i].count*0.01))
-				print('Weapon weight not set, defaulted to 5')
+				print('Weapon weight not set for '..k..', defaulted to 5')
 			end
 		end
 	end
@@ -450,86 +450,98 @@ AddEventHandler('invhud:tradePlayerItem', function(from, target, invType, itemNa
 	local xPlayer = ESX.GetPlayerFromId(src)
 	local tPlayer = ESX.GetPlayerFromId(target)
 
-	if invType == 'item_standard' then
-		local xItem = xPlayer.getInventoryItem(itemName)
-		local tItem = tPlayer.getInventoryItem(itemName)
-		
-		if xPlayer.canCarryItem ~= nil then
-			if xPlayer.maxWeight ~= nil then
-				if itemCount > 0 and xItem.count >= itemCount then
-					if tPlayer.canCarryItem(itemName, itemCount) then
-						xPlayer.removeInventoryItem(itemName, itemCount)
-						tPlayer.addInventoryItem(itemName, itemCount)
-            logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
-					else
-						Notify(xPlayer.source, 'This player can not carry that much')
-						Notify(tPlayer.source, 'You can not carry that much')
-					end
-				else
-					Notify(xPlayer.source, 'You do not have enough of that item to give')
-				end
-			else
-				Notify(src, 'Max weight error, relog')
-			end
-		else
-			if itemCount > 0 and xItem.count >= itemCount then
-				if tItem.limit == -1 or (tItem.count + itemCount) <= tItem.limit then
-					xPlayer.removeInventoryItem(itemName, itemCount)
-					tPlayer.addInventoryItem(itemName, itemCount)
+  if xPlayer ~= nil and type(xPlayer) == 'table' then
+    if tPlayer ~= nil and type(tPlayer) == 'table' then
+      if invType == 'item_standard' then
+        local xItem = xPlayer.getInventoryItem(itemName)
+        local tItem = tPlayer.getInventoryItem(itemName)
+        
+        if xPlayer.canCarryItem ~= nil then
+          if xPlayer.maxWeight ~= nil then
+            if itemCount > 0 and xItem.count >= itemCount then
+              if tPlayer.canCarryItem(itemName, itemCount) then
+                xPlayer.removeInventoryItem(itemName, itemCount)
+                tPlayer.addInventoryItem(itemName, itemCount)
+                logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
+              else
+                Notify(xPlayer.source, 'This player can not carry that much')
+                Notify(tPlayer.source, 'You can not carry that much')
+              end
+            else
+              Notify(xPlayer.source, 'You do not have enough of that item to give')
+            end
+          else
+            Notify(src, 'Max weight error, relog')
+          end
+        else
+          if itemCount > 0 and xItem.count >= itemCount then
+            if tItem.limit == -1 or (tItem.count + itemCount) <= tItem.limit then
+              xPlayer.removeInventoryItem(itemName, itemCount)
+              tPlayer.addInventoryItem(itemName, itemCount)
+              logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
+            else
+              Notify(xPlayer.source, 'This player can not carry that much')
+              Notify(tPlayer.source, 'You can not carry that much')
+            end
+          else
+            Notify(xPlayer.source, 'You do not have enough of that item to give')
+          end
+        end
+      elseif invType == 'item_account' then
+        if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
+          xPlayer.removeAccountMoney(itemName, itemCount)
+          tPlayer.addAccountMoney(itemName, itemCount)
           logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
-				else
-					Notify(xPlayer.source, 'This player can not carry that much')
-					Notify(tPlayer.source, 'You can not carry that much')
-				end
-			else
-				Notify(xPlayer.source, 'You do not have enough of that item to give')
-			end
-		end
-	elseif invType == 'item_account' then
-		if itemCount > 0 and xPlayer.getAccount(itemName).money >= itemCount then
-			xPlayer.removeAccountMoney(itemName, itemCount)
-			tPlayer.addAccountMoney(itemName, itemCount)
-      logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
-		else
-			Notify(xPlayer.source, 'You do not have enough in that account to give')
-		end
-	elseif invType == 'item_money' then
-		if xPlayer.getMoney() >= itemCount then
-			xPlayer.removeMoney(itemCount)
-			tPlayer.addMoney(itemCount)
-      logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
-		else
-			Notify(xPlayer.source, 'You do not have enough money')
-		end
-	elseif invType == 'item_weapon' then
-		if not plyHasWep(itemName,tPlayer) then
-			local weight
-			if Config.Weight.WeaponWeights[itemName] then
-				weight = Config.Weight.WeaponWeights[itemName] + (itemCount*0.01)
-			else
-				weight = 5 + (itemCount*0.01)
-				print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
-			end
-			if Config.Weight.AddWeaponsToPlayerWeight then
-				local newWeight = tPlayer.maxWeight - weight
-				if newWeight <= doRound(0, 2) then
-					Notify(source, 'Can not hold weapon')
-					return
-				end
-			end
-			xPlayer.removeWeapon(itemName)
-			tPlayer.addWeapon(itemName, itemCount)
-      logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
-			if Config.Weight.AddWeaponsToPlayerWeight then
-				local newWeight = xPlayer.maxWeight + weight
-				xPlayer.setMaxWeight(doRound(newWeight, 2))
-				newWeight = tPlayer.maxWeight - weight
-				tPlayer.setMaxWeight(doRound(newWeight, 2))
-			end
-		else
-			Notify(xPlayer.source, 'This person already has this weapon, just give them ammo')
-		end
-	end
+        else
+          Notify(xPlayer.source, 'You do not have enough in that account to give')
+        end
+      elseif invType == 'item_money' then
+        if xPlayer.getMoney() >= itemCount then
+          xPlayer.removeMoney(itemCount)
+          tPlayer.addMoney(itemCount)
+          logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
+        else
+          Notify(xPlayer.source, 'You do not have enough money')
+        end
+      elseif invType == 'item_weapon' then
+        if not plyHasWep(itemName,tPlayer) then
+          local weight
+          if Config.Weight.WeaponWeights[itemName] then
+            weight = Config.Weight.WeaponWeights[itemName] + (itemCount*0.01)
+          else
+            weight = 5 + (itemCount*0.01)
+            print(string.format('Weapon weight not set for %s, defaulted to 5',itemName))
+          end
+          if Config.Weight.AddWeaponsToPlayerWeight then
+            local newWeight = tPlayer.maxWeight - weight
+            if newWeight <= doRound(0, 2) then
+              Notify(source, 'Can not hold weapon')
+              return
+            end
+          end
+          xPlayer.removeWeapon(itemName)
+          tPlayer.addWeapon(itemName, itemCount)
+          logText(xPlayer, ' added '..itemCount..' '..itemName..' to inventory '..tPlayer.identifier)
+          if Config.Weight.AddWeaponsToPlayerWeight then
+            local newWeight = xPlayer.maxWeight + weight
+            xPlayer.setMaxWeight(doRound(newWeight, 2))
+            newWeight = tPlayer.maxWeight - weight
+            tPlayer.setMaxWeight(doRound(newWeight, 2))
+          end
+        else
+          Notify(xPlayer.source, 'This person already has this weapon, just give them ammo')
+        end
+      end
+    else
+      print('no target player for', target)
+      Notify(xPlayer.source, 'No target player for '..target)
+      cb(nil)
+    end
+  else
+    print('no source player, idk they do not exist server side apparently')
+    Notify(xPlayer.source, 'No source player, idk you do not exist server side apparently')
+    cb(nil)
+  end
 end)
 
 RegisterServerEvent('invhud:putItem')
