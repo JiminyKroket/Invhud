@@ -308,6 +308,10 @@ $(document).ready(function () {
             if (itemInventory == undefined || itemInventory == "second") {
                 return;
             }
+            
+            if (type !== "normal") {
+                return;
+            }
 
             if (itemData.usable) {
                 disableInventory(300);
