@@ -123,7 +123,8 @@ function createItems() {
     if (itemData.usable) {
         disableInventory(300);
         $.post("http://invhud/UseItem", JSON.stringify({
-            item: itemData
+            item: itemData,
+            amount: 1
         }));
     }
   });
@@ -311,7 +312,8 @@ $(document).ready(function () {
             if (itemData.usable) {
                 disableInventory(300);
                 $.post("http://invhud/UseItem", JSON.stringify({
-                    item: itemData
+                    item: itemData,
+                    amount: parseInt($("#count").val())
                 }));
             }
         }
@@ -331,7 +333,11 @@ $(document).ready(function () {
             if (itemInventory == undefined || itemInventory == "second") {
                 return;
             }
-
+            
+            if (type !== "normal") {
+                return;
+            }
+            
             if (itemData.canRemove) {
                 disableInventory(300);
                 $.post("http://invhud/GetNearPlayers", JSON.stringify({
@@ -353,6 +359,10 @@ $(document).ready(function () {
             itemInventory = ui.draggable.data("inventory");
 
             if (itemInventory == undefined || itemInventory == "second") {
+                return;
+            }
+            
+            if (type !== "normal") {
                 return;
             }
 
