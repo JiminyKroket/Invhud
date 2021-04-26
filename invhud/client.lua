@@ -893,11 +893,17 @@ RegisterNUICallback('UseItem', function(data, cb)
 		Notify('You dead')
 		return
 	end
-	TriggerServerEvent('esx:useItem', data.item.name)
+  
+  if shouldCloseInventory(data.item.name) then
+    TriggerEvent('invhud:closeInventory')
+  end
+  
+  for i = 1,data.amount do
+    TriggerServerEvent('esx:useItem', data.item.name)
+    Citizen.Wait(1)
+  end
 
-	if shouldCloseInventory(data.item.name) then
-		TriggerEvent('invhud:closeInventory')
-	else
+	if not shouldCloseInventory(data.item.name) then
 		Citizen.Wait(250)
 		loadPlayerInventory()
 	end
@@ -1427,13 +1433,13 @@ Citizen.CreateThread(function()
     while not HasAnimDictLoaded('reaction@intimidation@cop@unarmed') do
         Citizen.Wait(0)
     end
-    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@cop@unarmed', 'intro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    TaskPlayAnim(PlayerPedId(), 'reaction@intimidation@cop@unarmed', 'intro', 8.0, -8, -1, 49, 0, 0, 0, 0)
     DisableControlAction(0,25,true) -- disable aim
     Wait(1500)
-    SetCurrentPedWeapon(GetPlayerPed(-1), name,true)
+    SetCurrentPedWeapon(PlayerPedId(), name,true)
     Wait(500)
     DisableControlAction(0,25,false) -- disable aim
-    ClearPedSecondaryTask(GetPlayerPed(-1))
+    ClearPedSecondaryTask(PlayerPedId())
     isAnimated = false
 end)
 
@@ -1447,13 +1453,13 @@ Citizen.CreateThread(function()
     while not HasAnimDictLoaded('reaction@intimidation@cop@unarmed') do
         Citizen.Wait(0)
     end
-    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@cop@unarmed', 'outro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    TaskPlayAnim(PlayerPedId(), 'reaction@intimidation@cop@unarmed', 'outro', 8.0, -8, -1, 49, 0, 0, 0, 0)
     DisableControlAction(0,25,true) -- disable aim
     Wait(1500)
-    SetCurrentPedWeapon(GetPlayerPed(-1), "WEAPON_UNARMED",true)
+    SetCurrentPedWeapon(PlayerPedId(), "WEAPON_UNARMED",true)
     Wait(200)
     DisableControlAction(0,25,false) -- enable aim
-    ClearPedSecondaryTask(GetPlayerPed(-1))
+    ClearPedSecondaryTask(PlayerPedId())
     isAnimated = false
 end)
 end
@@ -1467,13 +1473,13 @@ Citizen.CreateThread(function()
         Citizen.Wait(0)
     end
     
-    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@1h', 'intro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    TaskPlayAnim(PlayerPedId(), 'reaction@intimidation@1h', 'intro', 8.0, -8, -1, 49, 0, 0, 0, 0)
     DisableControlAction(0,25,true) -- disable aim
     Wait(1500)
-    SetCurrentPedWeapon(GetPlayerPed(-1), name,true)
+    SetCurrentPedWeapon(PlayerPedId(), name,true)
     Wait(1400)
     DisableControlAction(0,25,false) -- disable aim
-    ClearPedSecondaryTask(GetPlayerPed(-1))
+    ClearPedSecondaryTask(PlayerPedId())
     isAnimated = false
 end)
 end
@@ -1487,15 +1493,15 @@ Citizen.CreateThread(function()
         Citizen.Wait(0)
     end
     
-    TaskPlayAnim(GetPlayerPed(-1), 'reaction@intimidation@1h', 'outro', 8.0, -8, -1, 49, 0, 0, 0, 0)
+    TaskPlayAnim(PlayerPedId(), 'reaction@intimidation@1h', 'outro', 8.0, -8, -1, 49, 0, 0, 0, 0)
     DisableControlAction(0,25,true) -- disable aim
     DisableControlAction(0,24,true) -- disable shooting
     Wait(1800)
-    SetCurrentPedWeapon(GetPlayerPed(-1), "WEAPON_UNARMED",true)
+    SetCurrentPedWeapon(PlayerPedId(), "WEAPON_UNARMED",true)
     Wait(400)
     DisableControlAction(0,25,false) -- enable aim
     DisableControlAction(0,24,false) -- enable shooting
-    ClearPedSecondaryTask(GetPlayerPed(-1))
+    ClearPedSecondaryTask(PlayerPedId())
     isAnimated = false
 end)
 end
@@ -1518,13 +1524,13 @@ RegisterCommand('invhud:hotBar1', function(raw)
     if HotBar['1'] ~= nil and isAnimated == false then
       if HotBar['1'].type == 'item_weapon' then
         if PlayerData.job ~= nil and PlayerData.job.name == "police" then
-          if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['1'].name) then
+          if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['1'].name) then
             playCopWeaponPut()
           else
             playCopWeaponTake(HotBar['1'].name)
           end
         else -- not cop
-          if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['1'].name) then
+          if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['1'].name) then
             playWeaponPut()
           else
             playWeaponTake(HotBar['1'].name)
@@ -1551,13 +1557,13 @@ if not DelayInput['2'] then
 	if HotBar['2'] ~= nil and isAnimated == false then
 		if HotBar['2'].type == 'item_weapon' then
 			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['2'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['2'].name) then
 					playCopWeaponPut()
 				else
 					playCopWeaponTake(HotBar['2'].name)
 				end
 			else -- not cop
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['2'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['2'].name) then
 					playWeaponPut()
 				else
 					playWeaponTake(HotBar['2'].name)
@@ -1584,13 +1590,13 @@ if not DelayInput['3'] then
 	if HotBar['3'] ~= nil and isAnimated == false then
 		if HotBar['3'].type == 'item_weapon' then
 			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['3'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['3'].name) then
 					playCopWeaponPut()
 				else
 					playCopWeaponTake(HotBar['3'].name)
 				end
 			else -- not cop
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['3'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['3'].name) then
 					playWeaponPut()
 				else
 					playWeaponTake(HotBar['3'].name)
@@ -1617,13 +1623,13 @@ if not DelayInput['4'] then
 	if HotBar['4'] ~= nil and isAnimated == false then
 		if HotBar['4'].type == 'item_weapon' then
 			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['4'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['4'].name) then
 					playCopWeaponPut()
 				else
 					playCopWeaponTake(HotBar['4'].name)
 				end
 			else -- not cop
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['4'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['4'].name) then
 					playWeaponPut()
 				else
 					playWeaponTake(HotBar['4'].name)
@@ -1650,13 +1656,13 @@ if not DelayInput['5'] then
 	if HotBar['5'] ~= nil and isAnimated == false then
 		if HotBar['5'].type == 'item_weapon' then
 			if PlayerData.job ~= nil and PlayerData.job.name == "police" then
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['5'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['5'].name) then
 					playCopWeaponPut()
 				else
 					playCopWeaponTake(HotBar['5'].name)
 				end
 			else -- not cop
-				if GetSelectedPedWeapon(GetPlayerPed(-1)) == GetHashKey(HotBar['5'].name) then
+				if GetSelectedPedWeapon(PlayerPedId()) == GetHashKey(HotBar['5'].name) then
 					playWeaponPut()
 				else
 					playWeaponTake(HotBar['5'].name)
@@ -1676,3 +1682,10 @@ else
 	Notify("Can't do that action yet. Please wait.")
 end
 end)
+
+RegisterCommand('myInventory', function()
+  if not HasCollisionLoadedAroundEntity(PlayerPedId()) then return end
+  if isCuffed == true then Notify('You are handcuffed'); return; end
+  if canOpen == false then Notify('You can not do that'); return; end
+  openInventory('normal')
+end, false)
