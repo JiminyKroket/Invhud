@@ -69,11 +69,3 @@ TriggerEvent('invhud:openSafeInv', safeID)
 **YOU CAN OPEN ANY INVENTORY OUTSIDE OF INVHUD WITH THESE TWO EVENTS**
 
 Weapon attachments only store across inventories for ESX 1.1 and ABOVE. ESX 1.0 DOES NOT SUPPORT ATTACHMENTS
-
-I CAN BE CONTACTED HERE - https://discord.com/invite/8afXRrA OR DIRECTLY WITH ID SpindleScripts#0001
-My website:
-https://spindlescripts.com
-
-My ko-fi links:
-https://ko-fi.com/spindlescripts
-[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X42NXB6)
