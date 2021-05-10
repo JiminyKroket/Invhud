@@ -10,7 +10,7 @@ INSERT INTO `items` (`name`, `label`, `price`) VALUES
 	('speccalrounds', 'Special Caliber Clip', 100)
 ;
 
-CREATE TABLE IF NOT EXISTS `inventories` (
+CREATE TABLE `inventories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `owner` text NOT NULL,
   `type` varchar(50) NOT NULL,
